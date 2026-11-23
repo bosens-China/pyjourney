@@ -1,0 +1,85 @@
+---
+title: 定义和调用函数
+description: 用 def 定义函数，调用函数并接收 return 交回的结果。
+---
+
+import ConceptStepper from "@/components/learning/ConceptStepper";
+import QuickQuiz from "@/components/learning/QuickQuiz";
+
+函数把一段有明确用途的代码组织在一起。定义函数时，我们给这段代码起名。以后用这个名字调用函数，就可以让它处理不同的输入。
+
+## 用 def 定义函数
+
+下面的函数接收一个数，计算它的平方。以 `def` 开头的一行写出函数名 `square`、参数名 `number` 和冒号。缩进的第二行属于函数体。
+
+```python
+def square(number):
+    return number * number
+
+
+result = square(4)
+print(result)  # 16
+```
+
+执行 `def` 会创建函数，并把它绑定到名字 `square`。当 Python 执行 `square(4)`，这次调用的参数 `number` 取得值 `4`，函数体才开始运行。
+
+## 用 return 交回结果
+
+`return` 先算出表达式的值，再结束这次调用，把这个值交回调用处。在示例中，`square(4)` 的值是 `16`，后面的赋值把 `result` 绑定到这个整数。调用表达式也可以参与运算，例如 `square(4) + 1` 的值是 `17`。
+
+<ConceptStepper
+  client:visible
+  label="跟踪 square(4) 的结果"
+  steps={[
+    {
+      code: "result = square(4)",
+      description: "进入函数时，参数 number 得到 4。",
+      values: [{ name: "number", value: "4" }],
+    },
+    {
+      code: "return number * number",
+      description: "函数算出 16，结束这次调用，把 16 交回调用处。",
+      values: [{ name: "number", value: "4" }],
+    },
+    {
+      code: "print(result)",
+      description: "调用处把交回的值绑定到 result，随后打印。",
+      values: [{ name: "result", value: "16" }],
+      output: "16",
+    },
+  ]}
+/>
+
+## 打印与返回
+
+`print()` 把内容写到输出区。`return` 把值交给调用处，调用处可以继续计算、赋值或打印这个值。函数运行到末尾时会返回 `None`。单独写 `return` 也会返回 `None`。
+
+```python
+def show_double(number):
+    print(number * 2)
+
+
+result = show_double(5)  # 打印 10
+print(result)            # None
+```
+
+## 随堂练习
+
+跟踪下面的两次调用，判断最后一行的输出。
+
+```python
+def add_one(number):
+    return number + 1
+
+
+first = add_one(3)
+print(add_one(first))
+```
+
+<QuickQuiz
+  client:visible
+  question="最后一行会输出什么？"
+  options={["3", "4", "5"]}
+  answerIndex={2}
+  explanation="第一次调用返回 4，第二次调用用 4 再加 1，所以输出 5。"
+/>

@@ -1,0 +1,68 @@
+---
+title: 遍历字典并累计数据
+description: 用 items() 同时读取键和值，用字典按类别累计或分组。
+---
+
+import PythonExercise from "@/components/python/PythonExercise";
+
+遍历字典时，可以同时读取键和对应的值。也可以在遍历数据时更新字典。比如用类别作键，用累计的阅读页数作值，把每一笔页数加到对应类别。
+
+## 同时取出键和值
+
+`items()` 可以让 `for` 每次取出一对键和值。用两个名字接收，写法和上一章的元组解包相同。
+
+```python
+totals = {"散文": 15, "小说": 28}
+for category, pages in totals.items():
+    print(f"{category} {pages} 页")
+```
+
+这段代码先输出“散文 15 页”，再输出“小说 28 页”。字典保留键的插入顺序。替换已有键的值，键仍然在原来的位置。
+
+## 对同一个键重复累计
+
+使用一个空字典记录总页数。第一次遇到某个类别时，`get(category, 0)` 返回 0。再次遇到同一个类别时，它返回已经累计过的页数。每轮求出新的总数，再写回字典。
+
+```python
+records = [("小说", 12), ("散文", 8), ("小说", 15)]
+totals = {}
+
+for category, pages in records:
+    old_total = totals.get(category, 0)
+    totals[category] = old_total + pages
+
+print(totals)  # {'小说': 27, '散文': 8}
+```
+
+第一条“小说”记录把该类别的总数设为 12。读到第三条时，旧总数已经是 12，加上 15 后写入 27。如果要统计每个类别出现了几次，可以在每次更新时加 1。
+
+## 把同类数据放进同一个列表
+
+如果想保留类别下的每个书名，可以用列表作值。第一次遇到某个类别时，先在字典中给它放一个空列表，再用 `append()` 逐项追加书名。
+
+```python
+records = [("小说", "夜航"), ("散文", "山间"), ("小说", "海边")]
+groups = {}
+
+for category, title in records:
+    if category not in groups:
+        groups[category] = []
+    groups[category].append(title)
+
+print(groups["小说"])  # ['夜航', '海边']
+```
+
+每个类别都有独立的列表。“夜航”先加入“小说”列表，“海边”接在它后面。“散文”的书名归在另一个列表中。
+
+## 随堂练习
+
+把编辑器中的记录按类别累计，只输出“小说”的总页数。正确结果是一行 `27`。
+
+<PythonExercise
+  client:visible
+  label="累计小说的阅读页数"
+  starterCode={
+    'records = [("小说", 8), ("随笔", 16), ("小说", 19)]\n\n# 用字典累计各类别的页数，再输出小说的总页数。\n'
+  }
+  expectedOutput="27"
+/>

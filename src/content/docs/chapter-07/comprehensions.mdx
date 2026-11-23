@@ -1,0 +1,67 @@
+---
+title: 用推导式构造容器
+description: 用列表推导式转换和筛选元素，再用字典推导式组织键值。
+---
+
+import QuickQuiz from "@/components/learning/QuickQuiz";
+
+推导式用一段遍历规则构造新容器。规则可以指定从哪里取值、保留哪些值，以及每个新元素要怎样计算。
+
+## 从循环写到列表推导式
+
+下面的循环保留大于 `0` 的整数，把每个保留的值扩大到两倍，再添加到新列表。
+
+```python
+numbers = [-2, 3, 0, 5]
+doubled = []
+
+for number in numbers:
+    if number > 0:
+        doubled.append(number * 2)
+
+print(doubled)  # [6, 10]
+```
+
+列表推导式把这段构造过程写到方括号里。写成下面的形式，可以得到同样的结果。
+
+```python
+numbers = [-2, 3, 0, 5]
+doubled = [number * 2 for number in numbers if number > 0]
+
+print(doubled)  # [6, 10]
+```
+
+读这段代码时，可以先找到 `for number in numbers`，确认数据来自哪里。末尾的 `if number > 0` 决定哪些值要保留。方括号开头的 `number * 2` 决定往新列表装入什么。每个通过条件的元素产生一个结果，顺序与遍历顺序一致。
+
+当构造规则很短时，推导式能把规则放在一起。如果循环还需要处理多种分支或完成别的操作，普通循环更容易分步阅读。
+
+## 用字典推导式指定键和值
+
+把方括号换成大括号，并把开头的表达式写成 `键: 值`，就可以构造字典。下面把每个整数作为键，把平方作为对应的值。
+
+```python
+numbers = [2, 3, 4]
+squares = {number: number * number for number in numbers}
+
+print(squares)  # {2: 4, 3: 9, 4: 16}
+```
+
+字典中每个键对应一个值。遍历过程中如果产生相同的键，后面得到的值会覆盖先前的值。
+
+## 随堂练习
+
+从 `for` 开始读，先找出通过条件的值，再计算方括号开头的表达式。
+
+```python
+numbers = [0, 2, 5, 1]
+result = [number + 1 for number in numbers if number >= 2]
+print(result)
+```
+
+<QuickQuiz
+  client:visible
+  question="生成的列表是什么？"
+  options={["[1, 3, 6, 2]", "[2, 5]", "[3, 6]"]}
+  answerIndex={2}
+  explanation="2 和 5 满足条件，分别加 1，得到 [3, 6]。"
+/>

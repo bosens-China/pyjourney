@@ -1,0 +1,80 @@
+---
+title: 逐项取值的迭代器
+description: 用 iter 取得迭代器，用 next 逐项取值并识别耗尽。
+---
+
+import ConceptStepper from "@/components/learning/ConceptStepper";
+import QuickQuiz from "@/components/learning/QuickQuiz";
+
+列表和元组都可以逐项遍历。Python 把能用于这种遍历的对象叫作可迭代对象。迭代器负责当前这一轮遍历，记着下次该交出哪一项。
+
+## 用 iter 开始一轮遍历
+
+把列表交给 `iter()`，就可以取得它的迭代器。每调用一次 `next()`，迭代器就返回下一项。示例中的两次调用使用的是同一个迭代器，因此先后取得两个不同的值。
+
+```python
+numbers = [10, 20]
+items = iter(numbers)
+
+print(next(items))  # 10
+print(next(items))  # 20
+```
+
+<ConceptStepper
+  client:visible
+  label="观察迭代器两次取值"
+  steps={[
+    {
+      code: "numbers = [10, 20]\nitems = iter(numbers)",
+      description: "列表迭代器已经创建，可以从第一项开始遍历。",
+      values: [{ name: "下一项", value: "10" }],
+    },
+    {
+      code: "print(next(items))",
+      description: "第一次取值交出 10，下次将交出 20。",
+      values: [{ name: "下一项", value: "20" }],
+      output: "10",
+    },
+    {
+      code: "print(next(items))",
+      description: "第二次取值交出 20。列表的这一轮遍历已经走完。",
+      values: [{ name: "下一项", value: "已用完" }],
+      output: "20",
+    },
+  ]}
+/>
+
+## 迭代器用完之后
+
+如果在取值时已经没有下一项，`next(items)` 会引发 `StopIteration`。也可以提供一个默认值，例如 `next(items, None)`。这样在耗尽时会得到 `None`。
+
+```python
+numbers = [10]
+items = iter(numbers)
+
+print(next(items, None))  # 10
+print(next(items, None))  # None
+```
+
+`for` 循环也使用迭代器。遇到 `StopIteration` 时，循环会结束。把一个已经取过值的迭代器交给 `for`，循环从它当前的位置继续。想从列表开头重新遍历，可以对原列表再调用一次 `iter()`。
+
+## 随堂练习
+
+两次 `next()` 共用同一个迭代器。观察循环会从哪个位置继续。
+
+```python
+items = iter([2, 4, 6])
+print(next(items))
+print(next(items))
+
+for item in items:
+    print(item)
+```
+
+<QuickQuiz
+  client:visible
+  question="for 循环体会输出什么？"
+  options={["2、4、6", "4、6", "6"]}
+  answerIndex={2}
+  explanation="前两个 next() 已经分别取得 2 和 4。循环从下一项继续，只输出 6。"
+/>

@@ -1,0 +1,55 @@
+---
+title: 用 pathlib 读写文本
+description: 用 Path 表示文件位置，再用明确的编码读取和写入文本。
+---
+
+import QuickQuiz from "@/components/learning/QuickQuiz";
+
+变量里的字符串适合在程序运行时使用。需要把文本留给下次运行或另一个程序时，可以把它写入文件。`pathlib` 是 Python 的标准库模块，它提供的 `Path` 用来表示路径。
+
+## 先确定文件的位置
+
+```python
+from pathlib import Path
+
+folder = Path("notes")
+path = folder / "today.txt"
+```
+
+`/` 在这里把目录和文件名组合成一条路径。得到的 `path` 表示 `notes` 目录中的 `today.txt`。创建 `Path` 对象只是在程序里记录位置。读取、写入和创建目录各有相应的方法。
+
+`notes` 是相对路径。Python 读写这个位置时，会以程序的当前工作目录为起点。直接运行下面的示例时，可以先进入专门的练习目录。
+
+## 一次性写入和读回文本
+
+```python
+from pathlib import Path
+
+path = Path("chapter10-note.txt")
+path.write_text("整理书桌\n检查清单", encoding="utf-8")
+
+text = path.read_text(encoding="utf-8")
+print(text)
+```
+
+`write_text()` 写入整个字符串。示例里的 `\n` 代表换行，因此文件包含两行文本。`read_text()` 再把同一文件的内容读成一个字符串。两种方法在操作完成后都会关闭文件。
+
+`encoding="utf-8"` 说明字符串和文件字节之间按 UTF-8 转换。这里读写使用同一种编码，中文内容也能按原样读回。
+
+## 留意文件是否已经存在
+
+对同一路径再次调用 `write_text()` 会替换已有内容。读取一个不存在的文件时，`read_text()` 会引发 `FileNotFoundError`。如果文件可由用户稍后创建，可以捕获这个异常，给出清楚的提示。
+
+上述例子里的文本很短，适合一次读完。文件需要逐行处理时，可以打开文件并遍历文件对象。
+
+## 随堂练习
+
+<QuickQuiz
+  client:visible
+  question={
+    '同一个 path 先执行 write_text("一")，再执行 write_text("二")，最后 read_text() 读到什么？'
+  }
+  options={["一二", "一", "二"]}
+  answerIndex={2}
+  explanation="write_text() 会替换文件已有的内容。第二次写入后，文件里只有“二”。"
+/>

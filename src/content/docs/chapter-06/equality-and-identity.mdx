@@ -1,0 +1,87 @@
+---
+title: 对象的相等与身份
+description: 分别用 == 和 is 检查值相等与对象相同，并识别 None。
+---
+
+import ConceptStepper from "@/components/learning/ConceptStepper";
+import QuickQuiz from "@/components/learning/QuickQuiz";
+
+Python 中的值由对象表示。赋值把名字绑定到对象，同一个对象可以有多个名字。下面要区分两个问题。对象表示的值是否相等，以及两个名字是否引用同一个对象。
+
+## 比较值与比较身份
+
+`==` 比较对象是否相等，具体的相等规则由对象的类型决定。对列表来说，两个列表长度相同且对应元素相等，两个列表就相等。`is` 检查两边是否是同一个对象。
+
+```python
+original = [1, 2]
+alias = original
+separate = [1, 2]
+
+print(original == separate)  # True
+print(original is separate)  # False
+print(original is alias)     # True
+```
+
+执行 `alias = original` 时，两个名字绑定到同一个列表。执行 `separate = [1, 2]` 时，Python 创建一个新列表，并把 `separate` 绑定到新列表。两个列表内容相同，所以相等。两条列表表达式各自创建一个对象，所以身份不同。
+
+<ConceptStepper
+  client:visible
+  label="区分名字、列表内容和对象身份"
+  steps={[
+    {
+      code: "original = [1, 2]",
+      description: "列表 A 已创建，original 指向它。",
+      values: [{ name: "original", value: "列表 A [1, 2]" }],
+    },
+    {
+      code: "alias = original",
+      description: "读取 original 所指的列表，给这个对象绑定另一个名字。",
+      values: [
+        { name: "original", value: "列表 A [1, 2]" },
+        { name: "alias", value: "列表 A [1, 2]" },
+      ],
+    },
+    {
+      code: "separate = [1, 2]",
+      description: "separate 指向列表 B。两个列表的内容相同，身份各自独立。",
+      values: [
+        { name: "original", value: "列表 A [1, 2]" },
+        { name: "alias", value: "列表 A [1, 2]" },
+        { name: "separate", value: "列表 B [1, 2]" },
+      ],
+    },
+  ]}
+/>
+
+## 用 is None 检查缺失值
+
+Python 中只有一个 `None` 对象。检查某个名字是否引用它时，通常写 `is None`。这个判断可以把缺失值与有效的 `0`、空字符串或空列表区分开。
+
+```python
+value = None
+print(value is None)  # True
+
+value = 0
+print(value is None)  # False
+```
+
+## 随堂练习
+
+根据赋值与列表创建的过程，判断下面两行输出。
+
+```python
+first = [3]
+second = [3]
+third = second
+
+print(first == third)
+print(second is third)
+```
+
+<QuickQuiz
+  client:visible
+  question="两行分别会输出什么？"
+  options={["True 和 False", "False 和 True", "True 和 True"]}
+  answerIndex={2}
+  explanation="first 与 third 所指列表的内容相等。second 与 third 是同一个列表对象的两个名字。"
+/>

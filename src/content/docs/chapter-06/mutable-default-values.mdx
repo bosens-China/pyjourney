@@ -1,0 +1,72 @@
+---
+title: 可变对象与参数默认值
+description: 理解默认值的创建时机，用 None 为每次调用创建新的列表。
+---
+
+import QuickQuiz from "@/components/learning/QuickQuiz";
+
+参数的默认值在定义函数时求值一次。以后每次省略这个参数，函数会使用当时得到的对象。整数可以直接作为默认值。列表会原地变化，因此需要关心这个列表什么时候创建。
+
+## 默认列表会被重复使用
+
+下面的函数把一个元素加到 `items`。定义函数时创建的空列表，会在两次省略 `items` 的调用中使用。第二次调用开始时，这个列表里已经有 `1`。
+
+```python
+def collect(value, items=[]):
+    items.append(value)
+    return items
+
+
+print(collect(1))  # [1]
+print(collect(2))  # [1, 2]
+```
+
+函数中执行的是 `items.append(value)`，它修改列表对象。两次调用中的名字 `items` 都指向同一个默认列表，所以修改会延续到下一次调用。
+
+## 在需要时创建列表
+
+如果每次省略参数都应得到一个独立列表，可以用 `None` 作为默认值。在函数体里检查 `items is None`，然后创建新的空列表。每次进入这个分支都会创建一个新对象。
+
+```python
+def collect(value, items=None):
+    if items is None:
+        items = []
+    items.append(value)
+    return items
+
+
+print(collect(1))  # [1]
+print(collect(2))  # [2]
+
+existing = []
+collect(3, existing)
+print(existing)  # [3]
+```
+
+显式传入一个列表时，函数会继续使用传入的对象。这里的空列表 `existing` 也可以作为参数，因此精确检查 `is None` 很重要。这样写表示缺少列表时由函数创建，提供列表时在它上面添加元素。
+
+## 随堂练习
+
+观察显式传入的列表与省略参数时创建的列表，判断最后两行输出。
+
+```python
+def collect(value, items=None):
+    if items is None:
+        items = []
+    items.append(value)
+    return items
+
+
+existing = []
+collect(4, existing)
+print(collect(5))
+print(existing)
+```
+
+<QuickQuiz
+  client:visible
+  question="两行分别会输出什么？"
+  options={["[4, 5] 和 [4, 5]", "[5] 和 [4]", "[5] 和 []"]}
+  answerIndex={1}
+  explanation="省略参数的调用创建了新列表并加入 5。显式传入的 existing 仍包含先前加入的 4。"
+/>

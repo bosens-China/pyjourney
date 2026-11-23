@@ -1,0 +1,91 @@
+---
+title: 用列表保存和更新一组值
+description: 用列表保存有顺序的一组元素，练习读取、替换、添加和移除。
+---
+
+import ConceptStepper from "@/components/learning/ConceptStepper";
+import PythonExercise from "@/components/python/PythonExercise";
+
+列表把多个值放在一起，还能保留它们的顺序。需要一张会不断增减的书单时，可以把每本书的名字放进同一个列表。
+
+## 创建和读取列表
+
+列表用方括号包住一组元素，用逗号分隔。写 `[]` 就得到一个空列表。和字符串一样，列表的索引从 0 开始，也支持负索引和切片。
+
+```python
+titles = ["地图", "诗集", "游记"]
+print(titles[0])   # 地图
+print(titles[-1])  # 游记
+print(titles[:2])  # ['地图', '诗集']
+```
+
+`titles[0]` 取出一个元素，这里得到字符串“地图”。`titles[:2]` 取出一段，结果是包含前两项的新列表。
+
+## 更新元素和列表长度
+
+如果知道某个元素的位置，可以在赋值语句的左边写这个索引，直接替换该位置。`append()` 在末尾添加一项，`pop()` 默认从末尾移除一项，并返回取出的值。
+
+```python
+titles = ["地图", "诗集"]
+titles.append("游记")
+titles[0] = "图册"
+removed = titles.pop()
+
+print(removed)  # 游记
+print(titles)   # ['图册', '诗集']
+```
+
+替换索引 0 处的元素时，列表长度保持为 3。添加和移除会改变长度，`len(titles)` 可以查看改完后剩下多少项。
+
+<ConceptStepper
+  client:visible
+  label="逐步查看列表内容变化"
+  steps={[
+    {
+      code: 'titles = ["地图", "诗集"]',
+      description: "初始列表有两项，地图在索引 0，诗集在索引 1。",
+      values: [{ name: "titles", value: '["地图", "诗集"]' }],
+    },
+    {
+      code: 'titles.append("游记")',
+      description: "游记追加在末尾，原来的两项保持原来的位置。",
+      values: [{ name: "titles", value: '["地图", "诗集", "游记"]' }],
+    },
+    {
+      code: 'titles[0] = "图册"',
+      description: "把第一项换成图册，列表仍有三项。",
+      values: [{ name: "titles", value: '["图册", "诗集", "游记"]' }],
+    },
+    {
+      code: "removed = titles.pop()",
+      description: "把末尾的游记移出列表，removed 保存取出的值。",
+      values: [
+        { name: "titles", value: '["图册", "诗集"]' },
+        { name: "removed", value: '"游记"' },
+      ],
+    },
+  ]}
+/>
+
+## 用 for 逐项读取
+
+`for` 可以按顺序取出每一项。如果只需要元素，可以直接遍历列表。需要按位置访问或替换时，再用索引。
+
+```python
+titles = ["小说", "诗集"]
+for title in titles:
+    print(title)
+```
+
+这段代码会将书名依次输出，一本书占一行。
+
+## 随堂练习
+
+把第一项替换为“图册”，再把“故事”加到末尾。逐项输出更新后的书名，每项一行。三行输出依次为“图册”“诗集”和“故事”。
+
+<PythonExercise
+  client:visible
+  label="更新并输出书单"
+  starterCode={'titles = ["地图", "诗集"]\n\n# 更新书单，再逐项输出。\n'}
+  expectedOutput={"图册\n诗集\n故事"}
+/>

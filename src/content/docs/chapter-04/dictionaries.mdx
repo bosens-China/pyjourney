@@ -1,0 +1,87 @@
+---
+title: 用键读写字典
+description: 用字典表示键和值的对应关系，读取、更新并处理缺少的键。
+---
+
+import ConceptStepper from "@/components/learning/ConceptStepper";
+import QuickQuiz from "@/components/learning/QuickQuiz";
+
+字典把每个**键**与它对应的**值**放在一起。比如把“周一”当作键，把当天读的页数当作值。这样就能根据日期查到对应的页数。
+
+## 写出键和值的对应关系
+
+字典用一对花括号包住各项。每一项都写成 `键: 值`，多项之间用逗号分隔。空字典写成 `{}`。一个字典中每个键只对应一个值。
+
+```python
+pages = {"周一": 20, "周二": 18}
+print(pages["周一"])  # 20
+```
+
+这里用字符串“周一”作键。把键写在方括号里，Python 按键找到对应的值。
+
+## 更新已有键或添加新键
+
+可以把 `pages["周二"]` 写在赋值语句左边。若键已存在，赋值会替换它原来的值。若键还未出现，赋值会新增一项。
+
+```python
+pages = {"周一": 20, "周二": 18}
+pages["周二"] = 24
+pages["周三"] = 16
+print(pages)  # {'周一': 20, '周二': 24, '周三': 16}
+```
+
+字典原本有“周二”，所以这里把 18 更新为 24。“周三”是新键，于是多了一项。
+
+## 检查缺少的键
+
+直接用方括号读取缺少的键，Python 会报告 `KeyError`。用 `in` 可以检查某个键是否存在，用 `not in` 可以检查某个键是否缺失。若缺少数据时有合适的默认值，可用 `get(键, 默认值)`。
+
+```python
+pages = {"周一": 20}
+print("周二" in pages)     # False
+print(pages.get("周二", 0))  # 0
+print("周二" in pages)     # False
+```
+
+`get()` 只读取。在这个例子里，`0` 是查不到键时的结果，字典的内容保持原样。要添加“周二”这一项，仍然可以使用赋值。
+
+<ConceptStepper
+  client:visible
+  label="观察读取默认值和写入新项"
+  steps={[
+    {
+      code: 'pages = {"周一": 20}',
+      description: "字典里只有周一的记录。",
+      values: [{ name: "pages", value: '{"周一": 20}' }],
+    },
+    {
+      code: 'print(pages.get("周二", 0))',
+      description: "周二缺失，get() 取到默认值 0，字典内容保持原样。",
+      values: [{ name: "pages", value: '{"周一": 20}' }],
+      output: "0",
+    },
+    {
+      code: 'pages["周二"] = 18',
+      description: "显式赋值才会新增周二及其对应的 18 页。",
+      values: [{ name: "pages", value: '{"周一": 20, "周二": 18}' }],
+    },
+  ]}
+/>
+
+## 随堂练习
+
+判断下面两行 `print()` 分别输出什么。
+
+```python
+targets = {"散文": 10}
+print(targets.get("小说", 5))
+print("小说" in targets)
+```
+
+<QuickQuiz
+  client:visible
+  question="两行输出依次是什么？"
+  options={["5、True", "5、False", "10、False"]}
+  answerIndex={1}
+  explanation="get() 找不到小说时返回 5。读取默认值之后，字典仍然只有散文这一个键。"
+/>

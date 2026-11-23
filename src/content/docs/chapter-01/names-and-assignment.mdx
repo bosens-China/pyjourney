@@ -1,0 +1,89 @@
+---
+title: 名字与赋值
+description: 理解名字如何绑定到值，以及赋值如何更新绑定。
+---
+
+import ConceptStepper from "@/components/learning/ConceptStepper";
+import QuickQuiz from "@/components/learning/QuickQuiz";
+
+Python 用名字来引用值。给一个值起名之后，后面的代码就可以用同一个名字取得它。
+
+## 用赋值给值起名
+
+在 `count = 2` 中，左边的 `count` 是变量名，右边的 `2` 是它要指向的值。执行这条赋值语句时，Python 建立两者之间的关联。这个操作叫绑定。
+
+```python
+count = 2
+print(count)  # 2
+```
+
+运行 `print(count)` 时，Python 先找到 `count` 当前指向的整数 `2`，再把这个值交给 `print()`。在一个新脚本里，如果先运行 `print(count)`，Python 会因为找不到这个名字而报告 `NameError`。
+
+名字可以说明数据的用途。例如，`total_count` 表示总数，`previous_count` 表示前一次的计数。多个单词组成的变量名，通常用小写字母书写，并用下划线分隔单词。
+
+## 先算右边，再给左边赋值
+
+同一个名字可以再次赋值。要在现有计数上加 1，可以从等号右边读起。Python 先取出 `count` 当前指向的 `2`，算出 `2 + 1`。随后它把等号左边的 `count` 重新绑定到结果 `3`。
+
+```python
+count = 2
+count = count + 1
+print(count)  # 3
+```
+
+点“下一步”，观察每行执行后 `count` 指向的值。
+
+<ConceptStepper
+  client:visible
+  label="逐步查看 count 的值"
+  steps={[
+    {
+      code: "count = 2",
+      description: "第一行给 count 建立绑定。",
+      values: [{ name: "count", value: "2" }],
+    },
+    {
+      code: "count = count + 1",
+      description: "右边算出 3，左边的 count 随后指向 3。",
+      values: [{ name: "count", value: "3" }],
+    },
+    {
+      code: "print(count)",
+      description: "这一行读取 count 的值并输出。",
+      values: [{ name: "count", value: "3" }],
+      output: "3",
+    },
+  ]}
+/>
+
+## 两个名字可以指向同一个值
+
+`saved_count = count` 会先读取 `count` 当前指向的值，再把 `saved_count` 绑定到同一个值。此时，两个名字都指向整数 `2`。随后给 `count` 重新赋值时，`saved_count` 继续指向原来的 `2`。
+
+```python
+count = 2
+saved_count = count
+count = count + 1
+
+print(count)        # 3
+print(saved_count)  # 2
+```
+
+## 随堂练习
+
+从第一行往下读。每遇到一次赋值，记下等号左边的名字此时指向哪个值。
+
+```python
+amount = 4
+saved_amount = amount
+amount = amount + 3
+print(saved_amount + 1)
+```
+
+<QuickQuiz
+  client:visible
+  question="最后一行会输出多少？"
+  options={["4", "5", "8"]}
+  answerIndex={1}
+  explanation="第三行把 amount 重新绑定到 7，saved_amount 仍指向 4。最后一行用 4 加上 1，输出 5。"
+/>

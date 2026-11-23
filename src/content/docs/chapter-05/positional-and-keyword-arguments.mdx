@@ -1,0 +1,50 @@
+---
+title: 位置参数与关键字参数
+description: 理解调用时如何按位置或名字给参数传值。
+---
+
+import PythonExercise from "@/components/python/PythonExercise";
+
+函数定义中的参数是等待接收值的名字，也称为形参。调用时提供的值是实参。Python 根据实参的写法，判断该把值交给哪个形参。
+
+## 按位置传值
+
+`remaining(total, used)` 按顺序定义了两个参数。调用 `remaining(12, 5)` 时，第一个实参 `12` 交给 `total`，第二个实参 `5` 交给 `used`。当两个位置上的值交换时，函数会算出另一个结果。
+
+```python
+def remaining(total, used):
+    return total - used
+
+
+print(remaining(12, 5))  # 7
+print(remaining(5, 12))  # -7
+```
+
+## 按名字传值
+
+在调用处写 `total=12`，就可以直接指定参数名。关键字参数的顺序可以调整，函数仍根据名字接收值。这种写法在数字本身难以看出用途时尤其有帮助。
+
+```python
+def remaining(total, used):
+    return total - used
+
+
+print(remaining(total=12, used=5))  # 7
+print(remaining(used=5, total=12))  # 7
+print(remaining(12, used=5))        # 7
+```
+
+同一次调用中，可以先写位置参数，再写关键字参数。最后一个示例用位置决定 `total`，用名字决定 `used`。每个参数接收一个值。比如 `remaining(12, total=5)` 试图给 `total` 传两个值，Python 会报告 `TypeError`。
+
+## 随堂练习
+
+补全 `total_seconds()`，让它返回合计的秒数。编辑器里的调用把两个关键字参数反过来写，函数仍应该得到 2 分 15 秒对应的整数 `135`。
+
+<PythonExercise
+  client:visible
+  label="将分和秒合并为总秒数"
+  starterCode={
+    "def total_seconds(minutes, seconds):\n    # 用 minutes 和 seconds 计算总秒数。\n    return 0\n\n\nprint(total_seconds(seconds=15, minutes=2))\n"
+  }
+  expectedOutput="135"
+/>

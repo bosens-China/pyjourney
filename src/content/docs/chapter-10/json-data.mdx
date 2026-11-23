@@ -1,0 +1,70 @@
+---
+title: 用 JSON 保存和读取结构化数据
+description: 在 Python 数据和 JSON 文本之间转换，并把结果保存到文件。
+---
+
+import PythonExercise from "@/components/python/PythonExercise";
+
+一份设置常常包含多个字段，每个字段都有自己的类型。例如，显示语言是一段文本，提醒开关是一个布尔值。JSON 可以把这些字段表示成文本，便于存到文件或交给其他程序读取。Python 的标准库 `json` 提供了转换方法。
+
+## 在 Python 数据和 JSON 文本之间转换
+
+```python
+import json
+
+settings = {"language": "中文", "alerts": True, "limit": None}
+text = json.dumps(settings, ensure_ascii=False)
+print(text)
+
+restored = json.loads(text)
+print(restored["alerts"])
+```
+
+输出如下。
+
+```text
+{"language": "中文", "alerts": true, "limit": null}
+True
+```
+
+`json.dumps()` 接受 Python 数据，生成 JSON 字符串。`json.loads()` 接受 JSON 字符串，还原其中的数据。这里的字典转换成 JSON 对象，`True` 转换成 `true`，`None` 转换成 `null`。读取时，`json.loads()` 把它们转换回对应的 Python 值。
+
+`ensure_ascii=False` 会让“中文”这样的字符直接出现在生成的文本里。如果把 JSON 写入文件，仍然可以用 `encoding="utf-8"` 指定文件编码。
+
+## 把 JSON 写入文件，再读回来
+
+```python
+import json
+from pathlib import Path
+
+path = Path("chapter10-settings.json")
+
+with path.open("w", encoding="utf-8") as target:
+    json.dump({"language": "中文", "alerts": True}, target, ensure_ascii=False, indent=2)
+
+with path.open("r", encoding="utf-8") as source:
+    settings = json.load(source)
+
+print(settings["language"])  # 中文
+```
+
+已经有打开的文件对象时，可以用 `json.dump()` 写入，用 `json.load()` 读取。`indent=2` 让写出的 JSON 分行并缩进，方便人工查看。
+
+## 区分格式错误与字段缺失
+
+JSON 文本损坏时，`json.load()` 或 `json.loads()` 会引发 `json.JSONDecodeError`。读取成功只表示文本符合 JSON 格式。字段和类型是否满足程序的要求，仍要根据数据用途判断。
+
+例如，`json.loads("42")` 得到整数 `42`。如果程序期望得到一份设置字典，就需要在访问字段之前确认它拿到的是字典。打开文件时的 `FileNotFoundError` 也有自己的处理路径。
+
+## 随堂练习
+
+把编辑器中的字典转换成一行 JSON 并输出，保留“本周计划”的中文字符。输出应为 `{"title": "本周计划", "done": false}`。
+
+<PythonExercise
+  client:visible
+  label="输出 JSON 文本"
+  starterCode={
+    'import json\n\nplan = {"title": "本周计划", "done": False}\n# 调用 json.dumps()，再输出生成的文本。'
+  }
+  expectedOutput={'{"title": "本周计划", "done": false}'}
+/>

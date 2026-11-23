@@ -1,0 +1,63 @@
+---
+title: 用集合去重和检查成员
+description: 用集合记录互不重复的元素，判断是否出现，并比较两组数据。
+---
+
+import QuickQuiz from "@/components/learning/QuickQuiz";
+
+集合保存一组互不重复的元素，可以用来检查某个值是否存在。比如把已经读完的书名放入集合，之后就能检查某本书是否读完。
+
+## 创建集合并检查元素
+
+用 `set()` 创建空集合。已经有元素时，也可以写成 `{"散文", "诗集"}`。同一个元素在集合中只出现一次。用 `in` 检查某个元素是否在集合里，用 `add()` 添加元素。
+
+```python
+finished = {"散文", "诗集", "散文"}
+print(len(finished))         # 2
+finished.add("游记")
+print("游记" in finished)    # True
+```
+
+`{}` 会创建空字典，空集合从 `set()` 开始。集合中的元素没有固定位置。需要按固定顺序输出时，可以把元素的先后顺序交给列表或原始记录。
+
+## 找共同项和剩余项
+
+用 `&` 取两个集合的交集，结果是共同拥有的元素。用 `-` 取差集，结果是左边有而右边没有的元素。
+
+```python
+planned = {"散文", "小说", "游记"}
+finished = {"散文", "科幻"}
+
+print(len(planned & finished))          # 1
+print("小说" in (planned - finished))    # True
+```
+
+`planned & finished` 只有“散文”。`planned - finished` 表示计划内还没读完的书，包含“小说”和“游记”。写差集时，先确定要从哪一组中减去另一组。
+
+## 去重时保留首次出现的顺序
+
+遍历原来的列表，用集合记住之前见过的书名。第一次见到一个书名，就把它加入集合并输出。输出顺序由列表的遍历顺序决定。
+
+```python
+titles = ["散文", "诗集", "散文", "游记"]
+seen = set()
+
+for title in titles:
+    if title not in seen:
+        seen.add(title)
+        print(title)
+```
+
+这段代码依次输出“散文”“诗集”和“游记”。第二次遇到“散文”时，`seen` 已经有这个书名。
+
+## 随堂练习
+
+`planned = {"小说", "诗集", "游记"}`，`finished = {"诗集", "散文"}`。用集合运算找出计划内还没读完的书。
+
+<QuickQuiz
+  client:visible
+  question="哪个表达式得到小说和游记？"
+  options={["planned & finished", "finished - planned", "planned - finished"]}
+  answerIndex={2}
+  explanation="从 planned 中减去 finished，留下计划内尚未读完的书。"
+/>

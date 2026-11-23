@@ -1,0 +1,65 @@
+---
+title: 类型标注
+description: 用参数、返回值和容器标注表达代码预期使用的类型。
+---
+
+import QuickQuiz from "@/components/learning/QuickQuiz";
+
+类型标注把代码对数据的预期写了出来。读函数定义时，可以直接看出参数适合传什么，以及调用后会得到什么类型的结果。
+
+## 标注参数和返回值
+
+在参数名后写 `: 类型`，在参数列表后写 `-> 类型`，分别标注参数和返回值。下面的函数接收两个整数，返回相加的结果。
+
+```python
+def add(left: int, right: int) -> int:
+    return left + right
+
+
+print(add(3, 4))  # 7
+```
+
+`left: int` 表示调用者应为 `left` 传入整数。`-> int` 表示调用者可以把返回值当作整数使用。编辑器和类型检查工具也可以利用这些信息提示用法。
+
+## 标注容器和可能缺失的值
+
+`list[str]` 表示元素预期都是字符串的列表。`str | None` 表示值可以是字符串，也可以是 `None`。
+
+```python
+def first_label(labels: list[str]) -> str | None:
+    if labels:
+        return labels[0]
+    return None
+
+
+print(first_label(["重点", "例题"]))  # 重点
+print(first_label([]))               # None
+```
+
+这里 `labels` 总是一个列表。列表有元素时，函数返回第一个字符串。空列表对应另一个结果，所以返回值标注也写出了 `None`。
+
+## 区分标注和运行时检查
+
+Python 执行代码时，会按实际传入的值做运算。比如下面的函数标注期望整数，此时对字符串应用 `*`，执行的是字符串重复。
+
+```python
+def double(value: int) -> int:
+    return value * 2
+
+
+print(double("A"))  # AA
+```
+
+类型检查工具可以指出这里传入的参数与标注不一致。若函数需要在运行时验证外部传入的数据，应在函数里明确写出相应的条件和错误处理。
+
+## 随堂练习
+
+一个函数的参数可以接收一组标签，也可以用 `None` 表示尚未提供标签。每个标签都是字符串。
+
+<QuickQuiz
+  client:visible
+  question="哪个标注能表达这两种输入？"
+  options={["list[str] | None", "list[int]", "str | None"]}
+  answerIndex={0}
+  explanation="list[str] 描述字符串列表，| None 再把缺失值包含进来。"
+/>

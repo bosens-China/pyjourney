@@ -1,0 +1,67 @@
+---
+title: 按顺序解包
+description: 用一条赋值语句取出序列中的各项，并在循环中解包成对的数据。
+---
+
+import QuickQuiz from "@/components/learning/QuickQuiz";
+
+当列表或元组里每个位置都有明确的含义，可以在赋值语句左边写多个名字。Python 按右边元素的顺序，依次绑定左边的名字。这个过程叫解包。
+
+## 取出列表或元组中的值
+
+下面的元组保存宽和高。左边第一个名字取得 `8`，第二个名字取得 `3`。左右顺序应与数据本身的含义一致。
+
+```python
+size = (8, 3)
+width, height = size
+
+print(width)   # 8
+print(height)  # 3
+```
+
+普通解包要求元素数量等于左边的名字数量。如果把这个元组解包给三个名字，Python 会报告 `ValueError`。当数据固定是两个元素时，可以直接给它们各起一个名字。
+
+## 交换两个名字指向的值
+
+普通赋值先求右边的值。下面的语句先取得 `right` 和 `left` 当时的两个值，再按顺序赋给左边，因此可以在一行内交换位置。
+
+```python
+left = "A"
+right = "B"
+left, right = right, left
+
+print(left)   # B
+print(right)  # A
+```
+
+## 在循环里解包
+
+循环也可以每轮给多个名字赋值。当列表的每一项都是两个元素组成的元组时，循环会先取出整组，再分别绑定这两个名字。
+
+```python
+dimensions = [(2, 3), (4, 5)]
+
+for width, height in dimensions:
+    print(width * height)
+```
+
+这段程序依次输出 `6` 和 `20`。通过解包，循环体可以直接使用宽和高。
+
+## 随堂练习
+
+跟踪解包后每个名字指向哪个值，再判断输出。
+
+```python
+pair = (9, 4)
+first, second = pair
+second, first = first, second
+print(first - second)
+```
+
+<QuickQuiz
+  client:visible
+  question="最后一行输出什么？"
+  options={["5", "-5", "13"]}
+  answerIndex={1}
+  explanation="解包后 first 是 9，second 是 4。交换后 first 是 4，second 是 9，所以输出 -5。"
+/>

@@ -1,0 +1,58 @@
+---
+title: 用 while 重复，按条件停止
+description: 用 while 检查循环条件，再用 break 和 continue 控制退出与跳过。
+---
+
+import PythonExercise from "@/components/python/PythonExercise";
+
+`while` 在每轮开始前检查条件。条件成立就执行这一轮，执行完再检查一次。条件不成立时，程序跳到循环之后。开始时就不满足条件，循环体会执行零次。
+
+## 让每一轮都朝停止条件推进
+
+假设还有 6 页没读，每轮读 2 页，就可以让循环一直处理到剩余页数为 0。
+
+```python
+pages_left = 6
+while pages_left > 0:
+    pages_left = pages_left - 2
+    print(pages_left)
+```
+
+第一轮把剩余页数从 6 改为 4，随后两轮分别得到 2 和 0。每轮都会更新参与判断的 `pages_left`，最终条件变为假。写完 `while` 后，可以从初始值推演一遍，确认循环能结束。
+
+## 用 break 提前结束
+
+碰到停止条件时，可以在循环体内用 `break`。执行到 `break` 后，当前循环就结束，剩余轮次会直接跳过。`for` 和 `while` 都支持 `break`。
+
+```python
+for day in range(1, 6):
+    if day == 4:
+        break
+    print(day)
+```
+
+这段代码输出 1、2、3。检查到第 4 天时，先执行了 `break`，第 4 天和后面的第 5 天都跳过。
+
+## 用 continue 跳过当前一轮
+
+如果只想跳过当前这一轮，可以用 `continue`。在 `for` 循环中，程序会取下一个元素。在 `while` 循环中，程序会重新检查条件。
+
+```python
+for day in range(1, 6):
+    if day == 4:
+        continue
+    print(day)
+```
+
+这次输出 1、2、3、5。第 4 天跳过了 `print(day)`，循环继续处理第 5 天。若在 `while` 里用 `continue`，要确认跳过的部分里有没有推进循环条件的更新。
+
+## 随堂练习
+
+从编辑器提供的 9 页开始，每轮读 3 页。每轮更新剩余页数后输出一次。读完就停止，三行输出应依次为 `6`、`3`、`0`。
+
+<PythonExercise
+  client:visible
+  label="输出每轮剩下的页数"
+  starterCode={"pages_left = 9\n\n# 用 while 循环更新并输出剩余页数。\n"}
+  expectedOutput={"6\n3\n0"}
+/>
