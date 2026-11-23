@@ -5,6 +5,8 @@ import tailwindcss from "@tailwindcss/vite";
 import { chapters } from "./src/data/chapters.ts";
 
 export default defineConfig({
+  site: process.env.PYJOURNEY_SITE,
+  base: process.env.PYJOURNEY_BASE ?? "/",
   integrations: [
     starlight({
       title: "Python 漫游指南",

@@ -13,6 +13,7 @@ export function getStaticPaths() {
 const { chapter } = Astro.props;
 const { challenge, lessons } = chapter;
 const previousLesson = lessons.at(-1);
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const sample = challenge.cases[0];
 ---
 
@@ -31,9 +32,7 @@ const sample = challenge.cases[0];
       <div class="chapter-context">
         <p>{chapter.label}</p>
         {previousLesson && (
-          <a href={`${import.meta.env.BASE_URL}${previousLesson.slug}/`}>
-            返回本章小节
-          </a>
+          <a href={`${base}/${previousLesson.slug}/`}>返回本章小节</a>
         )}
       </div>
       <p>{challenge.description}</p>
