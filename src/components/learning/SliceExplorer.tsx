@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import ActionButton from "@/components/ui/ActionButton";
+import { Button } from "@/components/ui/button";
 import Diagram, { sliceIndices, type SliceDiagram } from "./Diagram";
+import { Card } from "@/components/ui/card";
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from "@/components/ui/native-select";
 
 type Slice = NonNullable<SliceDiagram["slice"]>;
 type Mode = "explore" | "bounds" | "characters";
@@ -73,39 +78,37 @@ function Bounds({
       {bounds.map(({ label, value, update }) => (
         <label key={label} className="grid gap-1 text-sm font-medium">
           {label}
-          <select
-            className="min-h-11 rounded-md border border-rp-line bg-rp-surface px-3 text-rp-text focus-visible:outline-2 focus-visible:outline-rp-brand"
+          <NativeSelect
             value={value ?? ""}
             onChange={(event) => {
               const choice = event.currentTarget.value;
               onChange(update(choice === "" ? null : Number(choice)));
             }}
           >
-            <option value="">省略</option>
+            <NativeSelectOption value="">省略</NativeSelectOption>
             {positions.map((position) => (
-              <option key={position} value={position}>
+              <NativeSelectOption key={position} value={position}>
                 {position}
-              </option>
+              </NativeSelectOption>
             ))}
-          </select>
+          </NativeSelect>
         </label>
       ))}
       {showStep && (
         <label className="grid gap-1 text-sm font-medium">
           步长 step
-          <select
-            className="min-h-11 rounded-md border border-rp-line bg-rp-surface px-3 text-rp-text focus-visible:outline-2 focus-visible:outline-rp-brand"
+          <NativeSelect
             value={step ?? 1}
             onChange={(event) =>
               onChange([start, stop, Number(event.currentTarget.value)])
             }
           >
             {[-3, -2, -1, 1, 2, 3].map((choice) => (
-              <option key={choice} value={choice}>
+              <NativeSelectOption key={choice} value={choice}>
                 {choice}
-              </option>
+              </NativeSelectOption>
             ))}
-          </select>
+          </NativeSelect>
         </label>
       )}
     </div>
@@ -157,166 +160,168 @@ export default function SliceExplorer() {
     : result === target;
 
   return (
-    <section
-      className="rp-not-doc my-6 grid min-w-0 gap-4 rounded-xl border border-rp-line bg-rp-surface p-4 text-rp-text sm:p-6"
-      aria-label="探索字符串切片"
-    >
-      <div
-        className="flex flex-wrap gap-2"
-        role="group"
-        aria-label="选择切片活动"
-      >
-        <ActionButton
-          primary={isExplore}
-          aria-pressed={isExplore}
-          onClick={() => changeMode("explore")}
-        >
-          自由探索
-        </ActionButton>
-        <ActionButton
-          primary={!isExplore}
-          aria-pressed={!isExplore}
-          onClick={startPractice}
-        >
-          试一试
-        </ActionButton>
-      </div>
-
-      {isExplore ? (
-        <>
-          <p className="text-sm text-rp-muted">
-            调整起点、终点和步长，观察切片按什么顺序取字符。
-          </p>
-          <div
-            className="flex flex-wrap gap-2"
-            role="group"
-            aria-label="切片示例"
-          >
-            {examples.map((example) => (
-              <ActionButton
-                key={example.label}
-                aria-pressed={note === example.note}
-                onClick={() => {
-                  setExplore(example.slice);
-                  setNote(example.note);
-                }}
-              >
-                {example.label}
-              </ActionButton>
-            ))}
-          </div>
-          <Bounds
-            slice={explore}
-            showStep
-            onChange={(next) => {
-              setExplore(next);
-              setNote(null);
-            }}
-          />
-        </>
-      ) : (
-        <h3 ref={heading} tabIndex={-1} className="font-semibold">
-          {isTransfer
-            ? "2 / 2 · 选出切片取得的字符"
-            : "1 / 2 · 从 Python 中取出 yth"}
-        </h3>
-      )}
-
-      {!isExplore && !isTransfer && (
-        <Bounds
-          slice={trial}
-          onChange={(next) => {
-            setTrial(next);
-            setChecked(false);
-          }}
-        />
-      )}
-
-      <div className="grid gap-2" aria-live={isExplore ? "polite" : undefined}>
-        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 font-rp-mono text-sm">
-          <code>word = {JSON.stringify(items.join(""))}</code>
-          <code>{expression(slice)}</code>
-          {isExplore && <samp>结果：{JSON.stringify(result)}</samp>}
-        </div>
-        {isExplore && picked.length > 0 && (
-          <p className="text-sm text-rp-muted">
-            依次取出下标 <code>{picked.join(" → ")}</code>
-          </p>
-        )}
-        {isExplore && note && <p className="text-sm text-rp-muted">{note}</p>}
-        {isExplore || checked ? (
-          <Diagram
-            diagram={{ kind: "slice", items, slice, showBounds: true }}
-          />
-        ) : !isTransfer ? (
-          <Diagram diagram={{ kind: "slice", items }} />
-        ) : null}
-      </div>
-
-      {isTransfer && (
+    <Card asChild className="my-6">
+      <section aria-label="探索字符串切片">
         <div
           className="flex flex-wrap gap-2"
           role="group"
-          aria-label="选择结果中的字符"
+          aria-label="选择切片活动"
         >
-          {items.map((item, index) => {
-            const pressed = selected.includes(index);
-            return (
-              <ActionButton
-                key={index}
-                primary={pressed}
-                aria-label={`下标 ${index}，字符 ${item}`}
-                aria-pressed={pressed}
-                className="min-h-11 min-w-11 font-rp-mono"
-                onClick={() => {
-                  setSelected((previous) =>
-                    previous.includes(index)
-                      ? previous.filter((position) => position !== index)
-                      : [...previous, index],
-                  );
-                  setChecked(false);
-                }}
-              >
-                {index} · {item}
-              </ActionButton>
-            );
-          })}
+          <Button
+            variant={isExplore ? "default" : "outline"}
+            aria-pressed={isExplore}
+            onClick={() => changeMode("explore")}
+          >
+            自由探索
+          </Button>
+          <Button
+            variant={!isExplore ? "default" : "outline"}
+            aria-pressed={!isExplore}
+            onClick={startPractice}
+          >
+            试一试
+          </Button>
         </div>
-      )}
 
-      {!isExplore && (
-        <>
-          <div className="flex flex-wrap gap-2">
-            <ActionButton primary onClick={() => setChecked(true)}>
-              检查
-            </ActionButton>
-            {checked && correct && (
-              <ActionButton
-                onClick={
-                  isTransfer ? startPractice : () => changeMode("characters")
-                }
-              >
-                {isTransfer ? "再练一次" : "下一题"}
-              </ActionButton>
-            )}
+        {isExplore ? (
+          <>
+            <p className="text-sm text-rp-muted">
+              调整起点、终点和步长，观察切片按什么顺序取字符。
+            </p>
+            <div
+              className="flex flex-wrap gap-2"
+              role="group"
+              aria-label="切片示例"
+            >
+              {examples.map((example) => (
+                <Button
+                  variant="outline"
+                  key={example.label}
+                  aria-pressed={note === example.note}
+                  onClick={() => {
+                    setExplore(example.slice);
+                    setNote(example.note);
+                  }}
+                >
+                  {example.label}
+                </Button>
+              ))}
+            </div>
+            <Bounds
+              slice={explore}
+              showStep
+              onChange={(next) => {
+                setExplore(next);
+                setNote(null);
+              }}
+            />
+          </>
+        ) : (
+          <h3 ref={heading} tabIndex={-1} className="font-semibold">
+            {isTransfer
+              ? "2 / 2 · 选出切片取得的字符"
+              : "1 / 2 · 从 Python 中取出 yth"}
+          </h3>
+        )}
+
+        {!isExplore && !isTransfer && (
+          <Bounds
+            slice={trial}
+            onChange={(next) => {
+              setTrial(next);
+              setChecked(false);
+            }}
+          />
+        )}
+
+        <div
+          className="grid gap-2"
+          aria-live={isExplore ? "polite" : undefined}
+        >
+          <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 font-rp-mono text-sm">
+            <code>word = {JSON.stringify(items.join(""))}</code>
+            <code>{expression(slice)}</code>
+            {isExplore && <samp>结果：{JSON.stringify(result)}</samp>}
           </div>
-          <div role="status">
-            {checked && (
-              <p className="rounded-md bg-rp-soft px-3 py-2 text-sm">
-                <strong>{correct ? "答对了。" : "再试一次。"}</strong>{" "}
-                <span>
-                  实际结果是 <samp>{JSON.stringify(result)}</samp>。
-                </span>{" "}
-                {isTransfer
-                  ? "从下标 2 的 n 开始，停在最后一个 a 前面。"
-                  : correct
-                    ? "起点在 y 前面，终点在 o 前面。"
-                    : boundsHint(slice, picked)}
-              </p>
-            )}
+          {isExplore && picked.length > 0 && (
+            <p className="text-sm text-rp-muted">
+              依次取出下标 <code>{picked.join(" → ")}</code>
+            </p>
+          )}
+          {isExplore && note && <p className="text-sm text-rp-muted">{note}</p>}
+          {isExplore || checked ? (
+            <Diagram
+              diagram={{ kind: "slice", items, slice, showBounds: true }}
+            />
+          ) : !isTransfer ? (
+            <Diagram diagram={{ kind: "slice", items }} />
+          ) : null}
+        </div>
+
+        {isTransfer && (
+          <div
+            className="flex flex-wrap gap-2"
+            role="group"
+            aria-label="选择结果中的字符"
+          >
+            {items.map((item, index) => {
+              const pressed = selected.includes(index);
+              return (
+                <Button
+                  key={index}
+                  variant={pressed ? "default" : "outline"}
+                  aria-label={`下标 ${index}，字符 ${item}`}
+                  aria-pressed={pressed}
+                  className="min-h-11 min-w-11 font-rp-mono"
+                  onClick={() => {
+                    setSelected((previous) =>
+                      previous.includes(index)
+                        ? previous.filter((position) => position !== index)
+                        : [...previous, index],
+                    );
+                    setChecked(false);
+                  }}
+                >
+                  {index} · {item}
+                </Button>
+              );
+            })}
           </div>
-        </>
-      )}
-    </section>
+        )}
+
+        {!isExplore && (
+          <>
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={() => setChecked(true)}>检查</Button>
+              {checked && correct && (
+                <Button
+                  variant="outline"
+                  onClick={
+                    isTransfer ? startPractice : () => changeMode("characters")
+                  }
+                >
+                  {isTransfer ? "再练一次" : "下一题"}
+                </Button>
+              )}
+            </div>
+            <div role="status">
+              {checked && (
+                <p className="rounded-md bg-rp-soft px-3 py-2 text-sm">
+                  <strong>{correct ? "答对了。" : "再试一次。"}</strong>{" "}
+                  <span>
+                    实际结果是 <samp>{JSON.stringify(result)}</samp>。
+                  </span>{" "}
+                  {isTransfer
+                    ? "从下标 2 的 n 开始，停在最后一个 a 前面。"
+                    : correct
+                      ? "起点在 y 前面，终点在 o 前面。"
+                      : boundsHint(slice, picked)}
+                </p>
+              )}
+            </div>
+          </>
+        )}
+      </section>
+    </Card>
   );
 }

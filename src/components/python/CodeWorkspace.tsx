@@ -1,12 +1,21 @@
+import { ChevronDown } from "lucide-react";
 import { useEffect, useId, useState } from "react";
-import ActionButton from "@/components/ui/ActionButton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import type {
   PythonCase,
   PythonCheck,
   PythonResult,
 } from "@/lib/python/protocol";
 import { usePythonRunner } from "@/lib/python/usePythonRunner";
+import PythonCode from "./PythonCode";
 import PythonEditor from "./PythonEditor";
+import { Card } from "@/components/ui/card";
 
 type Props = {
   starterCode: string;
@@ -91,7 +100,7 @@ function CaseResult({
       {check && !success && test.expectedOutput !== undefined && (
         <div className="grid gap-1.5">
           <span className="text-amber-800 dark:text-amber-300">预期输出</span>
-          <pre className={outputCode}>{test.expectedOutput}</pre>
+          <pre className={outputCode}>{test.expectedOutput || "无输出"}</pre>
         </div>
       )}
     </li>
@@ -212,108 +221,123 @@ export default function CodeWorkspace({
   }
 
   return (
-    <section
-      className={`rp-not-doc min-w-0 overflow-hidden rounded-xl border border-rp-line bg-rp-surface text-rp-text ${chapter ? "" : "my-6"}`}
-      aria-label={label}
+    <Card
+      asChild
+      className={`gap-0 overflow-hidden p-0 sm:p-0 ${chapter ? "" : "my-6"}`}
     >
-      <div className="min-w-0">
-        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 border-b border-rp-line px-4 py-3 text-sm">
-          <strong>{label}</strong>
-          <span className="font-rp-mono text-xs text-rp-muted">Python</span>
-        </div>
-        <PythonEditor code={code} onChange={setCode} />
-        <div className="flex flex-wrap gap-2 border-t border-rp-line px-4 py-3">
-          <ActionButton
-            primary={!chapter}
-            disabled={!ready || busy}
-            onClick={() => execute(false)}
-          >
-            {chapter ? "运行示例" : "运行代码"}
-          </ActionButton>
-          {chapter && cases.length > 0 && (
-            <ActionButton
-              primary
-              disabled={!ready || busy}
-              onClick={() => execute(true)}
-            >
-              检查答案
-            </ActionButton>
-          )}
-          {busy ? (
-            <ActionButton onClick={stop}>停止</ActionButton>
-          ) : (
-            <ActionButton disabled={code === starterCode} onClick={restore}>
-              重置代码
-            </ActionButton>
-          )}
-        </div>
-      </div>
-      <div
-        className="grid gap-2 border-t border-rp-line px-4 py-3 text-sm text-rp-muted"
-        role="region"
-        aria-labelledby={resultHeadingId}
-        aria-live="polite"
-      >
-        <p id={resultHeadingId} className="font-semibold text-rp-text">
-          运行结果
-        </p>
-        {state.phase === "idle" && <p>运行代码后，输出会出现在这里。</p>}
-        {state.phase === "loading" && <p>正在加载 Python 环境⋯⋯</p>}
-        {state.phase === "running" && <p>正在执行代码⋯⋯</p>}
-        {state.phase === "error" && (
-          <p className="font-semibold text-red-700 dark:text-red-300">
-            {state.message}
-          </p>
-        )}
-        {showResults && (
-          <>
-            {execution.check && (
-              <Summary
-                chapter={chapter}
-                passedCases={
-                  state.results.filter((result, index) =>
-                    passed(result, execution.cases[index]),
-                  ).length
-                }
-                totalCases={execution.cases.length}
-                checks={execution.checks.length ? state.checks : []}
-              />
-            )}
-            <ul className="grid gap-2.5">
-              {state.results.map((result, index) => (
-                <CaseResult
-                  key={index}
-                  result={result}
-                  test={execution.cases[index]}
-                  check={execution.check}
-                />
-              ))}
-            </ul>
-            <CheckResults checks={execution.checks} outcome={state.checks} />
-          </>
-        )}
-        {state.phase === "complete" && !showResults && (
-          <p>代码已更改，请重新运行。</p>
-        )}
-      </div>
-      {solution && (
-        <details className="border-t border-rp-line px-4 py-3 text-sm">
-          <summary className="cursor-pointer font-semibold text-rp-text">
-            查看参考答案
-          </summary>
-          <div className="mt-3 grid gap-2.5">
-            <pre className={outputCode}>{solution}</pre>
-            <div>
-              <ActionButton
-                disabled={!ready || busy || code === solution}
-                onClick={() => setCode(solution)}
-              >
-                放进编辑器
-              </ActionButton>
-            </div>
+      <section aria-label={label}>
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 border-b border-rp-line px-4 py-3 text-sm">
+            <strong>{label}</strong>
+            <span className="font-rp-mono text-xs text-rp-muted">Python</span>
           </div>
-        </details>
-      )}
-    </section>
+          <PythonEditor code={code} onChange={setCode} />
+          <div className="flex flex-wrap gap-2 border-t border-rp-line px-4 py-3">
+            <Button
+              variant={!chapter ? "default" : "outline"}
+              disabled={!ready || busy}
+              onClick={() => execute(false)}
+            >
+              {chapter ? "运行示例" : "运行代码"}
+            </Button>
+            {chapter && cases.length > 0 && (
+              <Button disabled={!ready || busy} onClick={() => execute(true)}>
+                检查答案
+              </Button>
+            )}
+            {busy ? (
+              <Button variant="outline" onClick={stop}>
+                停止
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                disabled={code === starterCode}
+                onClick={restore}
+              >
+                重置代码
+              </Button>
+            )}
+          </div>
+        </div>
+        <div
+          className="grid gap-2 border-t border-rp-line px-4 py-3 text-sm text-rp-muted"
+          role="region"
+          aria-labelledby={resultHeadingId}
+          aria-live="polite"
+        >
+          <p id={resultHeadingId} className="font-semibold text-rp-text">
+            运行结果
+          </p>
+          {state.phase === "idle" && <p>运行代码后，输出会出现在这里。</p>}
+          {state.phase === "loading" && <p>正在加载 Python 环境⋯⋯</p>}
+          {state.phase === "running" && <p>正在执行代码⋯⋯</p>}
+          {state.phase === "error" && (
+            <Alert role={undefined} variant="destructive">
+              <AlertDescription>{state.message}</AlertDescription>
+            </Alert>
+          )}
+          {showResults && (
+            <>
+              {execution.check && (
+                <Summary
+                  chapter={chapter}
+                  passedCases={
+                    state.results.filter((result, index) =>
+                      passed(result, execution.cases[index]),
+                    ).length
+                  }
+                  totalCases={execution.cases.length}
+                  checks={execution.checks.length ? state.checks : []}
+                />
+              )}
+              <ul className="grid gap-2.5">
+                {state.results.map((result, index) => (
+                  <CaseResult
+                    key={index}
+                    result={result}
+                    test={execution.cases[index]}
+                    check={execution.check}
+                  />
+                ))}
+              </ul>
+              <CheckResults checks={execution.checks} outcome={state.checks} />
+            </>
+          )}
+          {state.phase === "complete" && !showResults && (
+            <p>代码已更改，请重新运行。</p>
+          )}
+        </div>
+        {solution && (
+          <Collapsible className="border-t border-border px-4 py-2 text-sm">
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" className="group w-full justify-between">
+                查看参考答案
+                <ChevronDown
+                  aria-hidden="true"
+                  className="text-muted-foreground transition-transform group-data-[state=open]:rotate-180"
+                />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="grid gap-2.5 pt-2 pb-1">
+                <pre className={outputCode}>
+                  <PythonCode code={solution} />
+                </pre>
+                <div>
+                  <Button
+                    variant="outline"
+                    disabled={!ready || busy || code === solution}
+                    onClick={() => setCode(solution)}
+                  >
+                    放进编辑器
+                  </Button>
+                </div>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        )}
+      </section>
+    </Card>
   );
 }

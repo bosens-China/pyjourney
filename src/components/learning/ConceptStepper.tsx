@@ -1,6 +1,8 @@
 import { useEffect, useId, useState } from "react";
 import Diagram, { type DiagramSpec } from "@/components/learning/Diagram";
-import ActionButton from "@/components/ui/ActionButton";
+import PythonCode from "@/components/python/PythonCode";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 interface Step {
   code: string;
@@ -13,9 +15,14 @@ interface Step {
 interface ConceptStepperProps {
   label: string;
   steps: Step[];
+  language?: "python" | "text";
 }
 
-export default function ConceptStepper({ label, steps }: ConceptStepperProps) {
+export default function ConceptStepper({
+  label,
+  steps,
+  language = "python",
+}: ConceptStepperProps) {
   const headingId = useId();
   const [ready, setReady] = useState(false);
   const [index, setIndex] = useState(0);
@@ -54,79 +61,86 @@ export default function ConceptStepper({ label, steps }: ConceptStepperProps) {
   }
 
   return (
-    <figure
-      className="rp-not-doc my-6 grid min-w-0 gap-4 rounded-xl border border-rp-line bg-rp-surface p-4 sm:p-6"
-      aria-labelledby={headingId}
-    >
-      <figcaption className="flex flex-wrap items-center justify-between gap-2">
-        <span id={headingId} className="font-semibold text-rp-text">
-          {label}
-        </span>
-        <span className="rounded-md bg-rp-tint px-2 py-0.5 font-rp-mono text-xs whitespace-nowrap text-rp-text">
-          {index + 1} / {steps.length}
-        </span>
-      </figcaption>
-      <div key={index} className="grid min-w-0 gap-2">
-        <pre
-          className="overflow-x-auto rounded-lg border border-rp-line bg-rp-soft px-3 py-2 font-rp-mono text-sm focus-visible:outline-2 focus-visible:outline-rp-brand"
-          tabIndex={0}
-          aria-label="当前步骤的代码"
-        >
-          <code>{step.code}</code>
-        </pre>
-      </div>
-      {step.diagram && <Diagram diagram={step.diagram} />}
-      <div className="grid min-w-0 gap-2 empty:hidden">
-        {!!step.values?.length && (
-          <dl className="grid min-w-0 gap-1.5" aria-label="当前变量">
-            {step.values.map(({ name, value }) => (
-              <div
-                className="flex min-w-0 items-baseline gap-2 rounded-lg border border-rp-line px-3 py-1.5 font-rp-mono text-sm wrap-anywhere"
-                key={name}
-              >
-                <dt className="text-rp-brand">
-                  <code>{name}</code>
-                </dt>
-                <dd className="flex min-w-0 items-baseline gap-2">
-                  <span aria-hidden="true">→</span>
-                  <code>{value}</code>
-                </dd>
-              </div>
-            ))}
-          </dl>
-        )}
-        {step.output !== undefined && (
-          <div className="grid min-w-0 gap-2 text-sm text-rp-muted">
-            <span>输出</span>
-            <pre className="overflow-x-auto rounded-lg border border-rp-line bg-rp-soft px-3 py-2 font-rp-mono text-sm focus-visible:outline-2 focus-visible:outline-rp-brand">
-              <samp>{step.output}</samp>
-            </pre>
-          </div>
-        )}
-      </div>
-      <p role="status" className="text-sm text-rp-muted">
-        {step.description}
-      </p>
-      <div className="flex flex-wrap gap-2">
-        <ActionButton
-          onClick={() => goTo(index - 1)}
-          disabled={!ready || index === 0}
-        >
-          上一步
-        </ActionButton>
-        <ActionButton
-          primary
-          onClick={() => goTo(index + 1)}
-          disabled={!ready || index === lastIndex}
-        >
-          下一步
-        </ActionButton>
-        {lastIndex > 0 && (
-          <ActionButton onClick={togglePlayback} disabled={!ready}>
-            {playing ? "暂停" : index === lastIndex ? "重新播放" : "播放"}
-          </ActionButton>
-        )}
-      </div>
-    </figure>
+    <Card asChild className="my-6">
+      <figure aria-labelledby={headingId}>
+        <figcaption className="flex flex-wrap items-center justify-between gap-2">
+          <span id={headingId} className="font-semibold text-rp-text">
+            {label}
+          </span>
+          <span className="rounded-md bg-rp-tint px-2 py-0.5 font-rp-mono text-xs whitespace-nowrap text-rp-text">
+            {index + 1} / {steps.length}
+          </span>
+        </figcaption>
+        <div key={index} className="grid min-w-0 gap-2">
+          <pre
+            className="overflow-x-auto rounded-lg border border-rp-line bg-rp-soft px-3 py-2 font-rp-mono text-sm focus-visible:outline-2 focus-visible:outline-rp-brand"
+            tabIndex={0}
+            aria-label="当前步骤的代码"
+          >
+            {language === "python" ? (
+              <PythonCode code={step.code} />
+            ) : (
+              <code>{step.code}</code>
+            )}
+          </pre>
+        </div>
+        {step.diagram && <Diagram diagram={step.diagram} />}
+        <div className="grid min-w-0 gap-2 empty:hidden">
+          {!!step.values?.length && (
+            <dl className="grid min-w-0 gap-1.5" aria-label="当前变量">
+              {step.values.map(({ name, value }) => (
+                <div
+                  className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1 rounded-lg border border-rp-line px-3 py-1.5 font-rp-mono text-sm wrap-anywhere"
+                  key={name}
+                >
+                  <dt className="max-w-full shrink-0 text-rp-brand">
+                    <code>{name}</code>
+                  </dt>
+                  <dd className="flex min-w-0 max-w-full items-baseline gap-2">
+                    <span aria-hidden="true">→</span>
+                    <code>{value}</code>
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          )}
+          {step.output !== undefined && (
+            <div className="grid min-w-0 gap-2 text-sm text-rp-muted">
+              <span>输出</span>
+              <pre className="overflow-x-auto rounded-lg border border-rp-line bg-rp-soft px-3 py-2 font-rp-mono text-sm focus-visible:outline-2 focus-visible:outline-rp-brand">
+                <samp>{step.output}</samp>
+              </pre>
+            </div>
+          )}
+        </div>
+        <p role="status" className="text-sm text-rp-muted">
+          {step.description}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            onClick={() => goTo(index - 1)}
+            disabled={!ready || index === 0}
+          >
+            上一步
+          </Button>
+          <Button
+            onClick={() => goTo(index + 1)}
+            disabled={!ready || index === lastIndex}
+          >
+            下一步
+          </Button>
+          {lastIndex > 0 && (
+            <Button
+              variant="outline"
+              onClick={togglePlayback}
+              disabled={!ready}
+            >
+              {playing ? "暂停" : index === lastIndex ? "重新播放" : "播放"}
+            </Button>
+          )}
+        </div>
+      </figure>
+    </Card>
   );
 }

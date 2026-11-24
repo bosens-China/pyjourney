@@ -1,3 +1,5 @@
+import PythonCode from "./PythonCode";
+
 export default function ChallengeExample({
   example,
 }: {
@@ -10,7 +12,7 @@ export default function ChallengeExample({
     <>
       <h3>样例变量</h3>
       <pre className={blockClass}>
-        <code>{example.setup}</code>
+        <PythonCode code={example.setup} />
       </pre>
 
       <h3>样例预期输出</h3>

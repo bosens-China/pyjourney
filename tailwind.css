@@ -5,6 +5,22 @@
 @custom-variant dark (&:where(.rp-dark, .rp-dark *));
 
 @theme inline {
+  --color-background: var(--rp-c-bg);
+  --color-foreground: var(--rp-c-text-1);
+  --color-card: var(--rp-c-bg);
+  --color-card-foreground: var(--rp-c-text-1);
+  --color-primary: color-mix(in srgb, var(--rp-c-brand) 70%, black);
+  --color-primary-foreground: white;
+  --color-primary-hover: color-mix(in srgb, var(--rp-c-brand) 60%, black);
+  --color-secondary: var(--rp-c-bg-soft);
+  --color-secondary-foreground: var(--rp-c-text-1);
+  --color-muted: var(--rp-c-bg-soft);
+  --color-muted-foreground: var(--rp-c-text-2);
+  --color-border: var(--rp-c-divider-light);
+  --color-input: var(--rp-c-divider);
+  --color-ring: var(--rp-c-brand);
+  --color-destructive: var(--ui-destructive);
+
   --color-rp-surface: var(--rp-c-bg);
   --color-rp-soft: var(--rp-c-bg-soft);
   --color-rp-line: var(--rp-c-divider-light);
@@ -13,4 +29,36 @@
   --color-rp-brand: var(--rp-c-brand);
   --color-rp-tint: var(--rp-c-brand-tint);
   --font-rp-mono: var(--rp-font-family-mono);
+}
+
+:root {
+  --ui-destructive: var(--color-red-700);
+}
+
+:root.rp-dark {
+  --ui-destructive: var(--color-red-300);
+}
+
+@layer utilities {
+  .python-code {
+    .tok-keyword {
+      @apply text-indigo-700 dark:text-indigo-300;
+    }
+
+    :is(.tok-string, .tok-string2) {
+      @apply text-green-700 dark:text-green-300;
+    }
+
+    :is(.tok-number, .tok-atom, .tok-bool) {
+      @apply text-orange-800 dark:text-orange-300;
+    }
+
+    .tok-comment {
+      @apply text-rp-muted;
+    }
+
+    .tok-definition {
+      @apply text-rp-brand;
+    }
+  }
 }

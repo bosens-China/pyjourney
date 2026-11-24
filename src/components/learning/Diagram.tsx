@@ -70,8 +70,8 @@ function Svg({
 }) {
   return (
     <svg
-      className="block h-auto w-full font-rp-mono text-[13px]"
-      style={{ maxWidth: width * 1.3 }}
+      className="mx-auto block h-auto w-full font-rp-mono text-[13px]"
+      style={{ minWidth: Math.ceil((width + 4) * 0.92), maxWidth: width * 1.3 }}
       viewBox={`-2 -2 ${width + 4} ${height + 4}`}
       role="img"
       aria-label={label}
@@ -286,18 +286,18 @@ function Flow({ nodes, active, edges, direction = "column" }: FlowDiagram) {
         const x = row ? box.offset : left;
         const y = row ? 0 : box.offset;
         return (
-          <g key={id} className="transition-opacity" opacity={on ? 1 : 0.4}>
+          <g key={id}>
             <rect
               x={x}
               y={y}
               width={box.width}
               height={BOX_HEIGHT}
               rx={6}
-              className={
+              className={`transition-colors ${
                 on
                   ? "fill-rp-tint stroke-rp-brand"
                   : "fill-rp-soft stroke-rp-line"
-              }
+              }`}
               strokeWidth={on ? 2 : 1}
             />
             <text
@@ -479,11 +479,22 @@ function Slice({ items, slice, index, showBounds }: SliceDiagram) {
 
 export default function Diagram({ diagram }: { diagram: DiagramSpec }) {
   return (
-    <div className="flex justify-center overflow-x-auto rounded-lg border border-rp-line px-4 py-4">
+    <div className="@container min-w-0 overflow-x-auto rounded-lg border border-rp-line p-4">
       {diagram.kind === "refs" ? (
         <Refs {...diagram} />
       ) : diagram.kind === "flow" ? (
-        <Flow {...diagram} />
+        !diagram.edges && diagram.direction === "row" ? (
+          <>
+            <div className="@min-[38rem]:hidden">
+              <Flow {...diagram} direction="column" />
+            </div>
+            <div className="hidden @min-[38rem]:block">
+              <Flow {...diagram} />
+            </div>
+          </>
+        ) : (
+          <Flow {...diagram} />
+        )
       ) : (
         <Slice {...diagram} />
       )}

@@ -1,6 +1,7 @@
 import { resolve } from "node:path";
 import { pluginTailwindcss } from "@rsbuild/plugin-tailwindcss";
 import { defineConfig } from "@rspress/core";
+import { lazyImportOffsets } from "./src/lib/python/highlight.ts";
 
 const base = process.env.PYJOURNEY_BASE ?? "/";
 const siteOrigin = process.env.PYJOURNEY_SITE;
@@ -14,6 +15,45 @@ export default defineConfig({
   description: "从零开始，探索 Python 的奇妙世界。",
   lang: "zh",
   llms: false,
+  markdown: {
+    shiki: {
+      transformers: [
+        {
+          name: "pyjourney:lazy-import",
+          tokens(tokens) {
+            if (this.options.lang !== "python" && this.options.lang !== "py")
+              return;
+            const offsets = lazyImportOffsets(this.source);
+            if (!offsets.size) return;
+
+            return tokens.map((line) =>
+              line.flatMap((token) => {
+                const index = token.content.indexOf("lazy");
+                if (index < 0 || !offsets.has(token.offset + index))
+                  return token;
+
+                const offset = token.offset + index;
+                return [
+                  { ...token, content: token.content.slice(0, index) },
+                  {
+                    ...token,
+                    offset,
+                    content: "lazy",
+                    color: "var(--shiki-token-keyword)",
+                  },
+                  {
+                    ...token,
+                    offset: offset + 4,
+                    content: token.content.slice(index + 4),
+                  },
+                ].filter(({ content }) => content);
+              }),
+            );
+          },
+        },
+      ],
+    },
+  },
   globalStyles: resolve(import.meta.dirname, "tailwind.css"),
   builderConfig: {
     plugins: [pluginTailwindcss()],

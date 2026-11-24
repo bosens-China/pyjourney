@@ -1,19 +1,19 @@
 ---
 title: 类与方法
-description: 用 class 把状态和方法放在一起。特殊方法让对象接入 print 和 ==，property 让属性带上计算，继承用 super() 复用基类。
+description: 用 class 定义实例的状态和方法，并学习特殊方法、property 和 super() 的用法。
 ---
 
 import ConceptStepper from "@/components/learning/ConceptStepper";
 import QuickQuiz from "@/components/learning/QuickQuiz";
 import PythonExercise from "@/components/python/PythonExercise";
 
-类把数据和对这些数据的操作放在一起。执行 `class` 语句会创建一个类对象，并把它绑定到类名上。调用类对象就创建一个实例；类定义了 `__init__` 时，Python 会立刻用调用时给出的参数调用它，完成初始化。
+类把数据和操作这些数据的方法放在一起。执行 `class` 语句时，Python 创建类对象，再把类名绑定到这个对象。调用类可以创建实例。如果类定义了 `__init__`，Python 会把调用时提供的参数交给它，用来初始化新实例。
 
 ## 实例方法与 self
 
-类体里的 `def` 定义方法。通过实例调用方法时，实例会作为第一个参数传进去，按约定这个参数叫 `self`：`counter.bump()` 相当于 `Counter.bump(counter)`。
+在类体里用 `def` 定义实例方法。通过实例调用方法时，Python 把实例作为第一个参数传入，按约定这个参数叫 `self`。下面的 `counter.bump()` 相当于 `Counter.bump(counter)`。
 
-`self.value = start` 把属性写在这个实例上，每个实例各有一份。直接写在类体里的赋值是类属性，所有实例共享，适合放常量。
+`self.value = start` 给当前实例设置 `value`，每个实例各有一份。直接写在类体里的 `step` 是类属性，供各个实例共用。
 
 ```python
 class Counter:
@@ -36,7 +36,7 @@ print(counter.bump())  # 2
     {
       code: "class Counter: ...",
       description:
-        "执行 class 语句后，名字 Counter 绑定到类对象。此时还没有实例。",
+        "执行 class 语句，创建 Counter 类。名字 Counter 现在指向这个类对象。",
       diagram: {
         kind: "refs",
         names: [{ name: "Counter", to: "cls" }],
@@ -47,7 +47,7 @@ print(counter.bump())  # 2
     {
       code: "counter = Counter(1)",
       description:
-        "调用类创建实例，再调用 __init__(self, 1)。self 就是这个新实例。",
+        "调用 Counter(1) 创建实例。Python 把新实例和 1 传给 __init__，由它设置 value。",
       diagram: {
         kind: "refs",
         names: [
@@ -64,7 +64,7 @@ print(counter.bump())  # 2
     {
       code: "counter.bump()",
       description:
-        "实例上没有 bump，沿着它的类找到方法，再把实例作为 self 传入。",
+        "Python 在 Counter 类上找到 bump，再把 counter 作为 self 传入。方法更新 value 并返回 2。",
       output: "2",
       diagram: {
         kind: "refs",
@@ -84,11 +84,11 @@ print(counter.bump())  # 2
 
 ## 特殊方法
 
-名字前后各有两个下划线的方法是特殊方法，Python 在特定场合自动调用它们。最常写的三个：
+特殊方法的名字前后各有两个下划线。Python 会在创建实例、比较对象等特定场合调用它们。
 
-- `__init__`：创建实例后初始化。
-- `__repr__`：返回对象的表示形式，`repr()`、交互式解释器和调试输出都用它。最好让它看起来像创建这个对象的表达式。没有定义 `__str__` 时，`print()` 也用它。
-- `__eq__`：定义 `==`。不定义时，两个实例只有是同一个对象才相等。
+- `__init__` 在实例创建后初始化它。
+- `__repr__` 返回对象的表示形式，供 `repr()`、交互式解释器和调试输出使用。合适时，可以把它写成创建该对象的表达式。类未定义 `__str__` 时，`print()` 也会用这个表示形式。
+- `__eq__` 定义 `==` 的行为。沿用 `object` 的默认比较时，同一个对象才相等。
 
 ```python
 class Money:
@@ -108,11 +108,11 @@ print(Money(5))              # Money(5, 'CNY')
 print(Money(5) == Money(5))  # True
 ```
 
-`__eq__` 遇到不认识的类型时返回 `NotImplemented`，让 Python 去试另一边的比较。像 `Money` 这样以字段为主的类，下一课的数据类会自动生成这几个方法。
+自定义的 `__eq__` 通常返回 `True` 或 `False`。如果它不支持与对方的类型比较，就返回 `NotImplemented`，让 Python 尝试对方的比较方法。像 `Money` 这样以字段为主的类，可以用数据类生成这些方法。
 
 ## property
 
-属性的值需要计算，或者赋值时需要检查，就用 `@property`。调用方仍然像读写普通属性一样使用它：
+属性的值需要计算时，可以用 `@property`。下面的 `fahrenheit` 由 `celsius` 换算而来，读取时只要写 `t.fahrenheit`。
 
 ```python
 class Temperature:
@@ -127,11 +127,11 @@ t = Temperature(100)
 print(t.fahrenheit)  # 212.0
 ```
 
-所以一开始直接用公开属性就好，不必为每个属性写取值和设值的方法；以后需要加计算或检查时，再换成 `property`，调用代码不用改。只供类内部使用的名字以一个下划线开头，例如 `self._cache`。
+一开始可以直接用公开属性。以后需要在读取时计算，或在赋值时检查，再用 `property` 加上相应逻辑，调用方仍然用属性语法。准备留给类内部使用的属性通常以一个下划线开头，例如 `self._cache`。
 
 ## 继承与 super()
 
-派生类把基类写在类名后面的括号里。查找属性时，当前类没有这个名字，就到基类里找。派生类可以写同名方法来覆盖基类；覆盖之后还要沿用基类的实现时，调用 `super()`：
+定义派生类时，把基类写在类名后面的括号里。派生类可以继承基类的方法，也可以用同名方法覆盖它。覆盖后还想沿用基类的实现，可以用 `super()` 调用它。
 
 ```python
 class LoudCounter(Counter):
@@ -141,9 +141,9 @@ class LoudCounter(Counter):
         return value
 ```
 
-`super().bump()` 调用的是基类的 `bump`，`self` 会自动传入。`__init__` 里也一样：派生类的 `__init__` 先 `super().__init__(...)`，再设置自己的属性。`isinstance(obj, cls)` 在 `obj` 的类是 `cls` 或其派生类时为真。
+在这个例子里，`super().bump()` 会调用 `Counter` 的 `bump`，并自动传入 `self`。派生类要扩展初始化时，可以先调用 `super().__init__(...)`，再设置自己的属性。`obj` 属于 `cls` 或其派生类时，`isinstance(obj, cls)` 返回 `True`。
 
-继承表示「是一种」。只是想用另一个对象的功能时，把它存成属性（组合）通常比继承更简单。
+继承适合表达「是一种」的关系，比如 `LoudCounter` 是一种 `Counter`。如果只是想用另一个对象提供的功能，通常把它存成属性就够了。这种做法叫组合。
 
 <QuickQuiz
   question="最后一行输出什么？"
@@ -156,17 +156,17 @@ class LoudCounter(Counter):
 options={["True", "False", "引发 TypeError", "None"]}
 answerIndex={1}
 feedback={[
-"Point 没有定义 __eq__，== 只在两边是同一个对象时为真；这里是两个不同的实例。",
+"两个点的坐标相同。Point 使用默认比较，检查两边是不是同一个对象。",
 "",
-"没有 __eq__ 时 == 仍然可以用，只是比较的是对象是否相同。",
-"== 总是给出布尔值，这里是 True 或 False 之一。",
+"Point 继承了 object 提供的默认比较，所以这段代码可以正常运行。",
+"这次比较得到了 False，因为这两个 Point 实例是不同的对象。",
 ]}
-explanation="没有定义 **eq** 时，== 按对象标识比较。两次调用 Point(1, 2) 创建了两个不同的实例，所以结果是 False。"
+explanation={"Point 沿用 object 的默认 __eq__。两次调用 Point(1, 2) 创建了两个不同的实例，所以比较结果是 False。"}
 />
 
 ## 随堂练习
 
-`Bounded.bump` 在数值达到 3 之后保持不动，未达到时沿用基类的 `bump`。
+实现 `Bounded.bump`。计数已达到 3 时直接返回当前值。计数小于 3 时，调用基类的 `bump` 继续加一。
 
 <PythonExercise
   label="继承并改写 bump"

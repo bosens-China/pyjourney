@@ -1,5 +1,11 @@
 import { useState } from "react";
-import ActionButton from "@/components/ui/ActionButton";
+import PythonCode from "@/components/python/PythonCode";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from "@/components/ui/native-select";
 
 const examples = [
   {
@@ -28,9 +34,6 @@ const examples = [
   },
 ];
 
-const selectClass =
-  "min-h-11 w-full rounded-md border border-rp-line bg-rp-surface px-3 text-rp-text focus-visible:outline-2 focus-visible:outline-rp-brand";
-
 function Assignment({ example }: { example: (typeof examples)[number] }) {
   const [assignments, setAssignments] = useState<string[]>([]);
   const [rest, setRest] = useState("");
@@ -58,17 +61,18 @@ function Assignment({ example }: { example: (typeof examples)[number] }) {
         check();
       }}
     >
-      <code className="block rounded-md bg-rp-soft p-3 font-rp-mono text-sm wrap-break-word">
-        {example.code}
-      </code>
+      <PythonCode
+        code={example.code}
+        className="block rounded-md bg-rp-soft p-3 font-rp-mono text-sm wrap-break-word"
+      />
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {example.items.map((item, index) => (
           <label key={item} className="grid min-w-0 gap-1 text-sm">
             <span>
               数值 <code>{item}</code> 给谁？
             </span>
-            <select
-              className={selectClass}
+            <NativeSelect
+              className="w-full"
               required
               value={assignments[index] ?? ""}
               onChange={(event) => {
@@ -81,11 +85,11 @@ function Assignment({ example }: { example: (typeof examples)[number] }) {
                 setFeedback("");
               }}
             >
-              <option value="">请选择</option>
+              <NativeSelectOption value="">请选择</NativeSelectOption>
               {example.targets.map((target) => (
-                <option key={target}>{target}</option>
+                <NativeSelectOption key={target}>{target}</NativeSelectOption>
               ))}
-            </select>
+            </NativeSelect>
           </label>
         ))}
         {singleItem && (
@@ -93,8 +97,8 @@ function Assignment({ example }: { example: (typeof examples)[number] }) {
             <span>
               <code>rest</code> 的结果
             </span>
-            <select
-              className={selectClass}
+            <NativeSelect
+              className="w-full"
               required
               value={rest}
               onChange={(event) => {
@@ -102,11 +106,11 @@ function Assignment({ example }: { example: (typeof examples)[number] }) {
                 setFeedback("");
               }}
             >
-              <option value="">请选择</option>
-              <option>[]</option>
-              <option>None</option>
-              <option>引发 ValueError</option>
-            </select>
+              <NativeSelectOption value="">请选择</NativeSelectOption>
+              <NativeSelectOption>[]</NativeSelectOption>
+              <NativeSelectOption>None</NativeSelectOption>
+              <NativeSelectOption>引发 ValueError</NativeSelectOption>
+            </NativeSelect>
           </label>
         )}
       </div>
@@ -132,9 +136,7 @@ function Assignment({ example }: { example: (typeof examples)[number] }) {
         </div>
       )}
       <div className="flex flex-wrap items-center gap-3">
-        <ActionButton type="submit" primary>
-          检查分配
-        </ActionButton>
+        <Button type="submit">检查分配</Button>
         <p className="text-sm" role="status">
           {feedback}
         </p>
@@ -147,23 +149,26 @@ export default function UnpackingGroups() {
   const [active, setActive] = useState(0);
 
   return (
-    <section
-      aria-label="星号解包练习"
-      className="rp-not-doc my-6 grid gap-4 rounded-xl border border-rp-line bg-rp-surface p-4 text-rp-text"
-    >
-      <div className="flex flex-wrap gap-2" role="group" aria-label="选择练习">
-        {examples.map(({ label }, index) => (
-          <ActionButton
-            key={label}
-            primary={active === index}
-            aria-pressed={active === index}
-            onClick={() => setActive(index)}
-          >
-            {label}
-          </ActionButton>
-        ))}
-      </div>
-      <Assignment key={active} example={examples[active]} />
-    </section>
+    <Card asChild className="my-6">
+      <section aria-label="星号解包练习">
+        <div
+          className="flex flex-wrap gap-2"
+          role="group"
+          aria-label="选择练习"
+        >
+          {examples.map(({ label }, index) => (
+            <Button
+              key={label}
+              variant={active === index ? "default" : "outline"}
+              aria-pressed={active === index}
+              onClick={() => setActive(index)}
+            >
+              {label}
+            </Button>
+          ))}
+        </div>
+        <Assignment key={active} example={examples[active]} />
+      </section>
+    </Card>
   );
 }

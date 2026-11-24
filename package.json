@@ -18,12 +18,18 @@
   "dependencies": {
     "@codemirror/lang-python": "^6.2.1",
     "@codemirror/language": "^6.13.1",
+    "@codemirror/view": "^6.43.15",
     "@lezer/highlight": "^1.2.5",
     "@rspress/core": "^2.1.4",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "codemirror": "^6.0.2",
+    "lucide-react": "^1.78.0",
     "pyodide": "^315.0.0-alpha.2",
+    "radix-ui": "^1.8.1",
     "react": "^19.3.1",
-    "react-dom": "^19.3.1"
+    "react-dom": "^19.3.1",
+    "tailwind-merge": "^3.7.1"
   },
   "devDependencies": {
     "@rsbuild/plugin-tailwindcss": "^2.0.3",

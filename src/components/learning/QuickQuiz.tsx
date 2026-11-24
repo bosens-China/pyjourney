@@ -1,5 +1,9 @@
 import { useEffect, useId, useState } from "react";
-import ActionButton from "@/components/ui/ActionButton";
+import PythonCode from "@/components/python/PythonCode";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface QuickQuizProps {
   question: string;
@@ -20,6 +24,7 @@ export default function QuickQuiz({
   explanation,
 }: QuickQuizProps) {
   const name = useId();
+  const questionId = `${name}-question`;
   const [ready, setReady] = useState(false);
   const [selected, setSelected] = useState<number | null>(null);
   const [checked, setChecked] = useState(false);
@@ -29,68 +34,80 @@ export default function QuickQuiz({
   useEffect(() => setReady(true), []);
 
   return (
-    <form
-      className="rp-not-doc my-6 grid min-w-0 gap-4 rounded-xl border border-rp-line bg-rp-surface p-4 sm:p-6"
-      onSubmit={(event) => {
-        event.preventDefault();
-        if (selected !== null) setChecked(true);
-      }}
-    >
-      <fieldset className="grid min-w-0 gap-2" disabled={!ready}>
-        <legend className="mb-3 font-semibold text-rp-text">{question}</legend>
-        {code && (
-          <pre
-            className="mb-2 overflow-x-auto rounded-lg border border-rp-line bg-rp-soft px-3 py-2 font-rp-mono text-sm/relaxed text-rp-text"
-            tabIndex={0}
-            aria-label="题目代码"
-          >
-            <code>{code}</code>
-          </pre>
-        )}
-        {options.map((option, index) => (
-          <label
-            className="flex cursor-pointer items-baseline gap-2.5 rounded-lg border border-rp-line px-3 py-2 wrap-anywhere hover:bg-rp-soft focus-within:border-rp-brand has-checked:border-rp-brand has-checked:bg-rp-tint"
-            key={index}
-          >
-            <input
-              type="radio"
-              className="shrink-0 accent-rp-brand"
-              name={name}
-              value={index}
-              checked={selected === index}
-              onChange={() => {
-                setSelected(index);
-                setChecked(false);
-              }}
-            />
-            <span>{option}</span>
-          </label>
-        ))}
-      </fieldset>
-      <div className="flex flex-wrap gap-2">
-        <ActionButton type="submit" primary disabled={selected === null}>
-          检查答案
-        </ActionButton>
-      </div>
-      <div role="status" className="empty:hidden">
-        {checked && (
-          <div
-            className="grid gap-1.5 rounded-lg border border-rp-line bg-rp-soft p-3 text-sm"
-            data-result={correct ? "correct" : "incorrect"}
-          >
-            <strong
-              className={
-                correct
-                  ? "text-green-700 dark:text-green-300"
-                  : "text-amber-800 dark:text-amber-300"
-              }
+    <Card asChild className="my-6">
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (selected !== null) setChecked(true);
+        }}
+      >
+        <fieldset className="grid min-w-0 gap-2" disabled={!ready}>
+          <legend id={questionId} className="mb-3 font-semibold">
+            {question}
+          </legend>
+          {code && (
+            <pre
+              className="mb-2 overflow-x-auto rounded-lg border border-border bg-muted px-3 py-2 font-rp-mono text-sm/relaxed focus-visible:outline-2 focus-visible:outline-ring"
+              tabIndex={0}
+              aria-label="题目代码"
             >
-              {correct ? "答对了" : "再想一想"}
-            </strong>
-            {correct || !hint ? <p>{explanation}</p> : <p>{hint}</p>}
-          </div>
-        )}
-      </div>
-    </form>
+              <PythonCode code={code} />
+            </pre>
+          )}
+          <RadioGroup
+            aria-labelledby={questionId}
+            name={name}
+            orientation="vertical"
+            disabled={!ready}
+            value={selected?.toString() ?? ""}
+            onValueChange={(value) => {
+              setSelected(Number(value));
+              setChecked(false);
+            }}
+          >
+            {options.map((option, index) => {
+              const id = `${name}-${index}`;
+              return (
+                <label
+                  className="flex min-h-10 cursor-pointer items-center gap-3 rounded-lg border border-border px-3 py-2 text-sm wrap-anywhere hover:bg-muted focus-within:border-ring has-[button[aria-checked=true]]:border-ring has-[button[aria-checked=true]]:bg-rp-tint"
+                  htmlFor={id}
+                  key={index}
+                >
+                  <RadioGroupItem id={id} value={String(index)} />
+                  <span>{option}</span>
+                </label>
+              );
+            })}
+          </RadioGroup>
+        </fieldset>
+        <div>
+          <Button type="submit" disabled={!ready || selected === null}>
+            检查答案
+          </Button>
+        </div>
+        <div role="status" className="empty:sr-only">
+          {checked && (
+            <Alert
+              role={undefined}
+              className="bg-muted"
+              data-result={correct ? "correct" : "incorrect"}
+            >
+              <AlertTitle
+                className={
+                  correct
+                    ? "text-green-700 dark:text-green-300"
+                    : "text-amber-800 dark:text-amber-300"
+                }
+              >
+                {correct ? "答对了" : "再想一想"}
+              </AlertTitle>
+              <AlertDescription>
+                {correct || !hint ? explanation : hint}
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
+      </form>
+    </Card>
   );
 }

@@ -1,6 +1,6 @@
 ---
 title: 条件与循环
-description: if 按条件分支，for 直接遍历元素。enumerate、zip 和 sorted 让循环保持简短；循环的 else 只在没有 break 时执行。
+description: 用 if 选择分支，用 for 和 while 循环，了解循环怎样结束以及何时执行 else。
 ---
 
 import ConceptStepper from "@/components/learning/ConceptStepper";
@@ -28,7 +28,7 @@ export const loopFlow = {
 
 ## 条件
 
-`if` 可以带任意多个 `elif` 和一个可选的 `else`，`elif` 让多路分支不必一层层缩进。条件可以是任何对象，按上一章的真值规则判断：空容器、零和 `None` 为假。
+`if` 按条件选择分支。可以接多条 `elif`，依次检查其他条件，也可以用一条 `else` 处理剩余情况。条件按上一章的真值规则判断，例如空容器、零和 `None` 都是假值。
 
 ```python
 score = 82
@@ -40,15 +40,17 @@ else:
     grade = "C"
 ```
 
-比较可以连写：`0 <= score < 100` 判断两个条件，中间的 `score` 只求值一次。`and` 和 `or` 从左到右短路，`not` 取反。`in` 做成员检测。
+比较可以连写。`0 <= score < 100` 判断分数是否落在指定范围内，中间的 `score` 只求值一次。`in` 检查某一项是否存在，`not` 把真假翻转为布尔值。
 
-只是在两个值之间二选一时，用条件表达式写成一行：
+`and` 遇到左侧是假值，就直接返回左侧。`or` 遇到左侧是真值，也直接返回左侧。其余情况下，它们会计算并返回右侧。例如，`name` 是空字符串时，`name or "匿名"` 会取右侧的默认名字。参见 [Python 3.15 的布尔运算规则](https://docs.python.org/zh-cn/3.15/builtins/stdtypes.html#boolean-operations-and-or-not)。
+
+需要按条件从两个值中选一个时，可以用条件表达式。
 
 ```python
 label = "及格" if score >= 60 else "不及格"
 ```
 
-在条件里需要顺手保存某个中间结果时，用赋值表达式 `:=`，它要放在括号里：
+在条件里需要保存中间结果时，可以用赋值表达式 `:=`。下面的括号让 `n` 先得到列表的长度，再拿这个长度与 10 比较。
 
 ```python
 items = list(range(12))
@@ -56,16 +58,20 @@ if (n := len(items)) > 10:
     print(f"列表太长（{n} 项，最多 10 项）")
 ```
 
+把赋值表达式直接用作 `if` 或 `while` 的整个条件时，可以省略括号。参见 [Python 3.15 的赋值表达式规则](https://docs.python.org/zh-cn/3.15/reference/expressions.html#assignment-expressions)。
+
 ## 遍历元素
 
-`for` 直接遍历序列或其他可迭代对象里的元素，循环变量依次绑定每一项。不需要先取下标再取元素：
+`for` 可以直接遍历序列和其他可迭代对象。每一轮，循环变量都绑定到当前取出的元素。
 
 ```python
 for word in ["cat", "window", "defenestrate"]:
     print(word, len(word))
 ```
 
-需要一串等差整数时用 `range(start, stop, step)`，它不含终止值。需要下标时用 `enumerate`，同时遍历几个序列时用 `zip`，遍历字典的键和值时用 `items()`：
+用 `range(start, stop, step)` 可以按固定步长遍历整数，取值到 `stop` 之前为止。
+
+同时需要编号和元素时，用 `enumerate()`。把几个序列的元素一一配对时，用 `zip()`。需要遍历字典的键和值时，用 `items()`。
 
 ```python
 names = ["Ada", "Bob"]
@@ -81,9 +87,9 @@ for name, score in {"Ada": 95, "Bob": 78}.items():
     print(name, score)
 ```
 
-`zip` 默认在最短的输入耗尽时停止；传入 `strict=True` 时，长度不一致会引发 `ValueError`，可以尽早发现数据对不上。
+`zip()` 默认在最短的输入用完时停止。如果几组数据应该一一对应，可以传入 `strict=True`。长度不一致时，Python 会引发 `ValueError`。
 
-`sorted()` 返回一个排好序的新列表，原序列不变。`key` 指定按什么排序，`reverse=True` 改为降序。`reversed()` 倒序遍历：
+`sorted()` 把元素排好序，放进一个新列表。`key` 指定按什么排序，例如按小写字母或元素长度。想反转排序方向时，传入 `reverse=True`。想直接从末尾开始遍历时，用 `reversed()`。
 
 ```python
 words = ["banana", "Fig", "apple"]
@@ -91,11 +97,11 @@ print(sorted(words, key=str.lower))  # ['apple', 'banana', 'Fig']
 print(sorted(words, key=len))        # ['Fig', 'apple', 'banana']
 ```
 
-边遍历边增删同一个容器容易出错。要么遍历一份副本，要么把结果放进新容器。
+需要在遍历时增删元素，可以遍历原容器的副本，或者把处理后的结果放进一个新容器。
 
 ## while、break 与 continue
 
-`while` 在条件为真时反复执行。`break` 离开最近的一层循环，`continue` 直接进入下一次迭代。
+`while` 在条件为真时反复执行循环体。`break` 结束当前所在的最内层循环。`continue` 跳过本轮剩余语句，进入下一轮。
 
 ```python
 n = 27
@@ -108,7 +114,7 @@ print(steps)  # 111
 
 ## 循环的 else
 
-`for` 和 `while` 都可以带 `else`。循环正常结束、没有执行 `break` 时，才执行这个 `else`。它适合「找一遍，没找到再处理」的场景，不必再设一个标志变量：
+`for` 和 `while` 都可以带 `else`，循环正常结束时才会执行它。下面查找以 A 开头的名字。找到时用 `break` 提前结束，遍历完仍没找到时，就在 `else` 里提示。
 
 ```python
 for name in names:
@@ -124,7 +130,7 @@ else:
   steps={[
     {
       code: 'names = ["Bob", "Ada"]\n# 第一轮：name 是 "Bob"',
-      description: "Bob 不以 A 开头，循环体执行完，回到 for 取下一项。",
+      description: "Bob 不符合条件，这一轮结束。for 接着取下一个名字。",
       diagram: {
         ...loopFlow,
         active: ["for", "body", "for"],
@@ -132,7 +138,7 @@ else:
     },
     {
       code: '# 第二轮：name 是 "Ada"',
-      description: "Ada 满足条件，打印后 break 离开循环。else 块被跳过。",
+      description: "Ada 符合条件。程序打印名字，执行 break，直接跳到整个循环之后。",
       output: "找到 Ada",
       diagram: {
         ...loopFlow,
@@ -141,7 +147,7 @@ else:
     },
     {
       code: 'names = ["Bob", "Eve"]\n# 两轮都不满足条件',
-      description: "循环把元素取完，没有遇到 break，于是执行 else 块。",
+      description: "两个名字都检查完了，循环正常结束，接着执行 else 块。",
       output: "没有以 A 开头的名字",
       diagram: {
         ...loopFlow,
@@ -152,7 +158,7 @@ else:
 />
 
 <FlowPrediction
-  question="遇到 8 时，判断条件之后会走哪一步？"
+  question="循环取到 8 时，判断完条件后会执行哪一步？"
   code={`for n in [3, 5, 8]:
       if n % 2 == 0:
           print("偶数", n)
@@ -162,7 +168,7 @@ else:
   diagram={{ ...loopFlow, active: ["for", "body"] }}
   choices={[
     { label: "回到 for 取下一项", feedback: "8 满足条件，先执行 if 块里的两条语句。" },
-    { label: "进入 else 块", feedback: "先看 if 块里的 break。执行它之后，循环的 else 会被跳过。" },
+    { label: "进入 else 块", feedback: "8 满足条件。if 块里的 break 会让程序直接跳到循环之后。" },
     {
       label: "打印后执行 break",
       feedback: "输出「偶数 8」后，break 直接离开循环，跳过 else。",
@@ -173,7 +179,7 @@ else:
 
 ## 随堂练习
 
-按分数从高到低给选手排名，打印成 `名次. 名字 分数`。不要用 `range(len(...))` 取下标。
+按分数从高到低给选手排名，每位选手按 `名次. 名字 分数` 的格式打印一行。用 `zip()` 配对、用 `sorted()` 排序、用 `enumerate()` 从 1 开始编号。遍历时请直接取元素，避免用 `range(len(...))` 取下标。
 
 <PythonExercise
   label="zip、sorted 与 enumerate"
@@ -186,7 +192,7 @@ else:
   solution={`names = ["Ada", "Bob", "Cy"]
   scores = [88, 95, 70]
 
-  ranking = sorted(zip(scores, names), reverse=True)
+  ranking = sorted(zip(scores, names, strict=True), reverse=True)
   for rank, (score, name) in enumerate(ranking, start=1):
       print(f"{rank}. {name} {score}")
 `}

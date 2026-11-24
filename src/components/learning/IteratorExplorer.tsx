@@ -1,5 +1,13 @@
 import { useState } from "react";
-import ActionButton from "@/components/ui/ActionButton";
+import PythonCode from "@/components/python/PythonCode";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { Input } from "@/components/ui/input";
 
 const numbers = [1, 2, 3];
 const trialNumbers = [2, 4, 7];
@@ -61,87 +69,90 @@ export default function IteratorExplorer() {
   }
 
   return (
-    <section
-      className="rp-not-doc my-6 grid gap-4 rounded-xl border border-rp-line bg-rp-surface p-4 text-rp-text sm:p-6"
-      aria-label="逐项取值的迭代器"
-    >
-      <p className="font-rp-mono text-sm">
-        <code>{`numbers = [${numbers.join(", ")}]`}</code>
-      </p>
-      <Positions values={numbers} position={state.position} />
-      <p className="text-sm text-rp-muted">
-        原列表保存着全部元素。标记显示的是迭代器的当前位置。
-      </p>
-      <div className="flex flex-wrap gap-2">
-        <ActionButton primary className="font-rp-mono" onClick={advance}>
-          next(it)
-        </ActionButton>
-        <ActionButton
-          className="font-rp-mono"
-          onClick={() => setState(initial)}
-        >
-          it = iter(numbers)
-        </ActionButton>
-      </div>
-      <p role="status" className="text-sm">
-        {state.message}
-      </p>
-
-      <div className="grid gap-3 border-t border-rp-line pt-3">
-        <div>
-          <ActionButton
-            aria-expanded={practice}
-            onClick={() => setPractice((previous) => !previous)}
+    <Card asChild className="my-6">
+      <section aria-label="逐项取值的迭代器">
+        <p className="font-rp-mono text-sm">
+          <code>{`numbers = [${numbers.join(", ")}]`}</code>
+        </p>
+        <Positions values={numbers} position={state.position} />
+        <p className="text-sm text-rp-muted">
+          原列表保存着全部元素。标记显示的是迭代器的当前位置。
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <Button className="font-rp-mono" onClick={advance}>
+            next(it)
+          </Button>
+          <Button
+            variant="outline"
+            className="font-rp-mono"
+            onClick={() => setState(initial)}
           >
-            {practice ? "收起自测" : "试一试：预测三次求和"}
-          </ActionButton>
+            it = iter(numbers)
+          </Button>
         </div>
-        {practice && (
-          <form
-            className="grid gap-3"
-            onSubmit={(event) => {
-              event.preventDefault();
-              setChecked(true);
-            }}
-          >
-            <pre className="overflow-x-auto rounded-lg bg-rp-soft p-3 font-rp-mono text-sm">
-              <code>{`numbers = [${trialNumbers.join(", ")}]\nit = iter(numbers)\nnext(it)\nprint(sum(it), sum(it), sum(numbers))`}</code>
-            </pre>
-            <Positions values={trialNumbers} position={1} />
-            <label className="grid max-w-sm gap-1 text-sm font-medium">
-              按顺序输入三个结果，用空格隔开
-              <input
-                required
-                className="min-h-11 rounded-md border border-rp-line bg-rp-surface px-3 font-rp-mono text-rp-text focus-visible:outline-2 focus-visible:outline-rp-brand"
-                value={answer}
-                onChange={(event) => {
-                  setAnswer(event.currentTarget.value);
-                  setChecked(false);
-                }}
-              />
-            </label>
-            <div>
-              <ActionButton primary type="submit">
-                检查
-              </ActionButton>
-            </div>
-            <p role="status" className="text-sm">
-              {checked && (
-                <>
-                  <strong>
-                    {correct ? "答对了。" : "再看看每次从哪里取值。"}
-                  </strong>{" "}
-                  结果是 <samp className="font-rp-mono">{expected}</samp>
-                  。第一次 <code>sum(it)</code> 取尽剩下的{" "}
-                  {remainingNumbers.join(" 和 ")}
-                  。第二次遇到已经耗尽的迭代器，直接结束并得到 0。
-                  <code>sum(numbers)</code> 从列表头重新取值。
-                </>
-              )}
-            </p>
-          </form>
-        )}
-      </div>
-    </section>
+        <p role="status" className="text-sm">
+          {state.message}
+        </p>
+
+        <Collapsible
+          open={practice}
+          onOpenChange={setPractice}
+          className="grid gap-3 border-t border-border pt-3"
+        >
+          <div>
+            <CollapsibleTrigger asChild>
+              <Button variant="outline">
+                {practice ? "收起自测" : "试一试：预测三次求和"}
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+          <CollapsibleContent>
+            <form
+              className="grid gap-3"
+              onSubmit={(event) => {
+                event.preventDefault();
+                setChecked(true);
+              }}
+            >
+              <pre className="overflow-x-auto rounded-lg bg-rp-soft p-3 font-rp-mono text-sm">
+                <PythonCode
+                  code={`numbers = [${trialNumbers.join(", ")}]\nit = iter(numbers)\nnext(it)\nprint(sum(it), sum(it), sum(numbers))`}
+                />
+              </pre>
+              <Positions values={trialNumbers} position={1} />
+              <label className="grid max-w-sm gap-1 text-sm font-medium">
+                按顺序输入三个结果，用空格隔开
+                <Input
+                  required
+                  className="font-rp-mono"
+                  value={answer}
+                  onChange={(event) => {
+                    setAnswer(event.currentTarget.value);
+                    setChecked(false);
+                  }}
+                />
+              </label>
+              <div>
+                <Button type="submit">检查</Button>
+              </div>
+              <p role="status" className="text-sm">
+                {checked && (
+                  <>
+                    <strong>
+                      {correct ? "答对了。" : "再看看每次从哪里取值。"}
+                    </strong>{" "}
+                    结果是 <samp className="font-rp-mono">{expected}</samp>
+                    。第一次 <code>sum(it)</code> 取尽剩下的{" "}
+                    {remainingNumbers.join(" 和 ")}
+                    。第二次遇到已经耗尽的迭代器，直接结束并得到 0。
+                    <code>sum(numbers)</code> 从列表头重新取值。
+                  </>
+                )}
+              </p>
+            </form>
+          </CollapsibleContent>
+        </Collapsible>
+      </section>
+    </Card>
   );
 }

@@ -1,5 +1,5 @@
 import { useState, type ComponentProps, type ReactNode } from "react";
-import ActionButton from "@/components/ui/ActionButton";
+import { Button } from "@/components/ui/button";
 import ConceptStepper from "@/components/learning/ConceptStepper";
 
 type Steps = ComponentProps<typeof ConceptStepper>["steps"];
@@ -22,20 +22,20 @@ export default function ContextlibTimeline({
         aria-label="离开代码块的情形"
         className="flex flex-wrap gap-2"
       >
-        <ActionButton
-          primary={path === "normal"}
+        <Button
+          variant={path === "normal" ? "default" : "outline"}
           aria-pressed={path === "normal"}
           onClick={() => setPath("normal")}
         >
           正常离开
-        </ActionButton>
-        <ActionButton
-          primary={path === "exception"}
+        </Button>
+        <Button
+          variant={path === "exception" ? "default" : "outline"}
           aria-pressed={path === "exception"}
           onClick={() => setPath("exception")}
         >
           遇到异常
-        </ActionButton>
+        </Button>
       </div>
       <ConceptStepper
         key={path}
