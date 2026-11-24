@@ -3,6 +3,7 @@ title: 结构子类型
 description: 用 typing.Protocol 描述对象需要具备哪些属性，让类型检查器判断它是否符合要求。
 ---
 
+import ProtocolMatch from "@/components/figures/ProtocolMatch";
 import QuickQuiz from "@/components/learning/QuickQuiz";
 
 名义子类型按继承关系判断。比如参数的类型标注是 `B`，就可以传入 `B` 或其子类的实例。结构子类型按对象具备的属性判断，只要这些属性符合协议，实现类就可以通过类型检查。
@@ -24,7 +25,9 @@ def display(doc: Renderable) -> str:
     return doc.render()
 ```
 
-`MarkdownDoc` 的 `render()` 符合要求，所以 `display(MarkdownDoc())` 能通过静态检查。运行时，`display` 照常调用 `doc.render()`。`Protocol` 提供的约束由类型检查器判断。
+<ProtocolMatch />
+
+运行时，`display` 照常调用 `doc.render()`。`Protocol` 提供的约束由类型检查器判断。
 
 协议也可以带类型参数，写法和泛型类一样，例如 `class Source[T](Protocol)`。
 

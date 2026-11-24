@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useState, type ReactNode } from "react";
 import Diagram, { type DiagramSpec } from "@/components/learning/Diagram";
 import PythonCode from "@/components/python/PythonCode";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ interface Step {
   values?: { name: string; value: string }[];
   output?: string;
   diagram?: DiagramSpec;
+  visual?: ReactNode;
 }
 
 interface ConceptStepperProps {
@@ -85,6 +86,7 @@ export default function ConceptStepper({
           </pre>
         </div>
         {step.diagram && <Diagram diagram={step.diagram} />}
+        {step.visual}
         <div className="grid min-w-0 gap-2 empty:hidden">
           {!!step.values?.length && (
             <dl className="grid min-w-0 gap-1.5" aria-label="当前变量">

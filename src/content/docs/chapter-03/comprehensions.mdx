@@ -3,6 +3,7 @@ title: 推导式
 description: 用列表、集合和字典推导式从可迭代对象生成新容器，并在推导式里用 * 和 ** 展开。
 ---
 
+import ComprehensionPairs from "@/components/figures/ComprehensionPairs";
 import ConceptStepper from "@/components/learning/ConceptStepper";
 import QuickQuiz from "@/components/learning/QuickQuiz";
 import PythonExercise from "@/components/python/PythonExercise";
@@ -16,6 +17,8 @@ squares = [x**2 for x in range(10)]
 pairs = [(x, y) for x in [1, 2, 3] for y in [3, 1, 4] if x != y]
 flat = [num for elem in [[1, 2], [4, 5]] for num in elem]
 ```
+
+<ComprehensionPairs />
 
 下面的循环也会得到相同的 `flat`。外层逐个取子列表，内层再把子列表中的数逐项追加到 `flat`。
 

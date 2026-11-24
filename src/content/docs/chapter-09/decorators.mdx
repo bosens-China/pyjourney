@@ -17,16 +17,7 @@ def greet():
     return "hi"
 ```
 
-上面的 `greet` 最终绑定的是 `log` 的返回值。写了多个装饰器时，它们会一层层应用，离 `def` 最近的装饰器先接收原函数。
-
-```python
-@f1(arg)
-@f2
-def func():
-    pass
-```
-
-求值 `f1(arg)` 得到外层装饰器。应用时，先把原函数交给 `f2`，再把 `f2` 的返回值交给外层装饰器。最后，名字 `func` 指向外层装饰器返回的对象。
+上面的 `greet` 最终绑定的是 `log` 的返回值。
 
 <ConceptStepper
   label="装饰之后，名字指向包装函数"
@@ -66,6 +57,61 @@ def func():
           { id: "fn", label: "原 greet" },
         ],
         highlight: ["wrapper", "fn"],
+      },
+    },
+  ]}
+/>
+
+## 叠加装饰器
+
+写了多个装饰器时，Python 先求值各个 `@` 后面的表达式，再应用得到的装饰器。离 `def` 最近的装饰器先接收原函数。
+
+```python
+@f1(arg)
+@f2
+def func():
+    pass
+```
+
+<ConceptStepper
+  label="叠加装饰器时的执行顺序"
+  steps={[
+    {
+      code: "@f1(arg)\n@f2",
+      description: "定义函数时先求值 f1(arg)，再求值 f2。图中用 outer 表示 f1(arg) 返回的外层装饰器。",
+      diagram: {
+        kind: "flow",
+        nodes: [
+          { id: "factory", label: "求值 f1(arg)" },
+          { id: "inner", label: "求值 f2" },
+        ],
+        active: ["factory", "inner"],
+      },
+    },
+    {
+      code: "func = outer(f2(original))",
+      description: "original 代表原函数对象。f2 先接收原函数，outer 再接收 f2 的返回值。最后，func 绑定到 outer 返回的对象。",
+      diagram: {
+        kind: "flow",
+        nodes: [
+          { id: "inner", label: "f2 接收原函数" },
+          { id: "outer", label: "outer 接收上一步的结果" },
+          { id: "bind", label: "绑定名字 func" },
+        ],
+        active: ["inner", "outer", "bind"],
+      },
+    },
+    {
+      code: "func()",
+      description: "假设两层包装函数都会调用所包裹的函数。执行 func() 时，依次进入外层包装函数、内层包装函数和原函数。",
+      diagram: {
+        kind: "flow",
+        nodes: [
+          { id: "outer", label: "调用外层包装函数" },
+          { id: "inner", label: "调用内层包装函数" },
+          { id: "original", label: "执行原函数" },
+        ],
+        active: ["outer", "inner", "original"],
       },
     },
   ]}

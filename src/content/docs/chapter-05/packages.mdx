@@ -3,28 +3,38 @@ title: 包与相对导入
 description: 用包组织模块，理解相对导入中的点号，用 python -m 运行包内模块。
 ---
 
+import FileTree from "@/components/figures/FileTree";
 import ConceptStepper from "@/components/learning/ConceptStepper";
 import QuickQuiz from "@/components/learning/QuickQuiz";
+
+export const soundFiles = [
+  { id: "sound", name: "sound/", depth: 0 },
+  { id: "sound/__init__", name: "__init__.py", depth: 1 },
+  { id: "formats", name: "formats.py", depth: 1 },
+  { id: "effects", name: "effects/", depth: 1 },
+  { id: "effects/__init__", name: "__init__.py", depth: 2 },
+  { id: "echo", name: "echo.py", depth: 2 },
+  { id: "surround", name: "surround.py", depth: 2 },
+  { id: "filters", name: "filters/", depth: 1 },
+  { id: "filters/__init__", name: "__init__.py", depth: 2 },
+  { id: "equalizer", name: "equalizer.py", depth: 2 },
+  { id: "vocoder", name: "vocoder.py", depth: 2 },
+];
+
+export function RelativeImportTree({ labels }) {
+  const entries = soundFiles.map((file) => ({
+    ...file,
+    tag: file.id === "surround" ? "导入起点" : labels[file.id],
+  }));
+
+  return <FileTree label="sound 包的文件树" compact entries={entries} />;
+}
 
 包可以把相关模块组织在一起。例如，`A.B` 指包 `A` 里的子模块 `B`。从文件系统导入时，Python 按 `sys.path` 查找顶层包，再到父包的 `__path__` 所列位置查找子模块。
 
 文件系统中的常规包通常是一个包含 `__init__.py` 的目录。可以把初始化代码写进这个文件，也可以让它保持为空。
 
-```text
-sound/                    ← .. 上级包
-├── __init__.py
-├── formats.py
-├── effects/              ← . 当前包
-│   ├── __init__.py
-│   ├── echo.py
-│   └── surround.py       ← 导入从这里出发
-└── filters/
-    ├── __init__.py
-    ├── equalizer.py
-    └── vocoder.py
-```
-
-下面三种导入写法都能调用 `echofilter`，各自绑定的名字不同。
+假设 `sound/effects/echo.py` 定义了 `echofilter()`。下面三种导入写法都能调用这个函数，各自绑定的名字不同。
 
 ```python
 import sound.effects.echo
@@ -41,7 +51,7 @@ echofilter(input, output, delay=0.7, atten=4)
 
 ## 相对导入
 
-包内模块也可以用绝对导入。`sound.filters.vocoder` 需要 `echo` 时，可以写 `from sound.effects import echo`。相对导入从当前模块所属的包出发。以图中的 `surround.py` 为例，一个点指向 `effects`，两个点指向 `sound`。
+包内模块也可以用绝对导入。`sound.filters.vocoder` 需要 `echo` 时，可以写 `from sound.effects import echo`。相对导入以当前模块所属的包为起点。下面以 `surround.py` 为例，看看 `.` 和 `..` 分别指向哪个包。
 
 <ConceptStepper
   label="顺着点号找模块"
@@ -49,17 +59,23 @@ echofilter(input, output, delay=0.7, atten=4)
     {
       code: "from . import echo",
       description: "一个点表示当前包。从 surround.py 所在的 effects 包里导入 echo。",
-      values: [{ name: "echo", value: "当前包里的 echo" }],
+      visual: <RelativeImportTree labels={{ effects: ". 当前包", echo: "导入目标" }} />,
     },
     {
       code: "from .. import formats",
-      description: "两个点表示上一层包。从 sound 包里导入 formats。",
-      values: [{ name: "formats", value: "上级包里的 formats" }],
+      description: "两个点表示上一级包。从 effects 向上找到 sound，再导入 formats。",
+      visual: (
+        <RelativeImportTree labels={{ sound: ".. 上一级包", effects: "当前包", formats: "导入目标" }} />
+      ),
     },
     {
       code: "from ..filters import equalizer",
-      description: "先到上级包，再进入 filters，导入 equalizer。",
-      values: [{ name: "equalizer", value: "sound.filters.equalizer" }],
+      description: "两个点指向 sound，再从子包 filters 导入 equalizer。",
+      visual: (
+        <RelativeImportTree
+          labels={{ sound: ".. 上一级包", effects: "当前包", filters: "目标所在包", equalizer: "导入目标" }}
+        />
+      ),
     },
   ]}
 />
