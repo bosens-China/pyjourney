@@ -4,9 +4,8 @@ import {
   HomeLayout as DefaultHomeLayout,
   type HomeLayoutProps,
 } from "@rspress/core/theme-original";
-import HomeExample from "@/content/docs/_home-example.mdx";
+import HomeContent from "@/content/docs/index.mdx";
 import { chapters } from "@/data/chapters";
-import BookContents from "./BookContents";
 
 const appendix = { link: "/engineering", text: "附录：工程实践" };
 
@@ -31,11 +30,10 @@ export function HomeLayout(props: HomeLayoutProps) {
       beforeFeatures={
         <div className="mx-auto max-w-6xl px-5 pb-10 sm:px-10">
           <section className="rp-doc max-w-2xl" aria-label="Python 示例">
-            <HomeExample components={getCustomMDXComponent()} />
+            <HomeContent components={getCustomMDXComponent()} />
           </section>
         </div>
       }
-      afterFeatures={<BookContents />}
     />
   );
 }

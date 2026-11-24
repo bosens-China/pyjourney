@@ -5,7 +5,7 @@ description: 从零开始，探索 Python 的奇妙世界。
 hero:
   name: Python 漫游指南
   text: PyJourney
-  tagline: 从零开始，探索 Python 的奇妙世界。以 Python 3.15 为准，只讲值得先学会的部分和今天推荐的写法，在浏览器里边读边练。
+  tagline: 从零开始，探索 Python 的奇妙世界。以 Python 3.15 为准，打开浏览器就能边读边练。
   image:
     src: /logo-mark.svg
     alt: ""
@@ -18,19 +18,28 @@ hero:
       link: /preface
 features:
   - title: 只讲精粹
-    details: 以 Python 3.15 官方文档为准，只介绍当前推荐的写法，不罗列旧语法和方法表。
+    details: 从 Python 3.15 官方文档出发，挑出值得先学的写法，讲清楚为什么这样写。
     icon: 🧭
     span: 6
   - title: 分步图解
-    details: 引用、执行路径和切片用分步动画展开，看清每一行代码改变了什么。
+    details: 一步步看清名字指向哪个对象、代码走过哪条路径、切片取出了哪些元素。
     icon: 🎞️
     span: 6
   - title: 边读边练
-    details: 浏览器里直接运行 Python，练习既检查输出，也检查是否用了推荐的写法。
+    details: 直接在浏览器里写 Python。练习会核对输出，也会检查写法是否符合题意。
     icon: 🧪
     span: 6
   - title: 章末挑战
-    details: 每章一道综合题，多组测试逐项给出结果，卡住时可以对照参考答案。
+    details: 每章一道综合题。运行后可以逐项查看测试结果，卡住时可以展开参考答案。
     icon: 🏁
     span: 6
 ---
+
+```python title="先猜一猜"
+a = [1, 2, 3]
+b = a
+a.append(4)
+print(b)
+```
+
+给 `a` 指向的列表追加一项后，`print(b)` 会输出什么？[在 1.2 节看分步图解](./chapter-01/object-model-and-references.mdx)。
