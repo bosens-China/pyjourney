@@ -9,7 +9,7 @@ import { chapter07 } from "@/data/chapters/chapter-07";
 
 ## 题目
 
-`rows` 是一组 `(名称, 单价, 数量)`。定义数据类 `Item`，并给它一个返回小计的方法 `total()`。编辑器里已经写好了创建订单项、打印小计和合计的代码，最后还会尝试修改第一项的数量。
+`rows` 里的每一项都是一个三元组，依次记录名称、单价和数量。定义数据类 `Item`，再实现返回小计的 `total()` 方法。编辑器中的现成代码会用 `Item` 创建订单项，打印每项小计和订单合计。最后，它会尝试修改第一项的数量。
 
 | 每行的位置 | 字段 | 类型 |
 | --- | --- | --- |
@@ -21,7 +21,7 @@ import { chapter07 } from "@/data/chapters/chapter-07";
 
 1. 用 `@dataclass(frozen=True)` 定义 `Item`，让修改字段引发 `FrozenInstanceError`。
 2. 按上表顺序声明字段，由数据类生成 `__init__`。
-3. `total()` 返回单价乘以数量。
+3. `total()` 返回单价与数量的乘积。
 
 <ChallengeExample example={chapter07.challenge.cases[0]} />
 

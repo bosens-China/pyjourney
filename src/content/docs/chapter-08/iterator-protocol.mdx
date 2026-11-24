@@ -1,12 +1,14 @@
 ---
 title: 迭代器协议
-description: for 通过 iter 与 __next__ 取值，并用 StopIteration 结束；类用 __iter__ 接入这套协议。
+description: 看 for 怎样逐项取值，并用 __iter__ 和 __next__ 定义自己的迭代器。
 ---
 
 import IteratorExplorer from "@/components/learning/IteratorExplorer";
 import PythonExercise from "@/components/python/PythonExercise";
 
-`for` 能遍历列表、元组、字典、字符串这些容器。它在容器上调用 `iter()`，得到定义了 `__next__` 的迭代器。每次循环调用 `__next__` 取下一个元素。元素用尽时，`__next__` 引发 `StopIteration`，`for` 据此结束。内置函数 `next()` 就是去调用这个方法；自己调用到尽头时，异常会直接冒出来。
+`for` 可以遍历列表、元组、字典和字符串。它先用 `iter()` 取得迭代器，再反复调用迭代器的 `__next__` 方法取出下一项。取尽时，该方法引发 `StopIteration`，循环就结束了。
+
+想自己逐项读取时，可以用内置函数 `next()` 调用同一个方法。
 
 ```python
 it = iter("abc")
@@ -15,13 +17,13 @@ print(next(it))
 print(next(it))
 ```
 
-第三次之后再 `next(it)`，得到的是 `StopIteration`。
+这三次调用依次取出 `a`、`b` 和 `c`。再调用一次 `next(it)` 就会引发 `StopIteration`。
 
 <IteratorExplorer />
 
 ## 为自己的类实现协议
 
-`__iter__` 返回一个带 `__next__` 的对象。类自己已经定义了 `__next__` 时，`__iter__` 可以返回 `self`。下面这个类从序列末尾往前交值，取尽后把 `StopIteration` 交给 `for`。
+`__iter__` 负责返回迭代器，迭代器用 `__next__` 提供下一项。下面的 `Reverse` 自己就能逐项取值，所以 `__iter__` 返回 `self`。`__next__` 从序列末尾往前取值，取尽时引发 `StopIteration`。
 
 ```python
 class Reverse:
@@ -39,51 +41,57 @@ class Reverse:
         return self.data[self.index]
 ```
 
-`for char in Reverse("spam")` 依次得到 `m`、`a`、`p`、`s`。这里 `__iter__` 返回的是同一个对象，`index` 会减到 0。再对同一个实例做一次 `for` 时，`__next__` 立刻引发 `StopIteration`，循环体不执行。容器上的 `for` 每次都会重新调用 `iter()`，所以列表可以反复遍历。
+`for char in Reverse("spam")` 依次得到 `m`、`a`、`p`、`s`，`index` 最终减到 0。再次用 `for` 遍历同一个实例时，`__iter__` 仍会返回它自己。`__next__` 会立刻引发 `StopIteration`，第二次循环随即结束。
 
-迭代器只能走一遍。需要多次遍历时，保存容器本身，每次遍历都会从它重新取得一个新迭代器。
+每次开始遍历列表时，`for` 都会从列表取得一个新迭代器。要反复遍历这些数据，可以保留列表本身。
 
 ## 随堂练习
 
-实现同一个反向迭代器，把 `"spam"` 拼回一个字符串。
+实现 `EveryOther`。从第一项开始，每取出一项就跳过下一项。取尽后，再把同一个实例交给 `list()` 应当得到空列表。
 
 <PythonExercise
-  label="实现反向迭代器"
-  starterCode={`class Reverse:
+  label="实现隔项取值的迭代器"
+  starterCode={`class EveryOther:
       def __init__(self, data):
           self.data = data
-          self.index = len(data)
+          self.index = 0
 
-      # TODO：实现 __iter__，返回带 __next__ 的对象
-      # TODO：实现 __next__，从末尾往前交出元素，取尽时引发 StopIteration
+      # TODO：实现 __iter__，返回当前迭代器
+      # TODO：实现 __next__，每取一项就把位置向后移两格，越界时引发 StopIteration
 
-  print("".join(Reverse("spam")))
+  chars = EveryOther("abcde")
+  print("".join(chars))
+  print(list(chars))
 `}
-  solution={`class Reverse:
+  solution={`class EveryOther:
       def __init__(self, data):
           self.data = data
-          self.index = len(data)
+          self.index = 0
 
       def __iter__(self):
           return self
 
       def __next__(self):
-          if self.index == 0:
+          if self.index >= len(self.data):
               raise StopIteration
-          self.index = self.index - 1
-          return self.data[self.index]
+          item = self.data[self.index]
+          self.index += 2
+          return item
 
-  print("".join(Reverse("spam")))
+  chars = EveryOther("abcde")
+  print("".join(chars))
+  print(list(chars))
 `}
-  expectedOutput={`maps`}
+  expectedOutput={`ace
+  []`}
 checks={[
 {
-message: "定义 __iter__ 和 __next__",
-test: "{'__iter__', '__next__'} <= {f.name for f in nodes(ast.FunctionDef)}",
+message: "EveryOther 定义 __iter__ 和 __next__",
+test: "any(c.name == 'EveryOther' and {'__iter__', '__next__'} <= {s.name for s in c.body if isinstance(s, ast.FunctionDef)} for c in nodes(ast.ClassDef))",
 },
 {
-message: "取尽时引发 StopIteration",
-test: "any(name_of(r.exc) == 'StopIteration' for r in nodes(ast.Raise))",
+message: "__next__ 取尽时引发 StopIteration",
+test: "any(f.name == '__next__' and any(isinstance(n, ast.Raise) and name_of(n.exc) == 'StopIteration' for n in ast.walk(f)) for f in nodes(ast.FunctionDef))",
 },
 ]}
 />

@@ -1,13 +1,13 @@
 ---
 title: 导入
-description: import 绑定模块名，from 绑定模块里的名字，as 更换绑定名。__name__ 区分模块是被导入还是被直接运行。
+description: 导入模块或模块里的对象，用 as 指定本地名字，用 __name__ 控制入口代码何时运行。
 ---
 
 import ConceptStepper from "@/components/learning/ConceptStepper";
 import QuickQuiz from "@/components/learning/QuickQuiz";
 import PythonExercise from "@/components/python/PythonExercise";
 
-模块是存有 Python 定义和语句的文件，文件名是模块名加 `.py`。模块里的全局变量 `__name__` 就是模块名。较长的程序按模块拆开，同一个函数就可以被多个脚本导入，不必复制定义。
+把可复用的函数写进 `.py` 文件，就能把这个文件当作模块，在多个脚本中使用同一份定义。例如，`import fibo` 可以导入 `fibo.py`，模块的 `__name__` 是 `"fibo"`。Python 也提供 `sys` 这样的内置模块，导入时无需对应的 `.py` 文件。
 
 ```python
 import fibo
@@ -17,11 +17,11 @@ fibo.fib2(100)
 fibo.__name__  # 'fibo'
 ```
 
-`import fibo` 只把名字 `fibo` 放进当前命名空间，不会把 `fib`、`fib2` 放进来。常用的函数可以再赋给一个局部名字：`fib = fibo.fib`。
+`import fibo` 让当前文件里的 `fibo` 指向模块。访问模块里的函数时，写 `fibo.fib` 或 `fibo.fib2`。也可以写 `fib = fibo.fib`，让当前文件里的 `fib` 直接指向这个函数。
 
-模块顶层的语句在第一次被导入时执行，用来初始化模块；同一个程序里，模块只导入一次。每个模块有自己的全局命名空间，所以模块作者的全局变量不会和使用者的全局变量撞名。
+Python 第一次加载模块时，先把模块放进 `sys.modules`，再执行顶层代码。再次用同一个模块名导入时，通常会复用缓存里的模块。每个模块都有自己的全局命名空间，可以用 `fibo.fib` 访问其中的名字。
 
-`import` 写在文件开头，按标准库、第三方库、本项目模块分成三组，组与组之间空一行：
+通常把导入语句放在文件开头。按标准库、第三方库和本项目模块分成三组，组与组之间空一行。
 
 ```python
 import json
@@ -34,23 +34,23 @@ from myapp import settings
 
 ## from 与 as
 
-`from fibo import fib, fib2` 把这两个函数名放进导入方的命名空间，不会绑定 `fibo`。写出要导入的名字，不要用 `from fibo import *`：它会带进一批来源不明显的名字，还可能覆盖已有名字。
+`from fibo import fib, fib2` 只绑定这两个名字，它们分别指向模块里的两个函数。逐个写出需要的名字，读者就能看出它们来自哪里。`from fibo import *` 会带进一批名字，也可能覆盖同名对象的绑定。
 
-`as` 把导入到的对象绑到新名字上：
+用 `as` 可以为导入的对象指定一个本地名字。
 
 ```python
 import fibo as fib
 from fibo import fib as fibonacci
 ```
 
-`import fibo as fib` 仍然载入整个模块，只是本地名字是 `fib`。
+第一行让本地的 `fib` 指向模块。第二行让本地的 `fibonacci` 指向模块里的 `fib` 函数。
 
 <ConceptStepper
   label="导入后，当前文件里的名字指向什么？"
   steps={[
     {
       code: "import fibo",
-      description: "当前文件绑定了 fibo，指向模块。调用函数时写 fibo.fib(50)。",
+      description: "名字 fibo 指向整个模块，因此可以写 fibo.fib(50)。",
       diagram: {
         kind: "refs",
         names: [{ name: "fibo", to: "fibo 模块" }],
@@ -63,7 +63,7 @@ from fibo import fib as fibonacci
     },
     {
       code: "from fibo import fib",
-      description: "单独执行这一条时，当前文件只绑定 fib，可以直接写 fib(50)。",
+      description: "单独执行这一行时，名字 fib 指向模块里的函数，可以直接写 fib(50)。",
       diagram: {
         kind: "refs",
         names: [{ name: "fib", to: "fib 函数" }],
@@ -73,7 +73,7 @@ from fibo import fib as fibonacci
     },
     {
       code: "from fibo import fib as fibonacci",
-      description: "单独执行这一条时，当前文件用 fibonacci 指向同一个函数，可以写 fibonacci(50)。",
+      description: "单独执行这一行时，名字 fibonacci 指向同一个函数，可以写 fibonacci(50)。",
       diagram: {
         kind: "refs",
         names: [{ name: "fibonacci", to: "fib 函数" }],
@@ -86,7 +86,7 @@ from fibo import fib as fibonacci
 
 ## 以脚本方式执行
 
-`python fibo.py <arguments>` 会执行模块里的代码，并把 `__name__` 设为 `"__main__"`。文件末尾可以据此只在直接运行时处理命令行：
+用 `python fibo.py <arguments>` 运行脚本时，Python 会把 `__name__` 设为 `"__main__"`。把处理命令行参数的代码放进下面的分支，它就只会在直接运行时执行。
 
 ```python
 if __name__ == "__main__":
@@ -94,14 +94,14 @@ if __name__ == "__main__":
     fib(int(sys.argv[1]))
 ```
 
-同一个文件被别的模块导入时，`__name__` 是模块名，这段代码不运行。这用来提供一个简单的命令行入口，或者把模块当作测试脚本运行。
+其他模块导入 `fibo` 时，`__name__` 是 `"fibo"`，导入会跳过这个分支。同一个文件因此既能作为命令行入口，也能让其他模块复用其中的函数。
 
 ## 模块搜索路径
 
-导入 `spam` 时，解释器先找内置模块，再按 `sys.path` 列出的目录依次找 `spam.py`。`sys.path` 的第一项是直接运行的脚本所在的目录，排在标准库前面。所以自己的文件不要和标准库模块同名：放在脚本旁边的 `json.py` 会挡住标准库的 `json`。
+在默认设置下，直接运行脚本时，Python 会在标准库目录之前搜索脚本所在的目录。给自己的模块取一个和标准库不同的名字。例如，脚本旁边的 `json.py` 可能让 `import json` 加载你写的文件。
 
 <QuickQuiz
-  question="fibo.py 末尾有 if __name__ == '__main__':。哪种运行方式会执行这个分支？"
+  question="哪种运行方式会进入 fibo.py 的 if __name__ == '__main__' 分支？"
   options={[
     "import fibo",
     "from fibo import fib",
@@ -111,7 +111,7 @@ if __name__ == "__main__":
   answerIndex={2}
   feedback={[
     "被导入时 __name__ 是模块名 'fibo'，不是 '__main__'。",
-    "from ... import 同样会载入并执行模块，__name__ 仍是 'fibo'。",
+    "from ... import 也是导入。模块的 __name__ 仍是 'fibo'。",
     "",
     "as 只改变本地绑定的名字，模块自己的 __name__ 仍是 'fibo'。",
   ]}
@@ -123,7 +123,7 @@ if __name__ == "__main__":
 补上两条导入语句，让后面的 `m` 指向模块 `math`，`root` 指向 `math.sqrt`。
 
 <PythonExercise
-  label="用 as 更换模块名和函数名"
+  label="用 as 指定导入后的本地名字"
   starterCode={`# TODO：导入 math，本地名字是 m
   # TODO：从 math 导入 sqrt，本地名字是 root
 

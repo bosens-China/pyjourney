@@ -1,6 +1,6 @@
 ---
 title: "用模式匹配分发指令"
-description: "按序列形状区分移动、停留和无法识别的指令。"
+description: "遍历一批指令，用序列模式和守卫区分移动、停留和未知指令。"
 ---
 
 import ChallengeExample from "@/components/python/ChallengeExample";
@@ -9,19 +9,19 @@ import { chapter03 } from "@/data/chapters/chapter-03";
 
 ## 题目
 
-`command` 是一个序列。按它的形状决定输出。
+`commands` 按到达顺序记录了一批指令。逐条检查指令的内容，每条指令输出一行。
 
-| 指令形状 | 输出 |
+| 指令 | 输出 |
 | --- | --- |
-| `["go", 方向]`，正好两项 | `前往 ` 加上方向 |
+| 正好两项的 `["go", 方向]`，方向是 `north`、`south`、`east` 或 `west` | `前往 ` 加上方向 |
 | `["stay"]`，正好一项 | `停留` |
-| 其他形状 | `未知` |
+| 其他指令，包括方向无效的移动指令 | `未知` |
 
 ### 题目要求
 
-1. 使用 `match` / `case`，不要写成一串 `isinstance` 判断。
-2. 方向绑定到 `direction`。
-3. 输出必须与样例一致。
+1. 用 `for` 按原来的顺序遍历 `commands`。
+2. 在 `match` 中用序列模式提取方向，绑定到 `direction`。
+3. 用 `case` 中的守卫检查方向是否有效。
 
 <ChallengeExample example={chapter03.challenge.cases[0]} />
 

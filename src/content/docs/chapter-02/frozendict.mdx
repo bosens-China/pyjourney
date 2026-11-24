@@ -1,43 +1,41 @@
 ---
 title: 不可变映射
-description: frozendict 是内置的不可变映射。它不是 dict 的子类；键和值都可哈希时，它自己也可哈希。
+description: 用 frozendict 保存固定的选项，了解什么时候可以把整个映射当作字典的键。
 ---
 
 import ConceptStepper from "@/components/learning/ConceptStepper";
 import QuickQuiz from "@/components/learning/QuickQuiz";
 import PythonExercise from "@/components/python/PythonExercise";
 
-`frozendict` 是内置的不可变映射。创建之后不能再修改：按下标赋值会引发 `TypeError`。它直接继承自 `object`，不是 `dict` 的子类，所以 `isinstance(frozen, dict)` 为假。要同时接受这两种映射，可以写 `isinstance(value, (dict, frozendict))`；`collections.abc.Mapping` 还会接受其他映射。
+`frozendict` 是内置的不可变映射，适合保存一组固定选项。和创建 `dict` 一样，可以传入关键字参数、另一个映射或一组键值对。试图给已有的 `frozendict` 按键赋值时，Python 会引发 `TypeError`。
 
-构造方式和 `dict` 相同：可以传关键字参数、一个映射，或者一个由键值对组成的可迭代对象。它保留插入顺序，但相等比较不看顺序：键值对相同即为相等。
+每个键都固定指向原来的值。如果值是列表，仍可往列表里追加元素。这组标签也可以用元组保存，让标签本身也固定下来。
+
+```python
+config = frozendict(tags=["python"])
+config["tags"].append("入门")
+print(config["tags"])  # ['python', '入门']
+```
+
+`frozendict` 保留键值对的插入顺序。两个 `frozendict` 包含相同的键值对就相等，它们的插入顺序可以不同。
 
 :::note 什么时候可以当作字典的键
 
-`frozendict` 可以存放列表这样的不可哈希值。要把这个映射放进集合或当作字典的键，它自己的键和值就都得可哈希。
+`frozendict` 可以存放不可哈希的值，例如列表。如果里面的键和值都可哈希，就能把整个 `frozendict` 放进集合，或用作字典的键。
 
 :::
-
-```python
-a = frozendict(x=1, y=2)
-b = frozendict(y=2, x=1)
-print(a)           # frozendict({'x': 1, 'y': 2})
-print(a == b)      # True
-print(hash(a) == hash(b))  # True
-```
-
-程序里不应被修改的配置表、作为默认值的映射，以及需要放进集合或当作键的映射，都适合用 `frozendict`。
 
 <ConceptStepper
   label="顺序不影响相等，赋值会被拒绝"
   steps={[
     {
       code: "a = frozendict(x=1, y=2)",
-      description: "用关键字参数创建一个不可变映射，并记住插入顺序。",
+      description: "用关键字参数创建不可变映射。x 先插入，y 后插入。",
       values: [{ name: "a", value: "frozendict({'x': 1, 'y': 2})" }],
     },
     {
       code: "b = frozendict(y=2, x=1)",
-      description: "插入顺序不同。键值对相同，所以 a == b，哈希也相同。",
+      description: "b 先插入 y，再插入 x。a 和 b 的键值对相同，所以两者相等，哈希值也相等。",
       values: [
         { name: "a == b", value: "True" },
         { name: "hash(a) == hash(b)", value: "True" },
@@ -45,37 +43,35 @@ print(hash(a) == hash(b))  # True
     },
     {
       code: "a['z'] = 3",
-      description: "创建之后不能写入新键，这一行引发 TypeError。",
+      description: "a 已经创建。试图写入新键 z 时，Python 引发 TypeError。",
       output: "TypeError: 'frozendict' object does not support item assignment",
     },
   ]}
 />
 
 <QuickQuiz
-  question="最后一行输出什么？"
-  code={`a = frozendict(x=1, y=2)
-  b = frozendict({"y": 2, "x": 1})
-  print(a == b, isinstance(a, dict))`}
-  options={["True True", "True False", "False False", "False True"]}
+  question="哪个 frozendict 可以直接当作字典的键？"
+  code={`a = frozendict(tags=["python"])
+  b = frozendict(tags=("python",))`}
+  options={["只有 a", "只有 b", "a 和 b 都可以", "a 和 b 都不可以"]}
   answerIndex={1}
   feedback={[
-    "frozendict 直接继承自 object，不是 dict 的子类。",
+    "a 的值是列表，列表不可哈希。",
     "",
-    "相等比较只看键值对，不看插入顺序和构造方式。",
-    "相等比较只看键值对；而且 frozendict 不是 dict 的子类。",
+    "要分别检查两组设置的值。a 的值是列表，无法哈希。",
+    "b 的值是只包含字符串的元组，因此可哈希。",
   ]}
-  explanation="两个映射的键值对相同，所以相等。frozendict 不是 dict 的子类，isinstance 检查为假。"
+  explanation="b 中的键和元组值都可哈希，所以 b 可以直接用作字典的键。"
 />
 
 ## 随堂练习
 
-`prices` 按商品选项记录价格。字典不可哈希，不能当作键；把 `red_m` 和 `red_l` 改成 `frozendict`，查价时就不必在意键的顺序。
+`prices` 按颜色和尺码记录商品价格。用 `frozendict` 创建 `red_m` 和 `red_l`，把每组商品选项当作一个键。查询时，同一组颜色和尺码可以按任意顺序写。
 
 <PythonExercise
   label="用 frozendict 当作字典的键"
-  starterCode={`# TODO：把 red_m 和 red_l 改成 frozendict
-  red_m = {"size": "M", "color": "red"}
-  red_l = {"size": "L", "color": "red"}
+  starterCode={`# TODO：用 frozendict 创建红色 M 码的选项 red_m
+  # TODO：用 frozendict 创建红色 L 码的选项 red_l
 
   prices = {red_m: 99, red_l: 109}
 
@@ -101,3 +97,5 @@ print(hash(a) == hash(b))  # True
     },
   ]}
 />
+
+`frozendict` 直接继承自 `object`。要同时接受 `dict` 和 `frozendict`，可以用 `isinstance(value, (dict, frozendict))` 检查。要接受其他映射类型，可以用 `collections.abc.Mapping` 检查。参见 [Python 3.15 的 frozendict 说明](https://docs.python.org/zh-cn/3.15/builtins/stdtypes.html#frozendict)。

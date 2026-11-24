@@ -1,6 +1,6 @@
 ---
 title: 类型标注与泛型
-description: 给变量、参数和返回值写类型标注；用 type 语句声明类型别名，用类型参数写出泛型函数和泛型类。
+description: 给变量、参数和返回值写类型标注，再用类型别名和类型参数描述更复杂的类型。
 ---
 
 import ConceptStepper from "@/components/learning/ConceptStepper";
@@ -9,7 +9,7 @@ import PythonExercise from "@/components/python/PythonExercise";
 
 ## 类型标注
 
-类型标注写在名字后面的冒号之后，返回值的标注写在 `->` 之后：
+变量名或参数名后面的冒号引出类型标注。函数的返回值类型写在 `->` 后面。
 
 ```python
 def average(scores: list[float]) -> float:
@@ -19,13 +19,15 @@ counts: dict[str, int] = {}
 nickname: str | None = None
 ```
 
-容器类型直接写内置类名，方括号里写元素类型：`list[int]`、`dict[str, int]`、`tuple[int, str]`、`set[str]`。`X | Y` 表示两者之一，`str | None` 表示「字符串，或者没有值」。
+标注容器时，先写内置类名，再用方括号说明其中的类型。`list[int]` 表示整数列表，`dict[str, int]` 表示键是字符串、值是整数的字典。元组和集合也能用同样的写法，例如 `tuple[int, str]` 和 `set[str]`。
 
-Python 运行时不检查标注。它们是写给读者、编辑器和静态类型检查器的：检查器读源码，在程序运行之前指出类型对不上的调用。公开的函数和类写上标注，局部变量通常让检查器自己推断。
+`X | Y` 表示两种类型都可以。例如 `str | None` 表示值可以是字符串，也可以是 `None`。
+
+类型标注方便读者和工具理解代码。静态类型检查器读源码，可以在运行前指出类型不匹配的调用。Python 本身在运行时不检查标注。通常可以为公开的函数和类加上标注，把局部变量的类型留给检查器推断。
 
 ## 类型别名
 
-类型写得很长、又多处重复时，用 `type` 语句给它起个名字：
+同一个复杂的类型在多处用到时，可以用 `type` 语句给它起个名字。
 
 ```python
 type Point = tuple[float, float]
@@ -36,7 +38,7 @@ def perimeter(shape: Polygon) -> float: ...
 
 ## 泛型
 
-有的函数对任何类型都成立，但参数和返回值的类型之间有联系：`first` 返回列表的第一项，传入 `list[int]` 就得到 `int`，传入 `list[str]` 就得到 `str`。把这种联系写成类型参数，放在名字后面的方括号里：
+`first` 返回列表的第一项。传入 `list[int]` 就得到 `int`，传入 `list[str]` 就得到 `str`。类型参数把这种联系写明。声明时，把类型参数放进名字后面的方括号。
 
 ```python
 def first[T](items: list[T]) -> T:  # [!code highlight]
@@ -52,7 +54,9 @@ class Box[T]:
 type Pair[T] = tuple[T, T]
 ```
 
-类型参数只在这个函数、类或别名里可见，写完 `first` 之后，模块里并没有名字 `T`。`T: int` 限定它必须是 `int` 或其子类，`T: (str, bytes)` 限定它只能是列出的类型之一。运行时，泛型函数和泛型类的用法与普通函数、普通类相同。
+类型参数只在声明它的函数、类或类型别名里可见。因此，`first` 的 `T` 只在它自己的定义中使用。可以用 `T: int` 允许 `int` 及其子类，也可以用 `T: (str, bytes)` 让检查器把 `T` 确定为列出的类型之一。
+
+运行时，泛型函数照常调用，泛型类也照常创建实例。
 
 <ConceptStepper
   label="类型检查器怎样推断 T"
@@ -60,13 +64,13 @@ type Pair[T] = tuple[T, T]
     {
       code: "def first[T](items: list[T]) -> T:\n    return items[0]",
       description:
-        "T 只属于 first，表示「列表元素的类型」和「返回值的类型」是同一个。",
+        "T 由 first 声明。列表元素和返回值用同一个 T 标注。",
       values: [{ name: "T", value: "尚未确定" }],
     },
     {
       code: "n = first([8, 1])",
       description:
-        "实参是 list[int]，检查器推断 T 为 int，于是 n 的类型是 int。",
+        "传入的是整数列表。检查器据此推断 T 为 int，于是 n 的类型也是 int。",
       values: [
         { name: "T", value: "int" },
         { name: "n", value: "8" },
@@ -74,7 +78,7 @@ type Pair[T] = tuple[T, T]
     },
     {
       code: 's = first(["a", "b"])',
-      description: "每次调用单独推断。这一次 T 是 str，s 的类型是 str。",
+      description: "检查器为这次调用重新推断。传入的是字符串列表，所以 T 和 s 的类型都是 str。",
       values: [
         { name: "T", value: "str" },
         { name: "s", value: "'a'" },
@@ -94,15 +98,15 @@ answerIndex={1}
 feedback={[
 "标注不会把实参转换成 int，传进去的仍是字符串。",
 "",
-"Python 运行时不检查标注，字符串相加是合法操作。类型检查器会在运行前指出这里的问题。",
-"标注只是附加信息，代码的语法完全正确。",
+"运行时收到的是两个字符串，字符串可以用 + 连接。",
+"这段调用语法正确。类型检查器可以提前指出实参类型与标注不符。",
 ]}
-explanation="运行时不检查标注，'1' + '2' 得到 '12'。静态类型检查器会在运行之前报告这次调用不符合 int 标注。"
+explanation="Python 按实际收到的值运算，'1' + '2' 得到 '12'。静态类型检查器可以指出两个实参与 int 标注不符。"
 />
 
 ## 随堂练习
 
-用类型参数 `T` 写出泛型函数 `first`：参数是 `list[T]`，返回值是 `T`。它运行时就是一个普通函数，返回列表的第一项。
+定义泛型函数 `first`，用 `list[T]` 标注参数，用 `T` 标注返回值。函数返回列表的第一项。
 
 <PythonExercise
   label="定义带类型参数的函数"

@@ -1,6 +1,6 @@
 ---
 title: 映射模式与守卫
-description: 映射模式按写出的键提取值并忽略其余键。守卫在捕获之后求值，为假就继续尝试下一个 case。
+description: 用映射模式按键取值，再用守卫判断是否执行匹配到的分支。
 ---
 
 import ConceptStepper from "@/components/learning/ConceptStepper";
@@ -22,7 +22,7 @@ export const guardFlow = {
   ],
 };
 
-映射模式从字典里取出指定的键。`{"bandwidth": b, "latency": l}` 把这两个键的值绑到 `b` 和 `l`。没有写出来的键被忽略；序列模式则要求项数对应，多出来的项不能悄悄丢掉。`**rest` 可以把其余键值对收进一个字典。`**_` 是多余的，不允许使用。
+映射模式按键取值。`{"bandwidth": b, "latency": l}` 把指定键的值分别绑定到 `b` 和 `l`。字典里可以有额外的键，默认会忽略它们。需要保留这些键值对时，可以用 `**rest` 收进一个字典。双星号后要写一个接收这些键值对的普通名字。
 
 ```python
 match event:
@@ -32,7 +32,7 @@ match event:
         print(kind, rest)
 ```
 
-模式可以嵌套。`as` 给已经匹配的子模式再起一个名称，常和 `|` 一起用：
+模式里还可以嵌套其他模式。`as` 把子模式匹配到的值绑定到一个名字。下面先用 `|` 匹配一个方向，再用 `as` 把方向绑定到 `direction`。
 
 ```python
 match command.split():
@@ -42,7 +42,7 @@ match command.split():
 
 ## 守卫
 
-模式后面可以写 `if`。匹配时先按模式捕获，再求守卫。守卫为假就放弃这个 `case`，继续尝试下一个。守卫为真才执行该分支。
+写在模式后面的 `if` 条件叫作守卫。Python 先匹配模式并绑定名字，再检查守卫。守卫为真就执行这个分支。守卫为假就继续尝试下一个 `case`。
 
 ```python
 match point:
@@ -57,7 +57,7 @@ match point:
   steps={[
     {
       code: "point = (2, 2)",
-      description: "模式先把元组的两项绑到 x 和 y。",
+      description: "模式先把元组的两项分别绑定到 x 和 y。",
       values: [
         { name: "x", value: "2" },
         { name: "y", value: "2" },
@@ -66,13 +66,13 @@ match point:
     },
     {
       code: "case (x, y) if x == y:",
-      description: "两个值同为 2，守卫 x == y 为真，执行这个分支。",
+      description: "x 和 y 都是 2。守卫 x == y 为真，程序执行当前分支。",
       output: "在对角线上：2",
       diagram: { ...guardFlow, active: ["bind", "guard", "accept"] },
     },
     {
       code: "point = (1, 2)",
-      description: "同样的模式仍能绑定两项。1 和 2 不相等，守卫为假，尝试下一个 case。",
+      description: "模式仍然匹配，x 是 1，y 是 2。守卫为假，所以程序继续尝试下一个 case。",
       values: [
         { name: "x", value: "1" },
         { name: "y", value: "2" },
@@ -93,20 +93,20 @@ match point:
   options={["没有匹配", "1", "什么都不输出", "{'a': 1, 'b': 2}"]}
   answerIndex={1}
   feedback={[
-    "映射模式不要求写出全部键，多出来的键 b 被忽略。",
+    "模式只要求键 a 存在。字典还包含键 b，它会被忽略。",
     "",
-    "第一个 case 已经匹配，会执行它的 print。",
-    "n 绑定的是键 a 对应的值，不是整个字典。",
+    "第一个 case 匹配成功，程序会执行其中的 print()。",
+    "n 绑定到键 a 对应的值，也就是 1。",
   ]}
-  explanation="映射模式只提取写出来的键，额外的键被忽略。n 绑到 1，第一个成功匹配的分支输出 1。"
+  explanation="第一个模式只提取键 a 的值。它把 n 绑定到 1，然后执行这个分支，打印 1。"
 />
 
 ## 随堂练习
 
-遍历订单列表，对每个订单按下面的顺序匹配：
+逐条遍历订单。匹配模式 `{"id": order_id, "status": "paid", "amount": amt}` 时，用守卫区分两种金额。每条订单输出一行。
 
-- `{"id": order_id, "status": "paid", "amount": amt}` 并且 `amt >= 100` 时，输出 `VIP 订单 {order_id}: 已付款 {amt} 元`；
-- 同样的键，但守卫不成立时，输出 `普通订单 {order_id}: 已付款 {amt} 元`；
+- 匹配上述模式且 `amt >= 100` 时，输出 `VIP 订单 {order_id}: 已付款 {amt} 元`。
+- 其余匹配上述模式的订单，输出 `普通订单 {order_id}: 已付款 {amt} 元`。
 - 其他订单输出 `其他订单`。
 
 <PythonExercise

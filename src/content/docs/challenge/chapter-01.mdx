@@ -1,6 +1,6 @@
 ---
 title: "确认两个名字是否共用一个列表"
-description: "把一个名字追加元素，观察另一个名字看到的内容和两者是否是同一个对象。"
+description: "通过一个名字修改列表，再从另一个名字读取列表，验证两个名字是否指向同一个对象。"
 ---
 
 import ChallengeExample from "@/components/python/ChallengeExample";
@@ -9,15 +9,17 @@ import { chapter01 } from "@/data/chapters/chapter-01";
 
 ## 题目
 
-`records` 和 `extra` 已经给定。让 `alias` 指向同一个列表，追加 `extra`，并打印列表最后一个元素，以及两个名字是否指向同一个对象。
+`records` 是一个列表，`extra` 是要追加的元素。用两个名字操作这个列表，观察通过其中一个名字追加元素后，从另一个名字能读到什么。
 
 ### 题目要求
 
-1. 令 `alias` 与 `records` 指向同一个列表。
-2. 把 `extra` 追加到这个列表。
-3. 打印最后一个元素，以及 `alias is records` 的结果，中间用一个空格分隔。
+1. 让 `alias` 和 `records` 指向同一个列表。
+2. 通过 `alias` 把 `extra` 追加到列表末尾。
+3. 在同一行输出 `records` 的最后一项和 `alias is records` 的结果，中间用一个空格隔开。
 
-需要复习时，可以回看[名字指向列表的图解](../chapter-01/object-model-and-references.mdx)。
+用 `records[-1]` 读取列表的最后一项。`print()` 可以接收两个值，默认在它们中间放一个空格。
+
+可以回看两个名字共享列表的图解。[名字、身份与可变性](../chapter-01/object-model-and-references.mdx)
 
 <ChallengeExample example={chapter01.challenge.cases[0]} />
 

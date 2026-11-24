@@ -1,6 +1,6 @@
 ---
 title: 捕获与清理
-description: 语法错误在执行前就被解析器拒绝。运行期异常用 try、except、else 和 finally 处理，并且只捕获预计会出现的具体类型。
+description: 区分语法错误和运行时异常，用 try、except、else 和 finally 处理具体异常并清理资源。
 ---
 
 import ConceptStepper from "@/components/learning/ConceptStepper";
@@ -26,24 +26,19 @@ export const exceptionFlow = {
   ],
 };
 
-错误分两类。语法错误在代码运行之前就被解析器拒绝，错误信息会用箭头指出发现错误的位置。异常则发生在运行时：语法正确的代码执行到 `10 * (1/0)` 会引发 `ZeroDivisionError`，执行到 `'2' + 2` 会引发 `TypeError`。错误信息的最后一行是异常类型和细节，前面是堆栈回溯，显示异常是从哪一行一路传出来的。
+Python 在运行代码前会检查语法，遇到语法错误时会标出发现问题的位置。语法正确的代码在运行时也可能引发异常。例如，`10 * (1/0)` 会引发 `ZeroDivisionError`，`'2' + 2` 会引发 `TypeError`。回溯列出异常经过的调用位置，通常在末尾显示异常类型和错误信息。
 
 ## try、except、else、finally
 
-`try` 子句先执行。没有异常，就跳过所有 `except`。出现异常时，`try` 子句剩下的部分不再执行；类型与某个 `except` 匹配，就执行那一个处理器，然后继续 `try` 语句之后的代码。没有匹配的处理器时，异常继续向外传播，交给外层的 `try`，包括调用方函数里的 `try`；一直没有处理，程序就停止并输出错误信息。
+Python 先执行 `try` 子句。遇到异常时，会跳过其中剩余的语句，按顺序查找第一个匹配的 `except`。找不到匹配的处理器，异常就继续向外传播。异常传到程序的最外层时，解释器通常会显示回溯。
 
-`except` 匹配该类及其派生类的实例，不匹配它的基类。多个 `except` 时，把派生类写在基类前面，否则先写到的基类会接住后面的派生类。一个 `except` 要同时处理几种类型时，写成元组：
+`except` 匹配指定类及其派生类的实例。若派生类和基类都有各自的处理器，把派生类写在前面。几种具体异常共用一个处理器时，可以把类型写成元组，如 `except (OSError, ValueError) as err:`。
 
-```python
-except (RuntimeError, TypeError, NameError):
-    pass
-```
+`except ValueError as err` 会把名字 `err` 绑定到捕获的异常实例。可以直接打印 `err` 来查看错误信息，也可以通过 `err.args` 查看异常的参数。
 
-`except ValueError as err` 把异常实例绑到 `err`。实例通常有 `args`。内置异常的 `__str__()` 会把参数打出来，所以可以直接打印 `err`。
+`else` 可选，写在所有 `except` 后面。`try` 子句顺利执行到末尾才会进入 `else`。用 `return`、`break` 或 `continue` 提前退出时，会直接跳过 `else`。把成功后要做的事放在 `else`，前面的 `except` 就只会处理 `try` 子句中的异常。
 
-`else` 可选，必须放在全部 `except` 后面。它运行 `try` 没有引发异常时才要执行的代码。这段逻辑放在 `else` 里，避免被 `try` 意外捕获。
-
-`finally` 可选，是离开这个 `try` 语句前最后执行的部分。无论是否发生异常、是否从 `try` 里 `return`，它都会执行，适合释放资源。异常没有被 `except` 处理时，`finally` 执行完再让异常继续传播。
+`finally` 可选。写了它，就会在离开整条 `try` 语句前执行，适合用来释放资源。即使发生异常，或 `try` 里已经执行了 `return`，也会先完成 `finally`。未处理的异常随后继续向外传播。
 
 :::warning 当心提前离开 finally
 
@@ -63,16 +58,12 @@ def divide(x, y):
         print("executing finally clause")
 ```
 
-`divide(2, 1)` 走 `else`，然后 `finally`。`divide(2, 0)` 走 `ZeroDivisionError` 的处理器，然后 `finally`。`divide("2", "1")` 的 `TypeError` 没有对应处理器，`finally` 执行完再把这个异常抛出去。
-
-文件这类资源有预定义的清理动作，用 `with` 语句比手写 `try` / `finally` 更好：`with open("myfile.txt") as f` 在语句结束时关闭文件，处理过程中出了异常也会关。第 9 章细讲 `with`。
-
 <ConceptStepper
   label="三种调用各自经过哪些子句"
   steps={[
     {
       code: "divide(2, 1)",
-      description: "除法成功，跳过 except，else 打印结果，finally 仍然执行。",
+      description: "除法成功。else 打印结果，随后执行 finally。",
       output: "result is 2.0\nexecuting finally clause",
       diagram: {
         ...exceptionFlow,
@@ -82,7 +73,7 @@ def divide(x, y):
     {
       code: "divide(2, 0)",
       description:
-        "ZeroDivisionError 被对应的 except 处理，else 不运行，finally 仍然执行。",
+        "except 捕获 ZeroDivisionError。接下来跳过 else，直接执行 finally。",
       output: "division by zero!\nexecuting finally clause",
       diagram: {
         ...exceptionFlow,
@@ -92,7 +83,7 @@ def divide(x, y):
     {
       code: 'divide("2", "1")',
       description:
-        "TypeError 没有对应的处理器。finally 执行完，异常继续向外传播。",
+        "没有处理器匹配 TypeError。执行完 finally 后，异常继续向外传播。",
       output:
         "executing finally clause\nTypeError: unsupported operand type(s) for /: 'str' and 'str'",
       diagram: {
@@ -103,11 +94,13 @@ def divide(x, y):
   ]}
 />
 
+用 `with open("myfile.txt") as f` 管理文件时，Python 会在离开 `with` 块时关闭文件，遇到异常也一样。第 9 章会介绍更多用法。
+
 ## 捕获具体的异常
 
-`BaseException` 是所有异常的基类。`Exception` 是非致命异常的基类。`SystemExit` 和 `KeyboardInterrupt` 继承自 `BaseException`，不是 `Exception` 的子类，它们表示程序该结束，或者用户要中断程序。这类异常通常不处理，因此不要写捕获 `BaseException` 的处理器。
+`BaseException` 是所有异常的基类。平常需要处理的内置异常大多继承自 `Exception`。`SystemExit` 表示程序要退出，`KeyboardInterrupt` 表示用户要中断程序。这两个类都直接继承自 `BaseException`，捕获 `Exception` 时会让它们继续向外传播。
 
-只捕获预计会处理的具体类型，让意外的异常继续传播。确实需要兜底时捕获 `Exception`，记录之后用不带参数的 `raise` 重新抛出，让调用方还能处理。`try` 子句里只放可能引发这些异常的语句：
+优先捕获知道如何处理的具体异常，让意外的错误继续传播。需要统一记录错误时，可以捕获 `Exception`，记录后用不带参数的 `raise` 重新抛出。把 `try` 子句限制在需要捕获异常的操作上。
 
 ```python
 try:
@@ -132,10 +125,10 @@ except ValueError:
   diagram={{ ...exceptionFlow, active: ["try"] }}
   choices={[
     { label: "else", feedback: "try 已经引发异常，不能进入 else。" },
-    { label: "finally", feedback: "finally 随后会执行。先找能接住 ValueError 的 except。" },
+    { label: "finally", feedback: "Python 先寻找能捕获 ValueError 的 except，随后才执行 finally。" },
     {
       label: "except ValueError",
-      feedback: "except ValueError 接住异常并打印 A。之后跳过 else，进入 finally 打印 C。",
+      feedback: "except ValueError 捕获异常并打印 A。随后跳到 finally，打印 C。",
       path: ["try", "except", "finally"],
     },
   ]}
@@ -143,7 +136,7 @@ except ValueError:
 
 ## 随堂练习
 
-`parse` 能把文本转成整数时打印 `数值 n`，不能转换时打印 `无效`。`try` 里只放可能失败的那一句。
+用 `parse` 把文本转成整数。转换成功时打印 `数值 n`，失败时打印 `无效`。`try` 里只写转换语句。
 
 <PythonExercise
   label="转换失败时走 except，成功时走 else"

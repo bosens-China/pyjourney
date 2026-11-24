@@ -1,14 +1,14 @@
 ---
 title: 包与相对导入
-description: 包用带点号的模块名组织子模块。相对导入用前导点号表示当前包和上级包，直接运行的主模块则使用绝对导入。
+description: 用包组织模块，理解相对导入中的点号，用 python -m 运行包内模块。
 ---
 
 import ConceptStepper from "@/components/learning/ConceptStepper";
 import QuickQuiz from "@/components/learning/QuickQuiz";
 
-包用带点号的模块名划分命名空间。`A.B` 是包 `A` 里的子模块 `B`。这样不同的包可以各自使用同样的模块名，不必担心冲突。导入包时，Python 在 `sys.path` 的目录里寻找包的子目录。
+包可以把相关模块组织在一起。例如，`A.B` 指包 `A` 里的子模块 `B`。从文件系统导入时，Python 按 `sys.path` 查找顶层包，再到父包的 `__path__` 所列位置查找子模块。
 
-常规包通常是一个包含 `__init__.py` 的目录。这个文件可以是空的，也可以执行包的初始化代码。
+文件系统中的常规包通常是一个包含 `__init__.py` 的目录。可以把初始化代码写进这个文件，也可以让它保持为空。
 
 ```text
 sound/                    ← .. 上级包
@@ -24,7 +24,7 @@ sound/                    ← .. 上级包
     └── vocoder.py
 ```
 
-导入单个子模块有三种写法，绑定的名字不同：
+下面三种导入写法都能调用 `echofilter`，各自绑定的名字不同。
 
 ```python
 import sound.effects.echo
@@ -37,27 +37,23 @@ from sound.effects.echo import echofilter
 echofilter(input, output, delay=0.7, atten=4)
 ```
 
-`from package import item` 里的 `item` 可以是子模块、子包，也可以是包里定义的函数、类或变量。`import a.b.c` 则要求每一项都是包或模块。日常代码最常用第二种和第三种写法：名字短，来源也清楚。
-
-## 星号导入与 `__all__`
-
-`from sound.effects import *` 不会自动导入所有子模块。包或模块可以用 `__all__` 列出星号导入时公开的名字。写代码时仍然写出要导入的名字。
+`from package import item` 可以导入子模块或子包，也可以导入包里定义的函数、类或变量。`import a.b.c` 中，点号分隔的每一项都必须是包或模块。第二种写法保留了函数所属的子模块名，第三种可以直接写函数名。
 
 ## 相对导入
 
-同级子模块可以用绝对导入：`sound.filters.vocoder` 需要 `echo` 时，写 `from sound.effects import echo`。也可以用前导点号写相对导入，点号从当前模块所属的包算起。以图中的 `surround.py` 为例，一个点指向 `effects`，两个点指向 `sound`。
+包内模块也可以用绝对导入。`sound.filters.vocoder` 需要 `echo` 时，可以写 `from sound.effects import echo`。相对导入从当前模块所属的包出发。以图中的 `surround.py` 为例，一个点指向 `effects`，两个点指向 `sound`。
 
 <ConceptStepper
-  label="点号表示从当前包出发"
+  label="顺着点号找模块"
   steps={[
     {
       code: "from . import echo",
-      description: "一个点是当前包。surround.py 用它导入同包的 echo。",
+      description: "一个点表示当前包。从 surround.py 所在的 effects 包里导入 echo。",
       values: [{ name: "echo", value: "当前包里的 echo" }],
     },
     {
       code: "from .. import formats",
-      description: "两个点是上级包。这里导入 sound 包里的 formats。",
+      description: "两个点表示上一层包。从 sound 包里导入 formats。",
       values: [{ name: "formats", value: "上级包里的 formats" }],
     },
     {
@@ -74,22 +70,28 @@ from .. import formats
 from ..filters import equalizer
 ```
 
-主模块是直接运行的脚本，它不属于任何包。准备当作程序入口运行的模块使用绝对导入。
+要运行使用相对导入的 `surround.py`，先进入 `sound/` 的上一级目录，再用完整模块名启动它。
+
+```bash
+python -m sound.effects.surround
+```
+
+`-m` 让 Python 按模块名找到 `surround.py`，并把它当作入口执行。此时 `__name__` 是 `"__main__"`，Python 仍然知道这个文件属于 `sound.effects`，所以能够解析相对导入。按文件路径运行 `python sound/effects/surround.py` 时，Python 缺少这份包信息。
 
 <QuickQuiz
-  question="python app.py 直接运行的入口模块，可以怎样导入自己项目里的包？"
+  question="surround.py 使用 from . import echo。哪条命令能在包含 sound/ 的目录下运行它？"
   options={[
-    "from . import helpers",
-    "from ..helpers import parse",
-    "import helpers 或 from helpers import parse 这样的绝对导入",
-    "from .helpers import *",
+    "python sound/effects/surround.py",
+    "python -m sound.effects.surround",
+    "python -m sound.effects",
+    "python -m sound.effects.echo",
   ]}
-  answerIndex={2}
+  answerIndex={1}
   feedback={[
-    "直接运行的主模块不属于任何包，没有「当前包」可言，相对导入会失败。",
-    "两个点表示上级包；主模块没有所属的包，更没有上级包。",
+    "按文件路径执行时缺少包上下文，无法解析相对导入。",
     "",
-    "主模块不能用相对导入，星号导入也不推荐。",
+    "这条命令运行包的入口。图里的 effects 包没有提供 __main__.py。",
+    "这条命令运行的是 echo.py。目标模块是 surround。",
   ]}
-  explanation="相对导入根据当前模块所属的包来解析。直接运行的主模块没有所属包，入口代码使用绝对导入。"
+  explanation="用 -m 和完整模块名运行 surround。Python 能在 sound.effects 中找到 echo。"
 />

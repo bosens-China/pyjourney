@@ -9,13 +9,13 @@ import { chapter08 } from "@/data/chapters/chapter-08";
 
 ## 题目
 
-`numbers` 已经给定。写一个生成器，只产出大于 0 的数，并把结果打印成一行。
+完成生成器函数 `positives(nums)`，从给定的整数中找出正数。编辑器里的代码会把 `numbers` 传给它，并将结果打印成一行。
 
 ### 题目要求
 
-1. 使用 `yield`，不要先建成一个结果列表。
-2. 保留原有顺序。
-3. 用一个空格连接。没有正数时打印空行。
+1. 每读到一个大于 0 的数，就用 `yield` 交出它。
+2. 保留这些数在输入中的顺序。
+3. 打印时，数字之间用一个空格分隔。没有正数时打印空行。
 
 <ChallengeExample example={chapter08.challenge.cases[0]} />
 

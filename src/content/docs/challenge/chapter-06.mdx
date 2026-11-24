@@ -9,7 +9,7 @@ import { chapter06 } from "@/data/chapters/chapter-06";
 
 ## 题目
 
-`raw` 是配置文件里读到的一段文本。定义 `ConfigError` 和 `parse_port(raw)`。编辑器里的调用方会捕获 `ConfigError` 并打印错误信息。
+`raw` 是从配置文件读到的端口文本。定义 `ConfigError` 和 `parse_port(raw)`，按下表处理输入。编辑器里的调用代码会捕获 `ConfigError` 并打印错误信息。异常有直接原因时，它还会打印原因的类型，例如 `直接原因: ValueError`。
 
 | 输入情况 | `parse_port` 的行为 |
 | --- | --- |

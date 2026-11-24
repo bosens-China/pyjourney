@@ -1,13 +1,13 @@
 ---
 title: 结构子类型
-description: 用 typing.Protocol 让静态类型检查按对象是否具备指定属性来接受它。
+description: 用 typing.Protocol 描述对象需要具备哪些属性，让类型检查器判断它是否符合要求。
 ---
 
 import QuickQuiz from "@/components/learning/QuickQuiz";
 
-静态类型里的名义子类型要求：需要 `B` 的地方只有 `B` 的子类才能通过。结构子类型看的是对象有没有协议里声明的那些属性。实现类不用把协议写进基类列表，类型检查器也会接受它。
+名义子类型按继承关系判断。比如参数的类型标注是 `B`，就可以传入 `B` 或其子类的实例。结构子类型按对象具备的属性判断，只要这些属性符合协议，实现类就可以通过类型检查。
 
-协议类继承 `typing.Protocol`：
+要定义协议，可以继承 `typing.Protocol`。下面的 `Renderable` 要求对象有一个返回字符串的 `render()` 方法。
 
 ```python
 from typing import Protocol
@@ -24,15 +24,15 @@ def display(doc: Renderable) -> str:
     return doc.render()
 ```
 
-`display(MarkdownDoc())` 能通过静态检查，是因为 `MarkdownDoc` 有匹配的 `render`。运行这段函数时，Python 只查找并调用 `doc.render()`。协议不参与这次调用，也没有把 `MarkdownDoc` 收进 `Renderable` 的继承树。运行时“有这个方法就能调用”本来就成立；`Protocol` 负责的是类型检查器那一侧的结构判断。
+`MarkdownDoc` 的 `render()` 符合要求，所以 `display(MarkdownDoc())` 能通过静态检查。运行时，`display` 照常调用 `doc.render()`。`Protocol` 提供的约束由类型检查器判断。
 
-协议也可以带类型参数，写法与泛型类相同：`class Source[T](Protocol)`。
+协议也可以带类型参数，写法和泛型类一样，例如 `class Source[T](Protocol)`。
 
-需要描述「有某个方法的对象」时，用协议比要求调用方继承某个基类更灵活：别人写的类，甚至标准库的类，只要具备这些方法就能直接传进来。
+协议也适用于你无法修改的类。只要第三方库或标准库提供的对象符合协议，就可以直接传入。
 
 ## 运行时检查是另一条规则
 
-要把协议传给 `isinstance`，直接在这个协议上加 `@runtime_checkable`。运行时只检查列出的属性在不在，忽略类型签名。
+要用 `isinstance` 检查对象是否符合某个协议，可以给协议加上 `@runtime_checkable`。这种检查只确认属性是否存在，忽略类型签名。
 
 ```python
 from typing import Protocol, runtime_checkable
@@ -52,8 +52,8 @@ print(isinstance(door, Closable))  # True
 
 | 检查方式 | 对 `Closable` 检查什么 |
 | --- | --- |
-| 静态类型检查 | 比对 `close` 的签名，确认可以无参调用且返回 `None` |
-| `isinstance(door, Closable)` | 检查实例有没有 `close`，忽略参数和返回值 |
+| 静态类型检查 | 比对 `close` 的签名，确认无需传参且返回 `None` |
+| `isinstance(door, Closable)` | 确认实例有 `close`，忽略参数和返回值 |
 
 <QuickQuiz
   question="最后一行输出什么？"
@@ -72,9 +72,9 @@ options={["True", "False", "引发 TypeError", "None"]}
 answerIndex={0}
 feedback={[
 "",
-"运行时检查只看 close 这个属性在不在，不比较参数和返回值。",
+"isinstance 只确认实例有 close，这里符合要求。",
 "加了 @runtime_checkable 的协议可以用在 isinstance 里。",
 "isinstance 总是返回布尔值。",
 ]}
-explanation="运行时协议只检查列出的属性是否存在。Door 有 close，结果为 True，尽管它的签名和协议不同；静态类型检查器才会指出签名不匹配。"
+explanation="Door 有 close，所以 isinstance 返回 True。静态类型检查还会比较签名，并指出这里的参数和返回值不符合协议。"
 />

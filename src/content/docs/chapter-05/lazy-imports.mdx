@@ -1,20 +1,22 @@
 ---
 title: 惰性导入
-description: lazy 写在 import 前面时只绑定代理，模块等到该名字第一次被使用时才加载。
+description: 用 lazy 推迟加载模块，直到第一次使用导入的名字。
 ---
 
 import ConceptStepper from "@/components/learning/ConceptStepper";
 import QuickQuiz from "@/components/learning/QuickQuiz";
 import PythonExercise from "@/components/python/PythonExercise";
 
-`lazy` 是软关键字，只有紧挨在 `import` 或 `from` 前面时才有这个含义。语法是：
+`lazy` 是软关键字。在下面两种导入语句中，它让 Python 推迟加载模块。
 
 ```python
 lazy import json
 lazy from json import loads
 ```
 
-执行 `lazy import json` 时，模块不会立刻被定位、读入和执行。这个名字先绑定到一个轻量的代理。第一次使用名字 `json` 时才加载真正的模块。`lazy from json import loads, dumps` 则让 `loads` 和 `dumps` 各自绑定代理；第一次使用其中任何一个名字，都会加载整个模块，但只把被用到的那个名字换成真实对象，其余名字仍是代理。
+执行 `lazy import json` 时，Python 先把 `json` 绑定到一个临时的代理对象。第一次使用这个名字时，Python 才加载模块，并让 `json` 指向模块。
+
+`lazy from json import loads, dumps` 会给两个名字各绑定一个代理。第一次使用任意一个名字，Python 都会加载整个模块，并让用到的名字指向模块里对应的对象。另一个名字仍然指向代理，等到用到它时才更新绑定。
 
 ```python
 lazy import statistics
@@ -29,18 +31,18 @@ print(average([1, 2, 3]))           # 2
 print("statistics" in sys.modules)  # True
 ```
 
-定义 `average` 时还没有使用名字 `statistics`。调用 `average([1, 2, 3])` 执行到 `statistics.mean` 时，才是第一次使用，模块在这一刻加载。模块不存在这类错误也发生在第一次使用时，回溯里同时有使用处和原来的 `import` 语句。
+Python 定义 `average` 时还没有执行函数体。调用 `average([1, 2, 3])` 后，第一次读取 `statistics`，模块就在这时加载。如果模块不存在，错误也在第一次读取时出现。回溯会显示读取名字的位置和原来的导入语句。
 
-这样导入语句仍然集中写在文件开头，一次运行里用不到的模块却不会被加载。命令行工具的各个子命令往往只用到一部分依赖，最适合这样写。
+惰性导入可以留在文件开头，把模块加载推迟到真正用到时。命令行工具的每个子命令通常只用一部分依赖，适合这样写。
 
-`lazy` 只能写在模块顶层。出现在函数、类体，或 `try` / `except` / `finally` 里，会引发 `SyntaxError`。星号导入不能是惰性的。
+把惰性导入写在模块顶层。写进函数、类体或 `try` 语句会引发 `SyntaxError`。星号导入也不支持 `lazy`。
 
 <ConceptStepper
-  label="代理何时换成真正的模块"
+  label="名字什么时候开始指向模块？"
   steps={[
     {
       code: "lazy import statistics",
-      description: "执行这一行只绑定代理。statistics 还不在 sys.modules 里。",
+      description: "statistics 先指向代理。这个例子里，sys.modules 还没有 statistics 模块。",
       diagram: {
         kind: "refs",
         names: [{ name: "statistics", to: "proxy" }],
@@ -51,7 +53,7 @@ print("statistics" in sys.modules)  # True
     {
       code: "def average(values):\n    return statistics.mean(values)",
       description:
-        "定义函数不使用这个名字，模块仍未加载。lazy 不能写进函数体。",
+        "定义 average 时，Python 还没执行它的函数体，模块继续等待加载。",
       diagram: {
         kind: "refs",
         names: [{ name: "statistics", to: "proxy" }],
@@ -61,7 +63,7 @@ print("statistics" in sys.modules)  # True
     {
       code: "average([1, 2, 3])",
       description:
-        "调用执行到 statistics.mean，这是名字 statistics 的第一次使用，模块在这里加载。",
+        "调用 average 后，函数第一次读取 statistics，Python 在这里加载模块。",
       output: "2",
       diagram: {
         kind: "refs",
@@ -86,17 +88,17 @@ print("statistics" in sys.modules)  # True
   ]}
   answerIndex={1}
   feedback={[
-    "lazy 不能写在函数体里，这段代码根本无法编译，load 也就不存在。",
+    "Python 在编译时就会发现函数体里的 lazy 导入，并报出 SyntaxError。",
     "",
-    "lazy 不能写在函数体里，这段代码根本无法编译。",
-    "lazy 只能写在模块顶层；写在函数里是语法错误。",
+    "代码在定义 load 之前就会因语法错误停止。",
+    "函数体里的惰性导入会导致 SyntaxError，函数无法定义。",
   ]}
   explanation="惰性导入只能出现在模块顶层。写在函数、类体或 try 语句里，都会引发 SyntaxError。"
 />
 
 ## 随堂练习
 
-这个小工具有两个子命令，每次运行只会用到其中一个模块。把两条导入都改成惰性导入，它们仍然写在文件开头。
+这个小工具的两个子命令各用一个模块。把文件开头的两条导入语句改成惰性导入，让每次调用按需加载模块。
 
 <PythonExercise
   label="把导入改成惰性导入"

@@ -1,6 +1,6 @@
 ---
-title: "用装饰器改变返回值"
-description: "包装 greet，让它的返回文本变成大写，并保留原函数的名字。"
+title: "给消息加上临时预览前缀"
+description: "让装饰器在预览时临时改变消息前缀，调用结束后用上下文管理器恢复设置。"
 ---
 
 import ChallengeExample from "@/components/python/ChallengeExample";
@@ -9,15 +9,15 @@ import { chapter09 } from "@/data/chapters/chapter-09";
 
 ## 题目
 
-`message` 已经给定。写一个装饰器，把被包装函数返回的文本转成大写，然后用它装饰 `greet`。
+编辑器提供了渲染函数 `render`、初始设置和消息。`render` 从 `settings["prefix"]` 读取前缀。给这个函数加上一层包装，让它在调用期间使用 `[预览]` 前缀，调用结束后恢复原值。
 
 ### 题目要求
 
-1. 使用 `functools.wraps` 保留原函数元数据。
-2. `greet` 原样返回传入的文本，大写转换放在装饰器里。
-3. 编辑器会打印 `greet(message)` 和 `greet.__name__`，第二行应当仍是 `greet`。
+1. 用 `@contextmanager` 实现 `temporary_prefix(prefix)`。进入时先保存旧前缀，再写入临时前缀。用 `try` 和 `finally` 保证离开时恢复旧值。
+2. 实现装饰器 `preview(fn)`，用 `@wraps(fn)` 保留原函数的名字。在包装函数里进入 `with temporary_prefix("[预览]")`，在代码块中调用原函数并返回结果。
+3. 如果 `render` 引发 `ValueError`，先恢复前缀，再让异常传播到现成的 `except`。
 
-需要复习时，可以回看[装饰器怎样把函数名绑到包装函数](../chapter-09/decorators.mdx)。
+需要复习时，可以回看[装饰器](../chapter-09/decorators.mdx)和 [contextlib](../chapter-09/contextlib.mdx)。
 
 <ChallengeExample example={chapter09.challenge.cases[0]} />
 

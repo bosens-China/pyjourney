@@ -1,15 +1,15 @@
 ---
 title: 装饰器
-description: 装饰器是定义函数时调用的可调用对象，@ 把返回值绑回函数名。
+description: 用装饰器为函数增加行为，并了解 @ 怎样将装饰结果绑定到函数名。
 ---
 
 import ConceptStepper from "@/components/learning/ConceptStepper";
 import QuickQuiz from "@/components/learning/QuickQuiz";
 import PythonExercise from "@/components/python/PythonExercise";
 
-函数是对象，可以当参数传、当返回值返回（第 4 章）。装饰器就建立在这一点上：它是一个接收函数、返回新函数的可调用对象，用来在不改动原函数的情况下给它加上日志、计时、缓存、权限检查这类外围行为。
+函数可以像其他对象一样传给另一个函数（第 4 章）。装饰器接收原函数，通常会返回一个新的包装函数。有了这个包装，就能在调用原函数前后记录日志、统计耗时。
 
-`def` 上面的 `@表达式` 在定义函数时求值。Python 用刚创建的函数对象调用它，再把返回值绑到函数名上。因此：
+Python 在定义函数时求值 `def` 上方的 `@表达式`。求值结果必须可以调用，Python 会把原函数作为参数传给它，再把返回值绑定到函数名。
 
 ```python
 @log
@@ -17,7 +17,7 @@ def greet():
     return "hi"
 ```
 
-大致等价于先执行 `def`，再执行 `greet = log(greet)`。多个装饰器嵌套应用，靠近 `def` 的那一个先包进去：
+上面的 `greet` 最终绑定的是 `log` 的返回值。写了多个装饰器时，它们会一层层应用，离 `def` 最近的装饰器先接收原函数。
 
 ```python
 @f1(arg)
@@ -26,25 +26,24 @@ def func():
     pass
 ```
 
-大致等价于 `func = f1(arg)(f2(func))`。`f1(arg)` 先调用、返回真正的装饰器，这就是带参数的装饰器。
+求值 `f1(arg)` 得到外层装饰器。应用时，先把原函数交给 `f2`，再把 `f2` 的返回值交给外层装饰器。最后，名字 `func` 指向外层装饰器返回的对象。
 
 <ConceptStepper
   label="装饰之后，名字指向包装函数"
   steps={[
     {
       code: 'def greet():\n    return "hi"',
-      description: "先执行 def，创建原来的函数对象。",
+      description: "Python 创建原函数对象。名字 greet 要等装饰器返回后才绑定。",
       diagram: {
-        kind: "refs",
-        names: [{ name: "greet", to: "fn" }],
-        objects: [{ id: "fn", label: "原 greet" }],
-        highlight: ["greet"],
+        kind: "flow",
+        nodes: [{ id: "fn", label: "原函数对象" }],
+        active: ["fn"],
       },
     },
     {
-      code: "greet = log(greet)",
+      code: "@log",
       description:
-        "@log 用这个函数对象调用 log。log 返回的 wrapper 在闭包里记住了原函数。",
+        "log 接收原函数，返回通过闭包保留原函数的 wrapper。Python 把 greet 绑定到 wrapper。",
       diagram: {
         kind: "refs",
         names: [{ name: "greet", to: "wrapper" }],
@@ -58,7 +57,7 @@ def func():
     {
       code: "greet()",
       description:
-        "调用的是 wrapper。它先做自己的事，再通过闭包调用原函数，把结果交回去。",
+        "greet() 调用的是 wrapper。它先执行额外的操作，再调用闭包中的原函数，最后返回结果。",
       diagram: {
         kind: "refs",
         names: [{ name: "greet", to: "wrapper" }],
@@ -74,7 +73,7 @@ def func():
 
 ## functools.wraps
 
-装饰之后，名字指向的是包装函数，它自己的名字和文档字符串会盖住原函数。写装饰器时总是给包装函数加上 `functools.wraps(fn)`：它把原函数的名字、模块和文档字符串复制过来，并用 `__wrapped__` 留下原函数。
+给包装函数加上 `@functools.wraps(fn)`，就能保留原函数的名字、模块名和文档字符串。需要访问原函数时，可以从包装函数的 `__wrapped__` 属性取得。
 
 ```python
 import functools
@@ -95,7 +94,7 @@ print(add.__name__)
 print(add.__doc__)
 ```
 
-输出是 `add` 和 `计算两数之和。`。
+两次 `print` 依次打印原函数名 `add` 和文档字符串「计算两数之和。」。
 
 <QuickQuiz
   question="最后一行输出什么？"
@@ -119,16 +118,16 @@ options={["[hi!]", "[hi]!", "hi[]!", "[hi]"]}
 answerIndex={0}
 feedback={[
 "",
-"靠近 def 的 exclaim 先包进去，bracket 包在最外层，所以方括号在最外面。",
-"每个 wrapper 都把 fn() 的结果放在自己添加的内容中间或前面。",
-"两个装饰器都生效了：exclaim 加感叹号，bracket 再加方括号。",
+"bracket 包在最外层，所以右方括号在感叹号后面。",
+"bracket 把 fn() 的结果放在两个方括号之间。",
+"调用内层函数时，exclaim 会给 hi 加上感叹号。",
 ]}
-explanation="相当于 greet = bracket(exclaim(greet))。调用时 exclaim 的包装先得到 hi!，bracket 的包装再加上方括号。"
+explanation="装饰时，exclaim 先接收原函数，bracket 再接收 exclaim 的结果。调用 greet() 时，内层先得到 hi!，外层再加上方括号。"
 />
 
 ## 随堂练习
 
-`count_calls` 每调用一次就打印次数。`wraps` 让装饰之后的 `ping.__name__` 和文档字符串仍是原函数的。
+补全 `count_calls`。包装后的 `ping` 每调用一次，就打印当前次数，再执行原函数。用 `wraps` 保留原函数的名字和文档字符串。
 
 <PythonExercise
   label="用 wraps 保留原函数的名字和文档"

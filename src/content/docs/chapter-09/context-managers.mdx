@@ -1,6 +1,6 @@
 ---
 title: with 语句
-description: with 在进入代码块前调用 __enter__，离开时无论是否发生异常都会调用 __exit__。
+description: 用 with 管理需要及时释放的资源，并了解 __enter__ 和 __exit__ 分别何时执行。
 ---
 
 import ConceptStepper from "@/components/learning/ConceptStepper";
@@ -23,23 +23,23 @@ export const withFlow = {
   ],
 };
 
-最常见的 `with` 是打开文件：
+读取文件时，常把 `open()` 放进 `with`。
 
 ```python
 with open("notes.txt", encoding="utf-8") as f:
     text = f.read()
 ```
 
-不管代码块是正常结束、`return` 出去，还是中途引发异常，离开 `with` 时文件都会被关闭。凡是「用完必须归还」的资源，例如文件、锁和网络连接，都应该这样用。
+在 `with` 代码块里，可以通过 `f` 读取文件。代码块正常结束、通过 `return` 离开或引发异常时，`with` 都会关闭文件。其他用完就要释放的资源，例如锁，也适合用 `with` 管理。
 
-`with` 后面的对象是上下文管理器。它的协议只有两个方法：
+`with` 后面的对象叫上下文管理器。它提供两个方法。
 
-1. 进入时调用 `__enter__()`，有 `as` 时把它的返回值绑定到目标。`__enter__` 正常返回之后，离开时就一定会调用 `__exit__`。
-2. 离开时调用 `__exit__(exc_type, exc_value, traceback)`。代码块因异常离开时，三个参数描述这个异常；否则都是 `None`。
+1. 进入时，Python 调用 `__enter__()`。如果写了 `as`，返回值就绑定到 `as` 后面的目标。
+2. 只要 `__enter__()` 正常返回，离开时 Python 就会调用 `__exit__(exc_type, exc_value, traceback)`。发生异常时，三个参数描述这个异常。正常离开时，它们都是 `None`。
 
-异常离开时，`__exit__` 返回假值（包括什么都不返回），异常继续向外传播；返回真值，异常被抑制，接着执行 `with` 后面的语句。只在确实打算吞掉异常时才返回真值。
+代码块因异常中断时，`__exit__` 的返回值决定接下来怎么走。返回假值（包括默认的 `None`），异常就会继续传播。返回真值，Python 会抑制异常，接着执行 `with` 之后的语句。
 
-下面的管理器在代码块出错时把字典恢复成进入时的内容：
+下面的 `Edit` 在进入时保存字典的键值对。代码块出错时，它用保存的键值对恢复字典。
 
 ```python
 class Edit:
@@ -62,9 +62,9 @@ with Edit(store) as current:
 print(store["n"])
 ```
 
-没有异常时，`store["n"]` 保持 `2`。若代码块里抛出异常，`__exit__` 先把字典恢复成进入时的内容，再返回假值，异常继续向外走。
+代码块正常结束时，`store["n"]` 保持为 `2`。如果代码块引发异常，`__exit__` 会恢复字典并返回 `False`，异常继续向外传播。
 
-多个项目按嵌套的 `with` 处理：`with A() as a, B() as b` 就是进入 `A` 之后再进入 `B`，离开时先退出 `B` 再退出 `A`。
+一个 `with` 里可以写多个上下文管理器，效果和嵌套写法一样。`with A() as a, B() as b` 会先进入 `A`，再进入 `B`。退出顺序相反，先离开 `B`，再离开 `A`。
 
 <ConceptStepper
   label="一次 with 的进入和离开"
@@ -72,7 +72,7 @@ print(store["n"])
     {
       code: "with Edit(store) as current:",
       description:
-        "先调用 __enter__，返回值绑定到 current。从这里起，离开时一定会调用 __exit__。",
+        "Python 调用 __enter__，并把返回值绑定到 current。离开时会调用 __exit__。",
       diagram: {
         ...withFlow,
         active: ["enter"],
@@ -80,7 +80,7 @@ print(store["n"])
     },
     {
       code: 'current["n"] = 2',
-      description: "执行代码块，没有异常。",
+      description: "代码块把字典中的 n 改成 2，然后正常结束。",
       diagram: {
         ...withFlow,
         active: ["enter", "block"],
@@ -98,7 +98,7 @@ print(store["n"])
     {
       code: 'current["n"] = 2\nraise KeyError("x")',
       description:
-        "如果代码块引发异常：__exit__ 收到异常信息，恢复字典后返回 False，异常继续向外传播。",
+        "这次代码块引发了异常。__exit__ 收到异常信息，恢复字典后返回 False，让异常继续传播。",
       diagram: {
         ...withFlow,
         active: ["enter", "block", "exit", "raise"],
@@ -129,9 +129,9 @@ options={[
 answerIndex={0}
 feedback={[
 "",
-"__exit__ 返回 True，表示异常已经处理，它不会再传播。",
-"代码块因异常离开时，__exit__ 仍然会被调用。",
+"__exit__ 返回 True，Python 会抑制异常并继续执行。",
+"代码块因异常中断时，Python 仍会调用 __exit__。",
 "离开 with 时一定会调用 __exit__，它会打印「离开」。",
 ]}
-explanation="1 / 0 引发异常，**exit** 被调用并打印「离开」。它返回 True，异常被抑制，程序继续执行 with 之后的 print。"
+explanation={"1 / 0 引发异常后，Python 调用 __exit__，打印「离开」。__exit__ 返回 True，Python 抑制异常，再执行 with 后面的 print。"}
 />

@@ -7,9 +7,9 @@ import ArgumentBinding from "@/components/learning/ArgumentBinding";
 import QuickQuiz from "@/components/learning/QuickQuiz";
 import PythonExercise from "@/components/python/PythonExercise";
 
-参数默认可以按位置传递，也可以按关键字传递。关键字参数写成 `name=value`，必须放在位置参数后面，顺序本身无所谓，但每个关键字都要对应一个形参，同一个形参也不能赋值两次。
+调用函数时，通常可以按位置传入实参，也可以用 `name=value` 指定形参。普通位置实参写在关键字实参之前。关键字实参按名字匹配形参，先后顺序不影响匹配结果。每个形参只能接收一个值。
 
-函数定义里的 `/` 和 `*` 是可选标记，用来规定每个形参接受哪种传法。看定义就能确定调用方式：
+函数定义可以用 `/` 和 `*` 限定传参方式。下面的定义把形参分成三组。
 
 ```python
 def f(pos1, pos2, /, pos_or_kwd, *, kwd1, kwd2):
@@ -36,11 +36,11 @@ def f(pos1, pos2, /, pos_or_kwd, *, kwd1, kwd2):
   </div>
 </figure>
 
-- `/` 之前是仅限位置形参，顺序有意义，不能写成关键字。
+- `/` 之前是仅限位置形参，调用时按定义的顺序传值。
 - `/` 和 `*` 之间是位置或关键字形参。定义里两个标记都没有时，形参都属于这一类。
-- `*` 之后是仅限关键字形参，调用时必须写出名字。`*` 放在第一个仅限关键字形参之前。
+- `*` 之后是仅限关键字形参，传值时必须写出形参名。
 
-形参名没有实际意义、需要固定实参顺序，或者位置形参和关键字要同时接收时，使用仅限位置。形参名能说明含义、调用方不该依赖位置时，使用仅限关键字。对公开接口，仅限位置还可以在以后修改形参名时保持调用代码不变。
+当调用者只需知道实参的顺序时，可以把形参设为仅限位置。公开函数以后改动这些形参的名字，调用代码也能照常运行。形参名能帮助读者理解传入的值时，可以把它设为仅限关键字。
 
 ```python
 def combined_example(pos_only, /, standard, *, kwd_only):
@@ -50,13 +50,13 @@ combined_example(1, 2, kwd_only=3)
 combined_example(1, standard=2, kwd_only=3)
 ```
 
-`pos_only` 不能写成 `pos_only=1`，`kwd_only` 不能只按位置传 `3`。布尔开关和含义需要说明的选项尤其适合放在 `*` 后面：`send(to, subject, urgent=True)` 比 `send(to, subject, True)` 一眼就能读懂。
+两次调用都把 `1` 按位置传给 `pos_only`，用 `kwd_only=3` 传入第三个值。中间的 `standard` 支持两种传法。布尔开关尤其适合设为仅限关键字。看到 `send(to, subject, urgent=True)`，就知道这一参数用来标记紧急消息。
 
 <ArgumentBinding />
 
 ## 其余实参
 
-`*args` 把多出来的位置实参收成一个元组，一般放在形参列表靠后的位置。它后面的形参只能按关键字传递。`**kwargs` 把与形参对应不上的关键字收成一个字典，遍历顺序与调用时写出的顺序一致。两个一起用时，`*args` 在 `**kwargs` 前面。
+`*args` 把额外的位置实参收进一个元组。后面的形参只能按关键字传值。`**kwargs` 把没有匹配到形参的关键字实参收进一个字典。没有 `**kwargs` 的函数收到这类实参会引发 `TypeError`。两者一起用时，把 `*args` 写在 `**kwargs` 前面。
 
 ```python
 def concat(*args, sep="/"):
@@ -66,7 +66,9 @@ concat("earth", "mars", "venus")
 concat("earth", "mars", "venus", sep=".")
 ```
 
-调用处如果实参已经在序列或字典里，用 `*` 和 `**` 拆开：`concat(*planets)`、`connect(**options)`。
+调用时，`*` 会把可迭代对象拆成位置实参，如 `concat(*planets)`。`**` 会把以字符串为键的映射拆成关键字实参，如 `connect(**options)`。
+
+Python 允许把 `*planets` 写在 `sep="."` 之后。日常可以把拆开的位置实参写在前面，例如 `concat(*planets, sep=".")`，这样更容易对照函数定义。
 
 <QuickQuiz
   question="def send(to, *, subject, urgent=False) 哪一次调用合法？"
@@ -78,20 +80,20 @@ concat("earth", "mars", "venus", sep=".")
   ]}
   answerIndex={2}
   feedback={[
-    "关键字参数后面不能再跟位置参数，'hi' 的位置不合法。",
+    "直接写出的位置实参要放在关键字实参之前。'hi' 的位置不合法。",
     "subject 在 * 后面，只能写成 subject='hi'。",
     "",
-    "关键字参数后面不能再跟位置参数；urgent 也只能写成 urgent=True。",
+    "直接写出的位置实参要放在关键字实参之前。urgent 只能写成 urgent=True。",
   ]}
-  explanation="to 可以按位置传入。subject 和 urgent 在 * 后面，必须写出名字。关键字参数要放在位置参数后面，urgent 也不能再按位置补上。"
+  explanation="to 可以按位置传入。subject 和 urgent 在 * 后面，传值时必须写出名字。"
 />
 
 ## 随堂练习
 
-下面的代码已经能输出正确结果，但签名没有约束调用方式。改写签名，让 `sql` 只能按位置传入、`limit` 只能按关键字传入。
+改写 `query` 的形参列表，让 `sql` 只能按位置传入，`limit` 只能按关键字传入。保留下方的调用及其输出。
 
 <PythonExercise
-  label="仅限位置配仅限关键字"
+  label="用 / 和 * 限定传参方式"
   starterCode={`def query(sql, limit):  # TODO：用 / 和 * 划定参数边界
       print(f"{sql} limit {limit}")
 

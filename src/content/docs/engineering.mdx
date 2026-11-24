@@ -3,14 +3,15 @@ title: 附录：工程实践
 description: 用 uv 管理 Python 和依赖，用 Ruff 统一格式与规范，用 ty 检查类型，用 pytest 写测试，再让编辑器把它们串起来。
 ---
 
-import { Steps, Tab, Tabs } from "@rspress/core/theme";
+import { Steps } from "@rspress/core/theme";
 import ConceptStepper from "@/components/learning/ConceptStepper";
 import QuickQuiz from "@/components/learning/QuickQuiz";
 import EditorPreview from "@/components/figures/EditorPreview";
 import FileTree from "@/components/figures/FileTree";
 import LayerStack from "@/components/figures/LayerStack";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-书里的练习都在浏览器里运行。自己动手写项目时，代码放在本地：需要一份 Python，一个和系统隔离、专门安装依赖的地方，还需要一些工具在代码运行之前就指出问题。这一篇用一个统计词频的小项目 `tally`，把本书推荐的这套工具从安装走到日常使用。
+书里的练习都在浏览器里运行。想在自己的电脑上写项目，需要准备 Python、隔离依赖的虚拟环境，以及检查代码的工具。本篇以统计词频的小项目 `tally` 为例，从安装工具讲到日常开发。
 
 <LayerStack
   label="一个 Python 项目里的四层工具"
@@ -23,12 +24,12 @@ import LayerStack from "@/components/figures/LayerStack";
     {
       title: "命令",
       items: ["uv run ruff", "uv run ty check", "uv run pytest"],
-      note: "提交之前，以及持续集成里，跑同样的检查。",
+      note: "提交前和持续集成中都运行这些检查。",
     },
     {
       title: "项目",
       items: ["pyproject.toml", "uv.lock"],
-      note: "声明依赖和工具配置，并锁定每个包的确切版本。",
+      note: "声明依赖与工具配置，记录选定的依赖版本。",
     },
     {
       title: "环境",
@@ -40,26 +41,30 @@ import LayerStack from "@/components/figures/LayerStack";
 
 ## 安装 uv
 
-uv 是用 Rust 写的 Python 包管理和项目管理工具。下载 Python、创建虚拟环境、安装依赖、锁定版本、在环境里运行命令，都由这一个工具完成。
+uv 是用 Rust 编写的 Python 包和项目管理工具。它可以下载 Python、创建虚拟环境，也负责安装依赖、锁定版本和运行项目命令。按你的操作系统选择下面的安装命令。
 
-<Tabs>
-<Tab label={<button type="button" className="cursor-pointer">macOS / Linux</button>}>
+<Tabs defaultValue="unix" className="my-4 min-w-0 gap-0">
+<TabsList aria-label="操作系统" className="rp-not-doc max-w-full flex-wrap justify-start">
+  <TabsTrigger value="unix">macOS / Linux</TabsTrigger>
+  <TabsTrigger value="windows">Windows（PowerShell）</TabsTrigger>
+</TabsList>
+<TabsContent value="unix" className="min-w-0">
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-</Tab>
-<Tab label={<button type="button" className="cursor-pointer">Windows（PowerShell）</button>}>
+</TabsContent>
+<TabsContent value="windows" className="min-w-0">
 
 ```powershell
 powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
-</Tab>
+</TabsContent>
 </Tabs>
 
-不需要另外安装 Python。uv 发现项目要的 Python 版本还没有时，会自动下载；也可以提前装好：
+uv 可以按项目需要下载 Python。想提前准备 Python 3.15，可以运行下面的命令。
 
 ```bash
 uv python install 3.15
@@ -80,7 +85,7 @@ cd tally
 
 ### 安装开发依赖
 
-运行时要用的包用 `uv add 包名` 加入，删除用 `uv remove 包名`。只在开发时用的工具加上 `--dev`，写进单独的 dev 依赖组。下面把本篇要用的三个工具装进来：
+用 `uv add 包名` 添加运行时依赖，用 `uv remove 包名` 移除。添加开发工具时带上 `--dev`，uv 会把它们记入单独的 `dev` 依赖组。先安装本篇会用到的三个工具。
 
 ```bash
 uv add --dev ruff ty pytest
@@ -88,7 +93,7 @@ uv add --dev ruff ty pytest
 
 ### 首次运行
 
-运行项目入口，终端会打印一句问候：
+进入项目目录后，可以先运行一次项目入口。
 
 ```bash
 uv run tally
@@ -99,7 +104,7 @@ uv run tally
 
 ## 项目结构与依赖
 
-下面是运行项目并加上测试目录后的样子：
+项目运行起来后，再创建测试用的 `tests/` 目录。下图说明各个文件的用途，并标出哪些文件要提交。
 
 <FileTree
   label="tally 项目里每个文件的作用"
@@ -122,7 +127,7 @@ uv run tally
       name: ".gitignore",
       depth: 1,
       tag: "提交",
-      note: "已经写好要忽略的 .venv、__pycache__ 等。",
+      note: "列出 Git 应忽略的文件和目录，如 .venv、__pycache__。",
     },
     { name: "src/", depth: 1, note: "源代码放在 src 下面。" },
     {
@@ -143,7 +148,7 @@ uv run tally
       depth: 1,
       tag: "提交",
       generated: true,
-      note: "uv 生成，记录每个依赖的确切版本。不要手改。",
+      note: "由 uv 生成，记录锁定的依赖版本。",
     },
     {
       name: ".venv/",
@@ -151,12 +156,12 @@ uv run tally
       tag: "不提交",
       warn: true,
       generated: true,
-      note: "虚拟环境，依赖装在这里。删掉之后 uv 会按 uv.lock 重建。",
+      note: "项目的虚拟环境，用来安装依赖。uv 可以按 uv.lock 重建它。",
     },
   ]}
 />
 
-`pyproject.toml` 是项目的中心。下面是 `uv init` 刚生成的内容（省略了作者信息）：
+下面是 `uv init` 生成的 `pyproject.toml`，省略了作者信息。
 
 ```toml
 [project]
@@ -175,15 +180,16 @@ requires = ["uv_build>=0.13.9,<0.14.0"]
 build-backend = "uv_build"
 ```
 
-`[project]` 是标准字段，不只 uv，其他打包工具也读它。`requires-python` 声明项目需要的 Python 版本，`dependencies` 列出运行时依赖。`[project.scripts]` 定义项目入口，`tally` 命令会调用包 `tally` 里的 `main` 函数。
+`[project]` 存放标准的项目信息，其他打包工具也能读取。`requires-python` 声明支持的 Python 版本，`dependencies` 列出运行时依赖。`[project.scripts]` 定义入口命令。执行 `tally` 时，Python 会调用 `tally` 包里的 `main()`。
 
 <ConceptStepper
   label="一条 uv add 依次更新三个地方"
+  language="text"
   steps={[
     {
       code: "uv add --dev ruff ty pytest",
       description:
-        "先把三个工具写进 pyproject.toml 的 dev 依赖组。这里记的是版本范围：不低于当前的最新版。",
+        "uv 先把三个工具写进 pyproject.toml 的 dev 依赖组。这次生成的版本范围以选中的版本为下限。",
       values: [
         {
           name: "[dependency-groups] dev",
@@ -204,7 +210,7 @@ build-backend = "uv_build"
     {
       code: "uv add --dev ruff ty pytest",
       description:
-        "再解析出每个包的确切版本，写进 uv.lock。pytest 自己依赖的 pluggy、iniconfig 等包也一起锁定。",
+        "uv 再确定各个包的版本，并写入 uv.lock。pytest 依赖的 pluggy、iniconfig 等包也会一起锁定。",
       values: [
         { name: "pytest", value: "9.2.0" },
         { name: "pluggy", value: "1.7.0" },
@@ -224,7 +230,7 @@ build-backend = "uv_build"
     },
     {
       code: "uv add --dev ruff ty pytest",
-      description: "最后按 uv.lock 把这些版本装进 .venv。三个地方在一条命令里一起更新。",
+      description: "uv 最后按 uv.lock 将依赖安装到 .venv。一条命令就更新了这三个地方。",
       output:
         "+ iniconfig==2.3.1\n+ packaging==26.4\n+ pluggy==1.7.0\n+ pygments==2.21.0\n+ pytest==9.2.0\n+ ruff==0.17.6\n+ ty==0.0.109",
       diagram: {
@@ -241,7 +247,7 @@ build-backend = "uv_build"
     {
       code: "git clone <仓库地址>\ncd tally\nuv run pytest",
       description:
-        "同事克隆项目后直接运行命令。uv run 发现还没有 .venv，就按 uv.lock 装出完全相同的版本，再运行 pytest。",
+        "同事克隆项目后可以直接运行命令。uv run 会先按 uv.lock 准备项目环境，再运行 pytest。",
       diagram: {
         kind: "flow",
         direction: "row",
@@ -256,28 +262,30 @@ build-backend = "uv_build"
   ]}
 />
 
-`pyproject.toml` 写的是「能接受哪些版本」，`uv.lock` 写的是「实际用哪个版本」。两个文件都提交，每台机器装出来的环境就一样。`.venv` 不提交，它随时可以从 `uv.lock` 重建。
+`pyproject.toml` 记录项目接受的依赖范围，`uv.lock` 记录锁定的版本。两个文件一起提交，团队就可以按同一份锁文件安装依赖。`.venv` 留在本地，必要时由 uv 重建。
 
-`uv run` 每次运行前都会检查锁文件和环境是否与 `pyproject.toml` 一致，不一致就先同步，所以不需要手动激活虚拟环境。升级某个依赖用 `uv lock --upgrade-package 包名`。只想临时用一下某个命令行工具、不写进项目时，用 `uvx`，例如 `uvx ruff check`。
+`uv run` 会在执行命令前检查锁文件和项目环境，必要时先同步。平时可以直接用它运行项目命令，省去手动激活虚拟环境的步骤。
+
+想升级某个依赖，可以用 `uv lock --upgrade-package 包名`。想临时运行一个命令行工具，可以用 `uvx`，例如 `uvx ruff check`。
 
 ## Ruff：格式与规范
 
-Ruff 同时是格式化器和代码检查器。格式化器只改排版：缩进、空格、空行、引号和换行，不改变代码的行为。所有人都交给它，团队就不必再讨论格式。默认每行最多 88 个字符，缩进 4 个空格。
+Ruff 可以格式化代码，也可以检查代码。先用 `ruff format` 统一缩进、空格、引号和换行。它默认缩进 4 个空格，行宽目标为 88 个字符。长字符串等内容格式化后仍可能超过这个长度。
 
 ```bash
 uv run ruff format
 ```
 
-代码检查器找的是可能出错或者过时的写法。默认规则已经能发现未使用的导入、未定义的名字这类问题。在 `pyproject.toml` 里再打开三组规则：
+`ruff check` 可以发现未使用的导入、未定义的名字等问题。在 `pyproject.toml` 里还可以启用下面三组规则。
 
 ```toml
 [tool.ruff.lint]
 extend-select = ["I", "UP", "B"]
 ```
 
-- `I`：给导入排序分组，也就是 5.1 节讲的标准库、第三方库、本项目模块三组。
-- `UP`：把旧写法升级成目标版本支持的新写法。Ruff 从 `requires-python` 推断目标版本，这里是 3.15。
-- `B`：常见陷阱，例如 4.3 节讲的可变默认值。
+- `I` 把导入按标准库、第三方库和项目模块分组，也会给它们排序。分组方式见 5.1 节。
+- `UP` 找出可以升级的写法。Ruff 根据 `requires-python` 推断目标版本，本项目是 3.15。
+- `B` 检查容易踩的坑，例如 4.3 节讲的可变默认值。
 
 ```bash
 uv run ruff check        # 列出问题
@@ -286,17 +294,17 @@ uv run ruff check --fix  # 自动修复其中安全的部分
 
 ## ty：类型检查
 
-第 7 章说过，类型标注在运行时不做检查。类型检查器读这些标注，在代码运行之前找出不一致的地方：传错类型的参数、可能是 `None` 的值、拼错的属性名。
+第 7 章介绍了类型标注。Python 运行代码时不会自动按标注检查实参。ty 会读取标注，提前指出类型传错、没有处理可能的 `None`、属性名拼错等问题。
 
 ```bash
 uv run ty check
 ```
 
-ty 和 uv、Ruff 出自同一个团队（Astral），也带一个语言服务器，为编辑器提供补全、悬停提示和跳转。它目前仍是 beta 版，版本号是 0.0.x，诊断规则还会变化。需要更成熟的工具时，可以换成 Pyright 或 mypy，它们读的是同一套类型标注。
+ty、uv 和 Ruff 都由 Astral 开发。ty 也能为编辑器提供补全、悬停提示和跳转。本篇使用的 ty 仍是 beta 版，诊断规则还可能变化。Pyright 和 mypy 也可以读取同一套类型标注。
 
 ## pytest：测试
 
-测试放在 `tests/` 目录下，文件名和函数名都以 `test_` 开头。断言直接用 `assert`，不需要专门的断言方法：
+把下面的代码保存到 `tests/test_tally.py`。文件名和函数名都以 `test_` 开头，直接用 `assert` 写断言。这两条测试调用的 `count_words()` 会在下一节实现。
 
 ```python
 from tally import count_words
@@ -310,23 +318,26 @@ def test_ignores_case():
     assert count_words("Hi hi") == {"hi": 2}
 ```
 
+实现 `count_words()` 后，在项目根目录运行测试。
+
 ```bash
 uv run pytest
 ```
 
-断言失败时，pytest 会把等号两边的值都打印出来，并标出差异，一眼就能看出哪里不对。
+断言失败时，pytest 会显示实际结果和预期结果，并标出差异。
 
 ## 把它们串起来
 
-假设 `count_words` 的第一版给计数字典设了一个默认值，`main` 又传错了参数。四个工具依次跑下来是这样的：
+下面用 `count_words()` 的第一版演示这套检查。第一版给计数字典设了默认值，还在 `main()` 里传错了参数。按顺序运行四条命令，看看每一步发现了什么。
 
 <ConceptStepper
   label="从格式化到测试"
+  language="text"
   steps={[
     {
       code: "uv run ruff format",
       description:
-        "格式化器先统一排版：补上运算符两边的空格，函数之间空两行。",
+        "格式化器先统一排版，在运算符两边补空格，在函数之间留两行空白。",
       output: "1 file reformatted, 2 files left unchanged",
       diagram: {
         kind: "flow",
@@ -343,7 +354,7 @@ uv run pytest
     {
       code: "uv run ruff check",
       description:
-        "B006 就是 4.3 节讲的问题：默认值只在定义时求值一次，这个字典会被所有调用共用。help 一行给出了推荐的改法。",
+        "B006 对应 4.3 节讲的可变默认值。默认值只在定义时求值一次，每次调用都会共用这个字典。help 一行给出了改法。",
       output:
         "B006 Do not use mutable data structures for argument defaults\n --> src/tally/__init__.py:4:53\n  |\n4 | def count_words(text: str, counts: dict[str, int] = {}) -> dict[str, int]:\n  |                                                     ^^\nhelp: Replace with `None`; initialize within function",
       diagram: {
@@ -361,7 +372,7 @@ uv run pytest
     {
       code: "uv run ty check",
       description:
-        "count_words 的参数 text 标注为 str，这里却传了整数 42。不检查的话，要等程序运行到这一行才会出错；ty 在运行之前就指了出来。",
+        "count_words 的参数 text 标注为 str。ty 在运行前指出，调用方在这里传了整数 42。",
       output:
         "error[invalid-argument-type]: Argument to function `count_words` is incorrect\n  --> src/tally/__init__.py:11:23\n   |\n11 |     print(count_words(42))\n   |                       ^^ Expected `str`, found `Literal[42]`",
       diagram: {
@@ -379,7 +390,7 @@ uv run pytest
     {
       code: "uv run pytest",
       description:
-        "测试把 B006 的后果跑了出来：第二个测试拿到的字典里，还留着第一个测试写进去的 a 和 b。",
+        "第二个测试失败了。它读到的字典还留着第一个测试写入的 a 和 b。",
       output:
         "tests/test_tally.py .F\n>       assert count_words(\"Hi hi\") == {\"hi\": 2}\nE       AssertionError: assert {'a': 2, 'b': 1, 'hi': 2} == {'hi': 2}\n1 failed, 1 passed",
       diagram: {
@@ -396,7 +407,7 @@ uv run pytest
     },
     {
       code: "uv run ruff check\nuv run ty check\nuv run pytest",
-      description: "去掉默认值、在函数体里创建字典，再改正 main 里的调用，三项检查全部通过。",
+      description: "在函数体里创建新字典，再改正 main 里的调用。重新运行后，三项检查全部通过。",
       output: "All checks passed!\nAll checks passed!\n2 passed",
       diagram: {
         kind: "flow",
@@ -413,7 +424,7 @@ uv run pytest
   ]}
 />
 
-改好的 `src/tally/__init__.py`：
+将修正后的代码保存到 `src/tally/__init__.py`。
 
 ```python
 def count_words(text: str) -> dict[str, int]:
@@ -432,17 +443,17 @@ uv run tally
 # {'the': 2, 'cat': 1, 'and': 1, 'hat': 1}
 ```
 
-提交之前把这几条命令跑一遍；持续集成里也跑同样的命令，团队里每个人的代码就都经过了同样的检查。
+提交前可以在本地跑一遍检查。持续集成也可以运行同样的命令，让团队使用同一套检查流程。
 
 ## 编辑器
 
-命令行检查是最后一道关。更早的一道在编辑器里：一边写，一边就把问题标出来。本书推荐 VS Code，装三个扩展：
+把检查工具接到编辑器后，写代码时就能看到提示。这里用 VS Code 演示，需要安装三个扩展。
 
-- **Python**（`ms-python.python`）：识别项目里的 `.venv`，运行和调试代码。
-- **Ruff**（`charliermarsh.ruff`）：显示代码检查结果，保存时格式化。
-- **ty**（`astral-sh.ty`）：显示类型错误，并提供补全、悬停提示和跳转。它会自动停用 Python 扩展自带的语言服务器，免得两个语言服务器同时运行。
+- **Python**（`ms-python.python`）识别项目里的 `.venv`，用它运行和调试代码。
+- **Ruff**（`charliermarsh.ruff`）显示检查结果，也可以在保存时格式化。
+- **ty**（`astral-sh.ty`）显示类型错误，并提供补全、悬停提示和跳转。它会自动停用 Python 扩展自带的语言服务器。
 
-在设置文件 `settings.json` 里让 Ruff 在保存时格式化、自动修复并整理导入：
+把下面的配置加入 `settings.json`，让 Ruff 在保存时格式化、自动修复并整理导入。
 
 ```json
 {
@@ -457,10 +468,10 @@ uv run tally
 }
 ```
 
-两个扩展都读项目里 `pyproject.toml` 的配置，所以编辑器里的提示和命令行的结果一致。上一节的第一版代码在编辑器里是这样的：
+Ruff 和 ty 都会读取项目的 `pyproject.toml`。打开上一节的第一版代码，编辑器会直接标出问题所在的行。
 
 <EditorPreview
-  label="编辑器示意：不用运行，问题已经标在代码上"
+  label="编辑器里的检查提示"
   file="src/tally/__init__.py"
   code={[
     "import sys",
@@ -508,12 +519,12 @@ PyCharm 和 Zed 也能直接启用 Ruff 和 ty。换编辑器时，项目里的�
   options={["pyproject.toml", "uv.lock", ".python-version", ".venv"]}
   answerIndex={3}
   feedback={[
-    "pyproject.toml 声明依赖和工具配置，是项目的中心，必须提交。",
-    "uv.lock 记录确切版本，提交之后每台机器装出的环境才一样。",
+    "pyproject.toml 声明依赖和工具配置，团队需要共享这份文件。",
+    "提交 uv.lock 后，团队可以按同一份锁文件安装依赖。",
     ".python-version 记录项目用的 Python 版本，提交后大家用同一个版本。",
     "",
   ]}
   explanation=".venv 是按 uv.lock 装出来的虚拟环境，可以随时删掉重建。uv init 生成的 .gitignore 已经忽略了它。"
 />
 
-本篇写于 2026 年 11 月，用到的版本是 uv 0.13.9、Ruff 0.17.6、ty 0.0.109 和 pytest 9.2.0。这些工具更新很快，命令和选项以各自的官方文档为准：[uv](https://docs.astral.sh/uv/)、[Ruff](https://docs.astral.sh/ruff/)、[ty](https://docs.astral.sh/ty/)、[pytest](https://docs.pytest.org/)。
+本篇写于 2026 年 11 月，使用 uv 0.13.9、Ruff 0.17.6、ty 0.0.109 和 pytest 9.2.0。各版本的命令和选项以官方文档为准。 [uv](https://docs.astral.sh/uv/) · [Ruff](https://docs.astral.sh/ruff/) · [ty](https://docs.astral.sh/ty/) · [pytest](https://docs.pytest.org/)

@@ -1,15 +1,43 @@
 import meta from "@/content/docs/chapter-06/_meta.json";
 import { lessonsOf } from "../lessons.ts";
 
+const showPort = `
+try:
+    port = parse_port(raw)
+except ConfigError as err:
+    print(f"配置错误: {err}")
+    if err.__cause__ is not None:
+        print(f"直接原因: {type(err.__cause__).__name__}")
+else:
+    print(f"端口 {port}")
+`;
+
 export const chapter06 = {
   id: "chapter-06",
   label: "第 6 章 · 异常",
   lessons: lessonsOf("chapter-06", meta),
   challenge: {
-    starterCode:
-      "# 已给定：raw 是一段文本\n\n# TODO 1：定义异常类 ConfigError，直接继承 Exception\n\ndef parse_port(raw):\n    # TODO 2：把 raw 转成整数；转换失败时抛出 ConfigError('端口必须是整数')，并用 from 标明原因\n    # TODO 3：端口不在 1 到 65535 之间时，抛出 ConfigError('端口超出范围')\n    ...\n\ntry:\n    port = parse_port(raw)\nexcept ConfigError as err:\n    print(f'配置错误: {err}')\nelse:\n    print(f'端口 {port}')\n",
-    solution:
-      "class ConfigError(Exception):\n    pass\n\ndef parse_port(raw):\n    try:\n        port = int(raw)\n    except ValueError as exc:\n        raise ConfigError('端口必须是整数') from exc\n    if not 1 <= port <= 65535:\n        raise ConfigError('端口超出范围')\n    return port\n\ntry:\n    port = parse_port(raw)\nexcept ConfigError as err:\n    print(f'配置错误: {err}')\nelse:\n    print(f'端口 {port}')\n",
+    starterCode: `# 已给定文本 raw
+
+# TODO：定义异常类 ConfigError，直接继承 Exception
+
+def parse_port(raw):
+    # TODO：转成整数。失败时抛出 ConfigError，并用 from 标明原因
+    # TODO：检查端口范围，合法就返回端口
+    ...
+${showPort}`,
+    solution: `class ConfigError(Exception):
+    pass
+
+def parse_port(raw):
+    try:
+        port = int(raw)
+    except ValueError as exc:
+        raise ConfigError("端口必须是整数") from exc
+    if not 1 <= port <= 65535:
+        raise ConfigError("端口超出范围")
+    return port
+${showPort}`,
     checks: [
       {
         message: "ConfigError 直接继承 Exception",
@@ -20,8 +48,19 @@ export const chapter06 = {
         test: "all(name_of(h.type) in {'ValueError', 'ConfigError'} for h in nodes(ast.ExceptHandler))",
       },
       {
-        message: "用 raise ... from 把转换失败记为直接原因",
-        test: "any(r.cause is not None for r in nodes(ast.Raise))",
+        message: "用 raise ... from 把捕获到的 ValueError 记为直接原因",
+        test: `any(
+    name_of(handler.type) == 'ValueError'
+    and handler.name
+    and any(
+        isinstance(statement, ast.Raise)
+        and name_of(statement.exc) == 'ConfigError'
+        and isinstance(statement.cause, ast.Name)
+        and statement.cause.id == handler.name
+        for statement in ast.walk(handler)
+    )
+    for handler in nodes(ast.ExceptHandler)
+)`,
       },
     ],
     cases: [
@@ -33,7 +72,17 @@ export const chapter06 = {
       {
         label: "不是整数",
         setup: "raw = 'http'",
-        expectedOutput: "配置错误: 端口必须是整数",
+        expectedOutput: "配置错误: 端口必须是整数\n直接原因: ValueError",
+      },
+      {
+        label: "合法的最小端口",
+        setup: "raw = '1'",
+        expectedOutput: "端口 1",
+      },
+      {
+        label: "合法的最大端口",
+        setup: "raw = '65535'",
+        expectedOutput: "端口 65535",
       },
       {
         label: "超出上限",

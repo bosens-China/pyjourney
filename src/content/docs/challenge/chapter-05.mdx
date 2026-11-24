@@ -1,6 +1,6 @@
 ---
-title: "从标准库导入统计函数"
-description: "用 from 导入 statistics 里的 mean 和 median，算出一组分数的平均数和中位数。"
+title: "给统计模块加运行入口"
+description: "从标准库导入统计函数，用 __name__ 控制何时打印报告。"
 ---
 
 import ChallengeExample from "@/components/python/ChallengeExample";
@@ -9,13 +9,15 @@ import { chapter05 } from "@/data/chapters/chapter-05";
 
 ## 题目
 
-`scores` 已经给定。标准库模块 `statistics` 里的 `mean` 返回平均数，`median` 返回中位数。导入这两个函数，打印这组分数的平均数和中位数。
+写一个可以复用的分数报告模块。用标准库 `statistics` 中的 `mean` 计算平均数，用 `median` 计算中位数。直接运行脚本时打印报告。其他代码导入这个模块时，可以自行调用报告函数。
 
 ### 题目要求
 
-1. 用 `from statistics import ...` 写出要导入的两个名字，不使用星号导入。
-2. 不要手写求和或排序。
-3. 打印 `平均 x 中位 y`，两个数都保留一位小数。
+1. 用 `from statistics import ...` 明确导入 `mean` 和 `median`。
+2. 定义 `print_report(scores)`，用这两个函数算出结果，再打印 `平均 x 中位 y`，两个数都保留一位小数。
+3. 把 `print_report(scores)` 的调用写在 `if __name__ == "__main__"` 下。
+
+用例会提供 `scores`，并用不同的 `__name__` 模拟直接运行和导入。导入时应当保持安静。
 
 <ChallengeExample example={chapter05.challenge.cases[0]} />
 

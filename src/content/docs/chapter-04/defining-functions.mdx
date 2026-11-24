@@ -1,13 +1,13 @@
 ---
 title: 定义函数
-description: 用 def 定义函数，用 return 给出返回值，把文档字符串和函数对象本身当成接口的一部分。
+description: 用 def 定义函数，用 return 返回结果，认识文档字符串和函数对象。
 ---
 
 import ConceptStepper from "@/components/learning/ConceptStepper";
 import QuickQuiz from "@/components/learning/QuickQuiz";
 import PythonExercise from "@/components/python/PythonExercise";
 
-`def` 后面是函数名和形参列表，下一行起是必须缩进的函数体。函数执行时使用自己的局部符号表：赋值写进这张表，实参也放进这张表。实参传递的值是对象的引用。
+用 `def` 写出函数名和形参列表，再把函数体缩进一层。每次调用都有自己的局部名字。开始执行函数体之前，Python 会把形参绑定到实参所指向的对象。
 
 ```python
 def fib(n):
@@ -19,13 +19,13 @@ def fib(n):
     print()
 ```
 
-函数体的第一条语句如果是字符串，它就是文档字符串，保存在 `__doc__` 里，`help()` 和编辑器都会显示它。第一行是一句简短摘要，不必重复函数名或类型；还有更多说明时，第二行留空，再写调用约定和副作用。
+用普通字符串字面值作函数体的第一条语句，Python 会把它保存为文档字符串。可以用 `help(fib)` 或 `fib.__doc__` 查看上面这段文档。第一行简要说明函数做什么。需要补充调用约定或副作用时，空一行再写。
 
-形参和返回值可以写类型标注：`def fib2(n: int) -> list[int]:`。标注不影响运行，但能让读者和编辑器知道该传什么、会得到什么。第 7 章再细讲类型标注。
+形参和返回值都可以写类型标注，例如 `def fib2(n: int) -> list[int]:`。这行告诉读者，`n` 应是整数，返回值应是整数列表。Python 不会根据标注自动检查实参和返回值。第 7 章会继续介绍类型标注。
 
 ## 返回值
 
-`return` 带上表达式，就把该值返回给调用方。`return` 不带表达式，或者函数执行完没有遇到 `return`，返回值都是 `None`。
+带表达式的 `return` 会把表达式的值交给调用方。只写 `return`，或让函数执行到末尾，都会返回 `None`。
 
 ```python
 def fib2(n: int) -> list[int]:
@@ -40,14 +40,14 @@ def fib2(n: int) -> list[int]:
 
 ## 函数是对象
 
-`def` 在当前符号表里把函数名绑定到函数对象。这个对象可以赋给另一个名字，也可以传给别的函数、从函数里返回。
+执行 `def` 会创建一个函数对象，并把函数名绑定到它。你可以让另一个名字指向同一个函数对象，也可以把它传给别的函数，或用 `return` 返回它。
 
 <ConceptStepper
   label="函数名绑定的是函数对象"
   steps={[
     {
       code: "def square(n):\n    return n * n",
-      description: "定义把名字 square 绑定到这个函数对象。",
+      description: "执行 def 后，名字 square 指向新建的函数对象。",
       diagram: {
         kind: "refs",
         names: [{ name: "square", to: "fn" }],
@@ -57,7 +57,7 @@ def fib2(n: int) -> list[int]:
     },
     {
       code: "f = square",
-      description: "没有括号，不调用。另一个名字指向同一个函数对象。",
+      description: "赋值后，f 和 square 指向同一个函数对象。",
       diagram: {
         kind: "refs",
         names: [
@@ -87,7 +87,7 @@ def fib2(n: int) -> list[int]:
 
 ## Lambda 表达式
 
-`lambda` 创建匿名函数，函数体只能是一个表达式。语义上它是常规函数定义的语法糖，也可以引用外层作用域里的变量。它适合当场需要一个很小的函数对象：作为 `list.sort()` 的 `key`，或者从外层函数返回。
+`lambda` 用一个表达式创建函数，表达式的值就是返回值。临时需要一个简单的函数时，可以直接把它交给 `list.sort()` 的 `key`。它也能读取外层函数的变量，例如 `make_incrementor` 返回的函数会用到 `n`。
 
 ```python
 pairs = [(1, "one"), (2, "two"), (3, "three"), (4, "four")]
@@ -109,20 +109,20 @@ def make_incrementor(n):
 options={["你好 Ada，然后 你好 Ada", "你好 Ada，然后 None", "只有 None", "你好 Ada，然后空行"]}
 answerIndex={1}
 feedback={[
-"greet 打印之后没有 return，返回值不是它打印的内容。",
+"greet 打印问候语后就执行完了，所以返回 None。",
 "",
-"调用 greet 时函数体执行了 print，会先输出一行。",
-"没有 return 的函数返回 None，print(None) 输出的是 None 四个字母。",
+"调用 greet 时，函数体里的 print 会先输出问候语。",
+"greet 返回 None，外层的 print 会把 None 打印出来。",
 ]}
-explanation="调用时先执行函数体里的 print。函数没有 return，返回 None，于是 result 是 None。"
+explanation="greet 先打印你好 Ada，随后返回 None。最后一行打印 result 的值，也就是 None。"
 />
 
 ## 随堂练习
 
-给 `square` 写上文档字符串 `Return the square of n.`，让它返回参数的平方。再把这个函数对象绑定到名字 `f`，通过 `f` 调用。
+给 `square` 写上文档字符串 `Return the square of n.`，并让它返回 `n` 的平方。再让 `f` 指向同一个函数对象，使下方的 `f(4)` 能调用它。
 
 <PythonExercise
-  label="把函数对象交给另一个名字"
+  label="让两个名字指向同一个函数"
   starterCode={`def square(n):
       # TODO：第一行写文档字符串，然后返回 n 的平方
       ...

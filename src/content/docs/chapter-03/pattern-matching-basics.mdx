@@ -1,6 +1,6 @@
 ---
 title: 模式匹配
-description: match 按顺序尝试模式，只执行第一个匹配分支。字面值、捕获和序列模式各有自己的匹配规则。
+description: 用 match 选择分支，比较字面值，并从序列中提取对应的项。
 ---
 
 import ConceptStepper from "@/components/learning/ConceptStepper";
@@ -25,9 +25,9 @@ export const matchFlow = {
   ],
 };
 
-把一个值与多个常量比较，或者按数据的形状拆开它时，用 `match`。它接受一个主语，依次和各个 `case` 的模式比较，只执行第一个匹配成功的分支，并且可以把组成部分绑定到名称。没有任何模式匹配时，不执行任何分支。
+要按数据的值或形状选择分支，可以用 `match`。要匹配的值叫主语，Python 按顺序尝试每个 `case` 的模式，执行第一个匹配成功的分支。有的模式还可以取出主语的一部分，把它绑定到名字。所有模式都匹配失败时，程序继续执行 `match` 之后的语句。
 
-最简单的模式是字面值。`_` 是通配符，总会匹配。几个字面值可以用 `|` 放在同一个模式里。`True`、`False` 和 `None` 按标识号比较，其他字面值按相等比较。
+可以直接用字面值来匹配。多个字面值可以用 `|` 连起来，匹配其中任何一个即可。`_` 是通配符，可以匹配任意值。`True`、`False` 和 `None` 各自只匹配对应的那个对象，其他字面值按值比较。
 
 ```python
 status = 404
@@ -40,11 +40,13 @@ match status:
         print("其他错误")
 ```
 
-不带点号的名称是捕获模式，会匹配任意值并把它绑定到这个名称。所以不能用普通变量名匹配一个已有的常量：它会被当成新的捕获目标，匹配一切。要匹配常量，名称里要带点号，例如 `Color.RED`。
+在模式里直接写一个普通名字，会匹配任意值并把它绑定到这个名字，这叫捕获模式。要匹配已有常量的值，使用带点号的名字，例如 `Color.RED`。
 
 ## 序列模式
 
-序列模式的形状和解包赋值相同。元组模式和列表模式含义相同，都能匹配任意序列，但不能匹配迭代器或字符串。`[x, y, *rest]` 和 `(x, y, *rest)` 与对应的解包赋值做同样的事。`*` 后面可以写 `_`，此时只要求序列至少有星号之前和之后那些项，剩余项不绑定。
+序列模式和解包赋值的写法类似。`[x, y]` 和 `(x, y)` 都能匹配正好有两项的列表或元组，也能匹配长度为 2 的 `range`。遇到迭代器、`str`、`bytes` 或 `bytearray` 时，序列模式会匹配失败。参见 [Python 3.15 的序列模式规则](https://docs.python.org/zh-cn/3.15/reference/compound_stmts.html#sequence-patterns)。
+
+`[x, y, *rest]` 和 `(x, y, *rest)` 都要求至少有两项，剩余的项收进列表 `rest`。把 `*rest` 换成 `*_` 可以匹配同样的序列，同时忽略剩余项。
 
 ```python
 match point:
@@ -58,31 +60,31 @@ match point:
         print("不是二维点")
 ```
 
-`(0, y)` 把主语的第二项绑到 `y`。`(x, y)` 捕获两项，和 `(x, y) = point` 是同一类绑定。按类和属性匹配对象的写法，在第 7 章讲完数据类之后再介绍。
+`(0, y)` 要求第一项是 0，并把第二项绑定到 `y`。`(x, y)` 则把两项分别绑定到 `x` 和 `y`，就像解包赋值 `(x, y) = point`。第 7 章讲完数据类后，还会介绍怎样按类和属性匹配。
 
 <ConceptStepper
   label="长度不符就尝试下一个序列模式"
   steps={[
     {
       code: "cmd = ['load', 'app.py', 'test.py']",
-      description: "主语是三项的列表。",
+      description: "要匹配的是 cmd，它是一个有三项的列表。",
       values: [{ name: "cmd", value: "['load', 'app.py', 'test.py']" }],
     },
     {
       code: "case ['load', filename]:",
-      description: "这个模式要求正好两项，长度不符，继续看下一个 case。",
+      description: "这个模式只匹配两项。cmd 有三项，程序接着尝试下一个 case。",
       values: [{ name: "匹配", value: "失败" }],
     },
     {
       code: "case ['load', *files]:",
-      description: "第一项是 load，其余项绑到 files。星号目标得到的是列表。",
+      description: "第一项匹配 load。星号把其余两项收进一个列表，再绑定到 files。",
       values: [{ name: "files", value: "['app.py', 'test.py']" }],
     },
   ]}
 />
 
 <FlowPrediction
-  question="点击第一个匹配成功的 case。"
+  question="哪个 case 会最先匹配成功？"
   code={`match [1, 2]:
       case [x]:
           print(x)
@@ -92,12 +94,12 @@ match point:
           print("其他")`}
   diagram={{ ...matchFlow, active: ["match", "one"] }}
   choices={[
-    { label: "case [x]", feedback: "[x] 要求序列正好一项。给出的列表有两项，继续尝试下一个模式。" },
+    { label: "case [x]", feedback: "[x] 要求正好一项。这里有两项，程序会尝试下一个模式。" },
     {
       label: "case [x, y]",
-      feedback: "[x] 长度不符。接下来的 [x, y] 把 1 和 2 分别绑到 x 和 y，输出 3。到这里匹配结束。",
+      feedback: "[x] 的长度要求不符。[x, y] 把 1 和 2 分别绑定到 x 和 y，执行分支并输出 3。",
       path: ["match", "one", "two", "body"],
     },
-    { label: "case _", feedback: "通配符本来可以匹配，但在它之前，[x, y] 已经匹配成功。" },
+    { label: "case _", feedback: "[x, y] 先匹配成功，程序在那一项就选定了分支。" },
   ]}
 />

@@ -1,6 +1,6 @@
 ---
 title: contextlib
-description: 用 contextmanager 写恢复逻辑，用 suppress 忽略指定异常，用 ExitStack 组合多个上下文。
+description: 用 contextmanager 写清理逻辑，用 suppress 忽略指定异常，并用 ExitStack 管理多个上下文。
 ---
 
 import FlowPrediction from "@/components/learning/FlowPrediction";
@@ -19,18 +19,20 @@ export const overrideFlow = {
 
 export const overrideEnter = {
   code: 'old = store.get(key, missing)\nstore[key] = value',
-  description: "debug 原来是 False。先保存旧值，再改成 True。执行到 yield 时，生成器暂停。",
+  description: "进入时先保存 debug 的原值 False，再设为 True。生成器运行到 yield 后暂停。",
   values: [{ name: 'store["debug"]', value: "True" }],
   diagram: { ...overrideFlow, active: ["before"] },
 };
 
-手写 `__enter__` 和 `__exit__` 适合状态比较多的管理器。`contextlib` 覆盖几种反复出现的 `with` 写法。
+上一课用类实现了上下文管理器。准备和清理各只需要几行代码时，可以用 `contextlib` 把它们写进同一个生成器函数。
 
 ## @contextmanager
 
-`@contextmanager` 装饰一个生成器函数，这样就不必再写一个带两个特殊方法的类。生成器应当恰好产生一个值：`yield` 之前的代码充当 `__enter__`，产出的值在有 `as` 时绑定到目标；`yield` 之后的代码充当 `__exit__`。
+用 `@contextmanager` 装饰生成器函数后，就可以在 `with` 里调用它。生成器在 `yield` 之前执行原先写在 `__enter__()` 里的准备工作，并且恰好交出一个值。如果写了 `as`，Python 会把这个值绑定到目标。
 
-执行到 `yield` 时，`with` 的代码块开始运行，块结束后生成器继续。块里未处理的异常会在 `yield` 那一点重新抛出，所以清理放在 `finally` 里。如果捕获异常只是为了记录或做一件事，生成器必须把异常重新抛出。没有重新抛出时，这个上下文管理器会告诉 `with`：异常已经处理，执行从 `with` 后面继续。
+生成器在 `yield` 处暂停，`with` 代码块开始运行。离开代码块时，生成器从暂停处继续，执行原先写在 `__exit__()` 里的清理工作。代码块里未处理的异常会在 `yield` 处重新抛出。把清理语句放进 `finally`，无论代码块是正常结束还是引发异常，它们都会执行。
+
+如果捕获异常只是为了记一条日志，记录后要重新抛出。如果生成器捕获异常后正常结束，`with` 会把异常当作已处理，继续执行后面的语句。
 
 ```python
 from contextlib import contextmanager
@@ -49,25 +51,25 @@ def override(store, key, value):
             store[key] = old
 ```
 
-`finally` 在正常离开和异常离开时都会把这个键恢复。异常仍会继续传播，因为 `finally` 没有把它吞掉。
+`finally` 会恢复这个键。原来有这个键，就写回旧值。原来没有，就删掉临时添加的键。如果发生异常，清理完成后异常继续传播。
 
 <ContextlibTimeline
   normal={[
     overrideEnter,
     {
       code: 'with override(store, "debug", True):\n    print(store["debug"])',
-      description: "with 块开始运行，这时读到的是临时值。",
+      description: "with 代码块开始运行，print 读到临时值 True。",
       output: "True",
       diagram: { ...overrideFlow, active: ["before", "body"] },
     },
     {
       code: "yield",
-      description: "with 块正常结束，生成器从 yield 处继续执行。",
+      description: "with 代码块正常结束，生成器从 yield 处继续执行。",
       diagram: { ...overrideFlow, active: ["before", "body", "resume"] },
     },
     {
       code: "store[key] = old  # finally 中的恢复语句",
-      description: "finally 把 debug 恢复为 False，程序继续执行 with 后面的语句。",
+      description: "finally 把 debug 恢复为 False，然后程序继续执行 with 后面的语句。",
       values: [{ name: 'store["debug"]', value: "False" }],
       diagram: { ...overrideFlow, active: ["before", "body", "resume", "cleanup"] },
     },
@@ -76,25 +78,25 @@ def override(store, key, value):
     overrideEnter,
     {
       code: 'with override(store, "debug", True):\n    raise ValueError("读取失败")',
-      description: "with 块引发 ValueError，debug 此刻还是 True。",
+      description: "with 代码块引发 ValueError。此时 debug 仍然是 True。",
       values: [{ name: 'store["debug"]', value: "True" }],
       diagram: { ...overrideFlow, active: ["before", "body"] },
     },
     {
       code: "yield",
-      description: "ValueError 在生成器暂停的 yield 处重新抛出。写在 yield 后面的普通语句会被跳过。",
+      description: "Python 在生成器暂停的 yield 处重新抛出 ValueError。这样会跳过紧跟在 yield 后面的普通语句。",
       diagram: { ...overrideFlow, active: ["before", "body", "resume"] },
     },
     {
       code: "store[key] = old  # finally 中的恢复语句",
-      description: "恢复 debug 的代码在 finally 里，所以仍会执行。恢复后，ValueError 继续向外传播。",
+      description: "finally 仍会把 debug 恢复为 False。清理结束后，ValueError 继续传播。",
       values: [{ name: 'store["debug"]', value: "False" }],
       diagram: { ...overrideFlow, active: ["before", "body", "resume", "cleanup"] },
     },
   ]}
   exceptionCheck={
     <FlowPrediction
-      question="如果把恢复语句直接放在 yield 后面，这次异常会走哪条路？"
+      question="如果把恢复语句直接放在 yield 后面，程序会怎样处理这次异常？"
       code={'with override(store, "debug", True):\n    raise ValueError("读取失败")'}
       diagram={{
         kind: "flow",
@@ -111,10 +113,10 @@ def override(store, key, value):
         active: ["resume"],
       }}
       choices={[
-        { label: "先恢复，再让异常传播", feedback: "异常在 yield 那一行就抛出了。要让恢复语句在离开前执行，得把它放在 finally 里。" },
+        { label: "先恢复，再让异常传播", feedback: "Python 在 yield 处重新抛出异常。要保证离开前执行恢复语句，可以把它放在 finally 里。" },
         {
           label: "跳过恢复，向外传播",
-          feedback: "yield 后面的普通语句被跳过，debug 仍是 True。时间线里的版本把恢复语句放进 finally，所以会先恢复，再把异常传出去。",
+          feedback: "异常会跳过紧跟在 yield 后面的普通语句，debug 仍是 True。把恢复语句放进 finally，异常传播前就能清理。",
           path: ["resume", "propagate"],
         },
       ]}
@@ -124,7 +126,7 @@ def override(store, key, value):
 
 ## suppress
 
-`suppress(KeyError)` 用来标明：代码块里的 `KeyError` 是有意忽略的。该异常出现时，`with` 结束并继续后面的语句，其他异常仍然传播。它比写一个只有 `pass` 的 `except` 更直接。
+确定可以忽略 `KeyError` 时，可以用 `suppress(KeyError)` 包住这段操作。遇到 `KeyError` 时，程序结束 `with` 代码块，从下一条语句继续。其他异常照常传播。
 
 ```python
 from contextlib import suppress
@@ -137,7 +139,7 @@ print(counts["known"])
 
 ## ExitStack
 
-个数要到运行时才知道的管理器，用 `ExitStack.enter_context` 逐个进入。已经进入的管理器会在栈退出时执行自己的 `__exit__`；后面某一个进入失败时，前面进入成功的那些仍会退出。
+上下文管理器的数量要到运行时才能确定时，可以用 `ExitStack`。用 `stack.enter_context(...)` 逐个进入管理器。离开 `ExitStack` 时，已经进入的管理器按相反顺序退出。即使后续管理器进入失败，先前进入成功的也会退出。
 
 ```python
 from contextlib import ExitStack
@@ -150,7 +152,7 @@ with ExitStack() as stack:
 print(store["debug"], store["trace"])
 ```
 
-代码块里两个键都是 `True`。栈退出后，两个 `override` 都把键写回 `False`。
+代码块里，两个键的值都是 `True`。离开 `ExitStack` 时，两个 `override` 依次恢复原来的 `False`。
 
 | 阶段 | 管理器的执行顺序 |
 | --- | --- |
@@ -159,7 +161,7 @@ print(store["debug"], store["trace"])
 
 ## 随堂练习
 
-进入 `override` 时把 `debug` 改成 `True`，离开时恢复进入前的值。
+补全 `override` 的清理逻辑，让 `debug` 在 `with` 代码块内为 `True`，离开时恢复原值。
 
 <PythonExercise
   label="用生成器恢复字典里的一个键"

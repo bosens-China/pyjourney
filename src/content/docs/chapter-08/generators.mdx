@@ -1,6 +1,6 @@
 ---
 title: 生成器
-description: 用 yield 写出可暂停的迭代器，再把几个生成器串成逐项传递的管道。
+description: 用 yield 写出可以暂停和继续的迭代器，并用多个生成器逐项处理数据。
 ---
 
 import ConceptStepper from "@/components/learning/ConceptStepper";
@@ -8,7 +8,7 @@ import GeneratorExplorer from "@/components/learning/GeneratorExplorer";
 import QuickQuiz from "@/components/learning/QuickQuiz";
 import PythonExercise from "@/components/python/PythonExercise";
 
-生成器是写迭代器的一种方式。它看起来像普通函数，要用数据时写 `yield`。每次对生成器调用 `next()`，它从上次离开的地方继续，并记住当时的局部变量。生成器会自己提供 `__iter__` 和 `__next__`，结束时自己引发 `StopIteration`。同样的序列也可以写成上一课那种带 `__next__` 的类；生成器少写这些方法，也不必把进度存在 `self` 上。
+在函数里用 `yield` 逐项交出数据，这个函数就成了生成器函数。调用它会得到一个生成器对象。生成器提供迭代器需要的 `__iter__` 和 `__next__`，取尽时会引发 `StopIteration`。和上一课手写的类相比，生成器把保存进度的工作交给了 Python。
 
 ```python
 def countdown(n):
@@ -20,13 +20,13 @@ for i in countdown(3):
     print(i)
 ```
 
-循环依次打印 `3`、`2`、`1`。调用 `countdown(3)` 时函数体一行都不执行，只是得到一个生成器对象；每次向它要下一项，函数体才运行到下一个 `yield`。
+循环依次打印 `3`、`2` 和 `1`。调用 `countdown(3)` 时，Python 先创建生成器。第一次取值时，函数体运行到 `yield`，交出 `3` 并暂停。再取下一项时，生成器保留原来的局部变量，从暂停处继续执行。
 
 <GeneratorExplorer />
 
 ## 逐项传递
 
-把几个生成器串起来，就是一条处理管道。每一级都 `yield` 当前这一项；后一级要下一项时，前一级才继续往下走。数据一项一项地穿过整条管道，中间不会为每一级各建一个列表。
+把几个生成器串起来，就能让数据逐项经过多个处理步骤。后一个生成器需要取值时，前一个才继续运行，并通过 `yield` 交出下一项。各个步骤可以边读取边处理，省去保存中间结果的列表。
 
 ```python
 def stream_lines(data):
@@ -46,7 +46,7 @@ raw = ["INFO: 启动", "ERROR: 502", "DEBUG: 探针", "ERROR: 504"]
 print(list(extract_code(filter_errors(stream_lines(raw)))))
 ```
 
-打印 `['502', '504']`。上面的倒计时一次 `next()` 就得到一个数。这里 `list()` 也一次向管道要一项，但筛掉一行后，管道可以继续读下一行，直到找到符合条件的结果。
+这段代码打印 `['502', '504']`。`list()` 每次向最后一个生成器取一项，中间的 `filter_errors` 会继续读取输入，直到下一条错误消息出现，或输入已经取尽。
 
 <ConceptStepper
   label="每一项单独穿过整条管道"
@@ -54,7 +54,7 @@ print(list(extract_code(filter_errors(stream_lines(raw)))))
     {
       code: '"INFO: 启动"',
       description:
-        "list() 向 extract_code 要一项，请求一路传到 raw。第一行在 filter_errors 被过滤掉，于是 filter_errors 继续向上游要下一行。",
+        "list() 向 extract_code 要一项，各步依次往前取值，直到读到 raw 的第一行。filter_errors 跳过这行，继续读取。",
       diagram: {
         kind: "flow",
         direction: "row",
@@ -71,7 +71,7 @@ print(list(extract_code(filter_errors(stream_lines(raw)))))
     {
       code: '"ERROR: 502"',
       description:
-        "这一行通过了过滤，extract_code 取出代码，list() 收下第一项。",
+        "这是错误消息，extract_code 取出错误码 502。正在构建的列表现在有了第一项。",
       output: "['502']",
       diagram: {
         kind: "flow",
@@ -89,7 +89,7 @@ print(list(extract_code(filter_errors(stream_lines(raw)))))
     {
       code: '"DEBUG: 探针"',
       description:
-        "list() 要第二项。filter_errors 跳过这行，继续向上游要下一行。",
+        "list() 继续取值。filter_errors 跳过调试消息，再向 stream_lines 读取下一行。",
       diagram: {
         kind: "flow",
         direction: "row",
@@ -106,7 +106,7 @@ print(list(extract_code(filter_errors(stream_lines(raw)))))
     {
       code: '"ERROR: 504"',
       description:
-        "这一行通过过滤，list() 收下第二项。它再要下一项时，raw 已经取尽，各级依次结束。",
+        "extract_code 取出错误码 504，list() 把它加到列表里。下一次取值时，raw 已经取尽，各个生成器依次结束。",
       output: "['502', '504']",
       diagram: {
         kind: "flow",
@@ -126,7 +126,9 @@ print(list(extract_code(filter_errors(stream_lines(raw)))))
 
 ## 生成器表达式
 
-只有一个循环加一个表达式的简单生成器，写成第 3 章的生成器表达式即可：`(line.strip() for line in data)` 与上面的 `stream_lines(data)` 效果相同。逻辑需要多行语句或者要复用时，再写成生成器函数。
+简单的逐项转换可以写成[生成器表达式](../chapter-03/comprehensions.mdx)。给定同一份列表，`(line.strip() for line in data)` 和上面的 `stream_lines(data)` 会依次交出相同的值。
+
+两种写法取得迭代器的时机不同。创建生成器表达式时，Python 就会求值最左边 `for` 子句中的可迭代对象并取得迭代器。`stream_lines(data)` 要到第一次取值才运行函数体并取得迭代器。需要多行逻辑或想复用这一段转换时，可以写成生成器函数。
 
 <QuickQuiz
   question="这段代码输出什么？"
@@ -138,20 +140,20 @@ print(list(extract_code(filter_errors(stream_lines(raw)))))
 
   g = gen()
   print(next(g))`}
-options={["开始 和 1", "只有 1", "开始、1 和 继续", "什么都不输出"]}
+options={["先打印「开始」，再打印 1", "只打印 1", "打印「开始」、1 和「继续」", "没有输出"]}
 answerIndex={0}
 feedback={[
 "",
-"第一次 next() 时函数体从头运行，会先执行 print(\"开始\")。",
+"第一次调用 next() 会从函数体开头运行，所以会先打印「开始」。",
 "函数体在 yield 1 处暂停，要等下一次 next() 才会打印「继续」。",
-"g = gen() 确实不执行函数体，但 next(g) 会让它运行到第一个 yield。",
+"gen() 创建生成器，紧接着 next(g) 开始运行函数体。",
 ]}
-explanation="调用 gen() 只得到生成器对象。next(g) 让函数体从头运行到第一个 yield：先打印「开始」，再交出 1。"
+explanation="gen() 先创建生成器。next(g) 让函数体运行到第一个 yield，先打印「开始」，再把 1 交给外层的 print。"
 />
 
 ## 随堂练习
 
-`fib_stream` 从 `0, 1` 开始，依次交出小于 `limit` 的斐波那契数。
+实现 `fib_stream`，从 0、1 开始，逐项交出小于 `limit` 的斐波那契数。
 
 <PythonExercise
   label="用 yield 产生斐波那契数"

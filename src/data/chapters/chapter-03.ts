@@ -7,48 +7,48 @@ export const chapter03 = {
   lessons: lessonsOf("chapter-03", meta),
   challenge: {
     starterCode:
-      "# 已给定：command 是一个序列\n\nmatch command:\n    # TODO：['go', 方向] 打印「前往 方向」，方向绑定到 direction\n    # TODO：['stay'] 打印「停留」\n    case _:\n        print('未知')\n",
-    solution:
-      "match command:\n    case ['go', direction]:\n        print(f'前往 {direction}')\n    case ['stay']:\n        print('停留')\n    case _:\n        print('未知')\n",
+      "# 已给定：commands 是按顺序排列的一批指令\n\n# TODO：遍历 commands，用序列模式匹配每条指令\n# TODO：提取 direction，再用守卫检查方向是否有效\n",
+    solution: `directions = ("north", "south", "east", "west")
+
+for command in commands:
+    match command:
+        case ["go", direction] if direction in directions:
+            print(f"前往 {direction}")
+        case ["stay"]:
+            print("停留")
+        case _:
+            print("未知")
+`,
     checks: [
       {
-        message: "使用 match 语句",
-        test: "has(ast.Match)",
+        message: "用 for 遍历 commands",
+        test: "any(name_of(n.iter) == 'commands' for n in nodes(ast.For))",
       },
       {
         message: "在序列模式里把方向绑定到 direction",
         test: "any(isinstance(p, ast.MatchAs) and p.name == 'direction' for s in nodes(ast.MatchSequence) for p in s.patterns)",
       },
       {
-        message: "不用 isinstance 或下标判断形状",
-        test: "not calls('isinstance') and not any(name_of(s.value) == 'command' for s in nodes(ast.Subscript))",
+        message: "用守卫检查捕获到的方向",
+        test: "any(isinstance(c.pattern, ast.MatchSequence) and c.guard is not None for c in nodes(ast.match_case))",
       },
     ],
     cases: [
       {
-        label: "带方向的移动",
-        setup: "command = ['go', 'north']",
-        expectedOutput: "前往 north",
+        label: "按顺序处理一批指令",
+        setup: "commands = [['go', 'north'], ['stay'], ('go', 'west')]",
+        expectedOutput: "前往 north\n停留\n前往 west",
       },
       {
-        label: "停留",
-        setup: "command = ['stay']",
-        expectedOutput: "停留",
+        label: "方向不在允许范围内",
+        setup:
+          "commands = [['go', 'up'], ['go', 'east'], ['go', 'south'], ['go', []]]",
+        expectedOutput: "未知\n前往 east\n前往 south\n未知",
       },
       {
-        label: "无法识别的指令",
-        setup: "command = ['jump']",
-        expectedOutput: "未知",
-      },
-      {
-        label: "缺少方向",
-        setup: "command = ['go']",
-        expectedOutput: "未知",
-      },
-      {
-        label: "多出一项",
-        setup: "command = ('stay', 'here')",
-        expectedOutput: "未知",
+        label: "缺少字段、多出字段和未知指令",
+        setup: "commands = [['go'], ('stay', 'here'), ['jump']]",
+        expectedOutput: "未知\n未知\n未知",
       },
     ],
   },
