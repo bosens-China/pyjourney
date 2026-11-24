@@ -1,0 +1,193 @@
+---
+title: 装饰器
+description: 装饰器是定义函数时调用的可调用对象，@ 把返回值绑回函数名。
+---
+
+import ConceptStepper from "@/components/learning/ConceptStepper";
+import QuickQuiz from "@/components/learning/QuickQuiz";
+import PythonExercise from "@/components/python/PythonExercise";
+
+函数是对象，可以当参数传、当返回值返回（第 4 章）。装饰器就建立在这一点上：它是一个接收函数、返回新函数的可调用对象，用来在不改动原函数的情况下给它加上日志、计时、缓存、权限检查这类外围行为。
+
+`def` 上面的 `@表达式` 在定义函数时求值。Python 用刚创建的函数对象调用它，再把返回值绑到函数名上。因此：
+
+```python
+@log
+def greet():
+    return "hi"
+```
+
+大致等价于先执行 `def`，再执行 `greet = log(greet)`。多个装饰器嵌套应用，靠近 `def` 的那一个先包进去：
+
+```python
+@f1(arg)
+@f2
+def func():
+    pass
+```
+
+大致等价于 `func = f1(arg)(f2(func))`。`f1(arg)` 先调用、返回真正的装饰器，这就是带参数的装饰器。
+
+<ConceptStepper
+  label="装饰之后，名字指向包装函数"
+  steps={[
+    {
+      code: 'def greet():\n    return "hi"',
+      description: "先执行 def，创建原来的函数对象。",
+      diagram: {
+        kind: "refs",
+        names: [{ name: "greet", to: "fn" }],
+        objects: [{ id: "fn", label: "原 greet" }],
+        highlight: ["greet"],
+      },
+    },
+    {
+      code: "greet = log(greet)",
+      description:
+        "@log 用这个函数对象调用 log。log 返回的 wrapper 在闭包里记住了原函数。",
+      diagram: {
+        kind: "refs",
+        names: [{ name: "greet", to: "wrapper" }],
+        objects: [
+          { id: "wrapper", label: "wrapper", refs: ["fn"] },
+          { id: "fn", label: "原 greet" },
+        ],
+        highlight: ["greet", "wrapper"],
+      },
+    },
+    {
+      code: "greet()",
+      description:
+        "调用的是 wrapper。它先做自己的事，再通过闭包调用原函数，把结果交回去。",
+      diagram: {
+        kind: "refs",
+        names: [{ name: "greet", to: "wrapper" }],
+        objects: [
+          { id: "wrapper", label: "wrapper", refs: ["fn"] },
+          { id: "fn", label: "原 greet" },
+        ],
+        highlight: ["wrapper", "fn"],
+      },
+    },
+  ]}
+/>
+
+## functools.wraps
+
+装饰之后，名字指向的是包装函数，它自己的名字和文档字符串会盖住原函数。写装饰器时总是给包装函数加上 `functools.wraps(fn)`：它把原函数的名字、模块和文档字符串复制过来，并用 `__wrapped__` 留下原函数。
+
+```python
+import functools
+
+def log_call(fn):
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        print(f"调用函数: {fn.__name__}")
+        return fn(*args, **kwargs)
+    return wrapper
+
+@log_call
+def add(a, b):
+    """计算两数之和。"""
+    return a + b
+
+print(add.__name__)
+print(add.__doc__)
+```
+
+输出是 `add` 和 `计算两数之和。`。
+
+<QuickQuiz
+  question="最后一行输出什么？"
+  code={`def bracket(fn):
+      def wrapper():
+          return "[" + fn() + "]"
+      return wrapper
+
+  def exclaim(fn):
+      def wrapper():
+          return fn() + "!"
+      return wrapper
+
+  @bracket
+  @exclaim
+  def greet():
+      return "hi"
+
+  print(greet())`}
+options={["[hi!]", "[hi]!", "hi[]!", "[hi]"]}
+answerIndex={0}
+feedback={[
+"",
+"靠近 def 的 exclaim 先包进去，bracket 包在最外层，所以方括号在最外面。",
+"每个 wrapper 都把 fn() 的结果放在自己添加的内容中间或前面。",
+"两个装饰器都生效了：exclaim 加感叹号，bracket 再加方括号。",
+]}
+explanation="相当于 greet = bracket(exclaim(greet))。调用时 exclaim 的包装先得到 hi!，bracket 的包装再加上方括号。"
+/>
+
+## 随堂练习
+
+`count_calls` 每调用一次就打印次数。`wraps` 让装饰之后的 `ping.__name__` 和文档字符串仍是原函数的。
+
+<PythonExercise
+  label="用 wraps 保留原函数的名字和文档"
+  starterCode={`import functools
+
+  def count_calls(fn):
+      calls = 0
+
+      # TODO：定义 wrapper，并用 functools.wraps 保留 fn 的名字和文档
+      # 每次调用先把 calls 加一，打印「执行 名字 (第 n 次)」，再调用 fn
+
+      return wrapper
+
+  @count_calls
+  def ping():
+      """健康检查。"""
+      return "pong"
+
+  ping()
+  ping()
+  print(ping.__name__)
+  print(ping.__doc__)
+`}
+  solution={`import functools
+
+  def count_calls(fn):
+      calls = 0
+
+      @functools.wraps(fn)
+      def wrapper(*args, **kwargs):
+          nonlocal calls
+          calls += 1
+          print(f"执行 {fn.__name__} (第 {calls} 次)")
+          return fn(*args, **kwargs)
+
+      return wrapper
+
+  @count_calls
+  def ping():
+      """健康检查。"""
+      return "pong"
+
+  ping()
+  ping()
+  print(ping.__name__)
+  print(ping.__doc__)
+`}
+  expectedOutput={`执行 ping (第 1 次)
+  执行 ping (第 2 次)
+  ping
+  健康检查。`}
+checks={[
+{
+message: "包装函数用 functools.wraps 装饰",
+test: "any(name_of(d) == 'wraps' for f in nodes(ast.FunctionDef) for d in f.decorator_list)",
+},
+{
+message: "用 nonlocal 更新计数",
+test: "any('calls' in n.names for n in nodes(ast.Nonlocal))",
+},
+]}
+/>

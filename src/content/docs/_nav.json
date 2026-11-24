@@ -1,0 +1,57 @@
+[
+  {
+    "text": "前言",
+    "link": "/preface"
+  },
+  {
+    "text": "开始阅读",
+    "link": "/chapter-01/program-shape",
+    "activeMatch": "^/chapter-"
+  },
+  {
+    "text": "章末挑战",
+    "activeMatch": "^/challenge/",
+    "items": [
+      {
+        "text": "第 1 章 · 名字与对象",
+        "link": "/challenge/chapter-01"
+      },
+      {
+        "text": "第 2 章 · 数据",
+        "link": "/challenge/chapter-02"
+      },
+      {
+        "text": "第 3 章 · 控制流与推导",
+        "link": "/challenge/chapter-03"
+      },
+      {
+        "text": "第 4 章 · 函数",
+        "link": "/challenge/chapter-04"
+      },
+      {
+        "text": "第 5 章 · 模块",
+        "link": "/challenge/chapter-05"
+      },
+      {
+        "text": "第 6 章 · 异常",
+        "link": "/challenge/chapter-06"
+      },
+      {
+        "text": "第 7 章 · 类与类型",
+        "link": "/challenge/chapter-07"
+      },
+      {
+        "text": "第 8 章 · 迭代器与生成器",
+        "link": "/challenge/chapter-08"
+      },
+      {
+        "text": "第 9 章 · 包装机制",
+        "link": "/challenge/chapter-09"
+      }
+    ]
+  },
+  {
+    "text": "工程实践",
+    "link": "/engineering"
+  }
+]

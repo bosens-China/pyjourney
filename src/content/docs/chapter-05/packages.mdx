@@ -1,0 +1,95 @@
+---
+title: 包与相对导入
+description: 包用带点号的模块名组织子模块。相对导入用前导点号表示当前包和上级包，直接运行的主模块则使用绝对导入。
+---
+
+import ConceptStepper from "@/components/learning/ConceptStepper";
+import QuickQuiz from "@/components/learning/QuickQuiz";
+
+包用带点号的模块名划分命名空间。`A.B` 是包 `A` 里的子模块 `B`。这样不同的包可以各自使用同样的模块名，不必担心冲突。导入包时，Python 在 `sys.path` 的目录里寻找包的子目录。
+
+常规包通常是一个包含 `__init__.py` 的目录。这个文件可以是空的，也可以执行包的初始化代码。
+
+```text
+sound/                    ← .. 上级包
+├── __init__.py
+├── formats.py
+├── effects/              ← . 当前包
+│   ├── __init__.py
+│   ├── echo.py
+│   └── surround.py       ← 导入从这里出发
+└── filters/
+    ├── __init__.py
+    ├── equalizer.py
+    └── vocoder.py
+```
+
+导入单个子模块有三种写法，绑定的名字不同：
+
+```python
+import sound.effects.echo
+sound.effects.echo.echofilter(input, output, delay=0.7, atten=4)
+
+from sound.effects import echo
+echo.echofilter(input, output, delay=0.7, atten=4)
+
+from sound.effects.echo import echofilter
+echofilter(input, output, delay=0.7, atten=4)
+```
+
+`from package import item` 里的 `item` 可以是子模块、子包，也可以是包里定义的函数、类或变量。`import a.b.c` 则要求每一项都是包或模块。日常代码最常用第二种和第三种写法：名字短，来源也清楚。
+
+## 星号导入与 `__all__`
+
+`from sound.effects import *` 不会自动导入所有子模块。包或模块可以用 `__all__` 列出星号导入时公开的名字。写代码时仍然写出要导入的名字。
+
+## 相对导入
+
+同级子模块可以用绝对导入：`sound.filters.vocoder` 需要 `echo` 时，写 `from sound.effects import echo`。也可以用前导点号写相对导入，点号从当前模块所属的包算起。以图中的 `surround.py` 为例，一个点指向 `effects`，两个点指向 `sound`。
+
+<ConceptStepper
+  label="点号表示从当前包出发"
+  steps={[
+    {
+      code: "from . import echo",
+      description: "一个点是当前包。surround.py 用它导入同包的 echo。",
+      values: [{ name: "echo", value: "当前包里的 echo" }],
+    },
+    {
+      code: "from .. import formats",
+      description: "两个点是上级包。这里导入 sound 包里的 formats。",
+      values: [{ name: "formats", value: "上级包里的 formats" }],
+    },
+    {
+      code: "from ..filters import equalizer",
+      description: "先到上级包，再进入 filters，导入 equalizer。",
+      values: [{ name: "equalizer", value: "sound.filters.equalizer" }],
+    },
+  ]}
+/>
+
+```python
+from . import echo
+from .. import formats
+from ..filters import equalizer
+```
+
+主模块是直接运行的脚本，它不属于任何包。准备当作程序入口运行的模块使用绝对导入。
+
+<QuickQuiz
+  question="python app.py 直接运行的入口模块，可以怎样导入自己项目里的包？"
+  options={[
+    "from . import helpers",
+    "from ..helpers import parse",
+    "import helpers 或 from helpers import parse 这样的绝对导入",
+    "from .helpers import *",
+  ]}
+  answerIndex={2}
+  feedback={[
+    "直接运行的主模块不属于任何包，没有「当前包」可言，相对导入会失败。",
+    "两个点表示上级包；主模块没有所属的包，更没有上级包。",
+    "",
+    "主模块不能用相对导入，星号导入也不推荐。",
+  ]}
+  explanation="相对导入根据当前模块所属的包来解析。直接运行的主模块没有所属包，入口代码使用绝对导入。"
+/>

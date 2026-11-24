@@ -1,0 +1,30 @@
+---
+title: "用生成器筛出正数"
+description: "逐个产出大于 0 的数，再用一个空格拼成一行。"
+---
+
+import ChallengeExample from "@/components/python/ChallengeExample";
+import ChapterWorkbench from "@/components/python/ChapterWorkbench";
+import { chapter08 } from "@/data/chapters/chapter-08";
+
+## 题目
+
+`numbers` 已经给定。写一个生成器，只产出大于 0 的数，并把结果打印成一行。
+
+### 题目要求
+
+1. 使用 `yield`，不要先建成一个结果列表。
+2. 保留原有顺序。
+3. 用一个空格连接。没有正数时打印空行。
+
+<ChallengeExample example={chapter08.challenge.cases[0]} />
+
+## 编辑器 \{#challenge-editor}
+
+<ChapterWorkbench
+  key={chapter08.id}
+  starterCode={chapter08.challenge.starterCode}
+  solution={chapter08.challenge.solution}
+  cases={chapter08.challenge.cases}
+  checks={chapter08.challenge.checks}
+/>

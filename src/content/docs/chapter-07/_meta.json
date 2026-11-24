@@ -1,0 +1,27 @@
+[
+  {
+    "type": "file",
+    "name": "classes",
+    "label": "7.1 类与方法"
+  },
+  {
+    "type": "file",
+    "name": "dataclass-modeling",
+    "label": "7.2 用数据类建模"
+  },
+  {
+    "type": "file",
+    "name": "type-aliases",
+    "label": "7.3 类型标注与泛型"
+  },
+  {
+    "type": "file",
+    "name": "protocol",
+    "label": "7.4 结构子类型"
+  },
+  {
+    "type": "custom-link",
+    "label": "开始章节挑战",
+    "link": "/challenge/chapter-07"
+  }
+]

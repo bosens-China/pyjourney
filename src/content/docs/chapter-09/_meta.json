@@ -1,0 +1,22 @@
+[
+  {
+    "type": "file",
+    "name": "decorators",
+    "label": "9.1 装饰器"
+  },
+  {
+    "type": "file",
+    "name": "context-managers",
+    "label": "9.2 with 语句"
+  },
+  {
+    "type": "file",
+    "name": "contextlib",
+    "label": "9.3 contextlib"
+  },
+  {
+    "type": "custom-link",
+    "label": "开始章节挑战",
+    "link": "/challenge/chapter-09"
+  }
+]

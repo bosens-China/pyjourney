@@ -1,0 +1,27 @@
+[
+  {
+    "type": "file",
+    "name": "conditions",
+    "label": "3.1 条件与循环"
+  },
+  {
+    "type": "file",
+    "name": "comprehensions",
+    "label": "3.2 推导式"
+  },
+  {
+    "type": "file",
+    "name": "pattern-matching-basics",
+    "label": "3.3 模式匹配"
+  },
+  {
+    "type": "file",
+    "name": "matching-mappings-and-guards",
+    "label": "3.4 映射模式与守卫"
+  },
+  {
+    "type": "custom-link",
+    "label": "开始章节挑战",
+    "link": "/challenge/chapter-03"
+  }
+]

@@ -1,52 +1,39 @@
+import meta from "@/content/docs/chapter-09/_meta.json";
+import { lessonsOf } from "../lessons.ts";
+
 export const chapter09 = {
   id: "chapter-09",
-  label: "第 9 章 · 异常与错误处理",
-  lessons: [
-    { slug: "chapter-09/reading-tracebacks", label: "9.1 从异常回溯定位问题" },
-    {
-      slug: "chapter-09/handling-exceptions",
-      label: "9.2 用 try 和 except 处理异常",
-    },
-    {
-      slug: "chapter-09/raising-exceptions",
-      label: "9.3 用 raise 声明失败条件",
-    },
-  ],
+  label: "第 9 章 · 包装机制",
+  lessons: lessonsOf("chapter-09", meta),
   challenge: {
-    title: "盘点库存数量",
-    description:
-      "账表中的数量都是文本。有些记录还待补充，有些填了负数。请统计有效库存，并报告有几条记录无效。",
-    instructions: [
-      "程序提供数量文本列表 texts。编写 parse_quantity(text)，用 int() 转换文本，遇到负数时引发 ValueError。",
-      "逐条解析记录。捕获 ValueError 时把无效记录数加一，再处理剩下的记录。把转换成功的数量加进合计。",
-      "输出两行。第一行的格式是“库存合计 19”，第二行的格式是“无效记录 2”。数字随输入变化。",
+    starterCode:
+      "from functools import wraps\n\n# 已给定：message 是一段文本\n\ndef shout(fn):\n    # TODO：定义 wrapper，用 wraps 保留 fn 的元数据；它调用 fn，再把返回的文本转成大写\n    ...\n\n@shout\ndef greet(text):\n    return text\n\nprint(greet(message))\nprint(greet.__name__)\n",
+    solution:
+      "from functools import wraps\n\ndef shout(fn):\n    @wraps(fn)\n    def wrapper(text):\n        return fn(text).upper()\n    return wrapper\n\n@shout\ndef greet(text):\n    return text\n\nprint(greet(message))\nprint(greet.__name__)\n",
+    checks: [
+      {
+        message: "包装函数用 wraps 装饰",
+        test: "any(name_of(d) == 'wraps' for f in nodes(ast.FunctionDef) for d in f.decorator_list)",
+      },
+      {
+        message: "用 @shout 装饰 greet",
+        test: "any(f.name == 'greet' and [name_of(d) for d in f.decorator_list] == ['shout'] for f in nodes(ast.FunctionDef))",
+      },
+      {
+        message: "greet 原样返回文本，大写转换放在装饰器里",
+        test: "any(f.name == 'greet' and not any(isinstance(n, ast.Call) and name_of(n.func) == 'upper' for n in ast.walk(f)) for f in nodes(ast.FunctionDef))",
+      },
     ],
-    starterCode: [
-      "def parse_quantity(text):",
-      "    # 转换文本，再检验数量是否大于或等于零。",
-      "    pass",
-      "",
-      "",
-      "total = 0",
-      "invalid = 0",
-      "# 遍历 texts，调用 parse_quantity()，再输出统计结果。",
-      "",
-    ].join("\n"),
     cases: [
       {
-        label: "有效数量和无效记录混合",
-        setup: 'texts = ["12", "待定", "-3", "7"]',
-        expectedOutput: "库存合计 19\n无效记录 2",
+        label: "转成大写",
+        setup: "message = 'hello'",
+        expectedOutput: "HELLO\ngreet",
       },
       {
-        label: "零、空白和空字符串",
-        setup: 'texts = [" 0 ", " 12 ", "", "-2"]',
-        expectedOutput: "库存合计 12\n无效记录 2",
-      },
-      {
-        label: "没有有效记录",
-        setup: 'texts = ["缺失", "-1", "2.5"]',
-        expectedOutput: "库存合计 0\n无效记录 3",
+        label: "保留原有字符",
+        setup: "message = 'Py 3'",
+        expectedOutput: "PY 3\ngreet",
       },
     ],
   },

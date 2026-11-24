@@ -1,0 +1,17 @@
+[
+  {
+    "type": "file",
+    "name": "handling-exceptions",
+    "label": "6.1 捕获与清理"
+  },
+  {
+    "type": "file",
+    "name": "raising-exceptions",
+    "label": "6.2 抛出异常"
+  },
+  {
+    "type": "custom-link",
+    "label": "开始章节挑战",
+    "link": "/challenge/chapter-06"
+  }
+]

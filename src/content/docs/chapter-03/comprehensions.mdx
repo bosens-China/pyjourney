@@ -1,0 +1,174 @@
+---
+title: 推导式
+description: 用列表、集合和字典推导式从可迭代对象生成新容器，并在推导式里用 * 和 ** 展开。
+---
+
+import ConceptStepper from "@/components/learning/ConceptStepper";
+import QuickQuiz from "@/components/learning/QuickQuiz";
+import PythonExercise from "@/components/python/PythonExercise";
+
+列表推导式对一个可迭代对象的每一项求值，用结果组成新列表，也可以只留下满足条件的项。它比先建空列表再 `append` 更短。普通 `for` 会把循环变量留在外层作用域里；推导式计算平方列表时没有这个副作用。
+
+方括号里先写表达式，再写一个 `for`，后面可以有零个或多个 `for` 或 `if`。这些子句的顺序和等价的嵌套循环相同。表达式如果是元组，必须加圆括号。
+
+```python
+squares = [x**2 for x in range(10)]
+pairs = [(x, y) for x in [1, 2, 3] for y in [3, 1, 4] if x != y]
+flat = [num for elem in [[1, 2], [4, 5]] for num in elem]
+```
+
+`flat` 与下面的循环得到同一列表：外层取出每个子列表，内层取出其中的数。
+
+集合推导式用花括号，重复元素只会留下一个。字典推导式的冒号左边是键、右边是值：
+
+```python
+vowels = {x for x in "abracadabra" if x not in "abc"}
+squares_by_n = {x: x**2 for x in (2, 4, 6)}
+```
+
+推导式适合「对每一项做变换、按条件筛选」这一件事。逻辑需要好几层 `for` 和 `if`、或者每一项要执行语句时，写成普通循环更好读。
+
+## 生成器表达式
+
+把推导式的方括号换成圆括号，得到生成器表达式。它不会先建出整个列表，而是在被迭代时逐项给出结果。它常常直接交给 `sum`、`max`、`any`、`all` 这样一次消费整个序列的函数；作为唯一参数时，可以省掉自己的那对圆括号：
+
+```python
+prices = [12, 48, 7]
+print(sum(p * 2 for p in prices))    # 134
+print(any(p > 40 for p in prices))   # True，有一项大于 40
+print(all(p > 5 for p in prices))    # True，每一项都大于 5
+```
+
+`any` 遇到第一个真值就停下，`all` 遇到第一个假值就停下。生成器的工作方式在第 8 章细讲。
+
+## 随堂练习
+
+统计每个长度超过 3 的单词的长度，再判断是否有单词长于 5 个字符。
+
+<PythonExercise
+  label="字典推导式与 any"
+  starterCode={`words = ["apple", "fig", "banana", "kiwi"]
+
+  # TODO：用字典推导式得到 {单词: 长度}，只保留长度大于 3 的单词
+  # TODO：用 any 和生成器表达式判断是否有单词长于 5
+`}
+  solution={`words = ["apple", "fig", "banana", "kiwi"]
+
+  lengths = {word: len(word) for word in words if len(word) > 3}
+  print(lengths)
+  print(any(len(word) > 5 for word in words))
+`}
+  expectedOutput={`{'apple': 5, 'banana': 6, 'kiwi': 4}
+  True`}
+checks={[
+{ message: "用字典推导式构造结果", test: "has(ast.DictComp)" },
+{
+message: "把生成器表达式交给 any",
+test: "any(name_of(c.func) == 'any' and c.args and isinstance(c.args[0], ast.GeneratorExp) for c in nodes(ast.Call))",
+},
+]}
+/>
+
+## 推导式里的解包
+
+列表、集合和字典推导式，以及生成器表达式，都可以在表达式的位置使用 `*` 或 `**`。文档里的写法是：
+
+```python
+lists = [[1, 2], [3, 4], [5]]
+[*L for L in lists]  # 等价于 [x for L in lists for x in L]
+
+sets = [{1, 2}, {2, 3}, {3, 4}]
+{*s for s in sets}  # 等价于 {x for s in sets for x in s}
+
+dicts = [{"a": 1}, {"b": 2}, {"a": 3}]
+{**d for d in dicts}  # 等价于 {k: v for d in dicts for k, v in d.items()}
+```
+
+三个结果分别是 `[1, 2, 3, 4, 5]`、`{1, 2, 3, 4}` 和 `{'a': 3, 'b': 2}`。后面的字典再次写入 `"a"` 时，新值替换旧值。生成器表达式同样可以写 `(*L for L in lists)`，它等价于 `(x for L in lists for x in L)`。
+
+<ConceptStepper
+  label="星号把每个内层序列展开进新列表"
+  steps={[
+    {
+      code: "lists = [[1, 2], [3, 4], [5]]",
+      description: "每一项本身都是列表。推导式从一个空的结果列表开始。",
+      values: [{ name: "结果", value: "[]" }],
+    },
+    {
+      code: "[*L for L in lists]",
+      description: "第一轮取到 [1, 2]。*L 把 1 和 2 依次放进结果。",
+      values: [
+        { name: "L", value: "[1, 2]" },
+        { name: "结果", value: "[1, 2]" },
+      ],
+    },
+    {
+      code: "[*L for L in lists]",
+      description: "第二轮取到 [3, 4]。3 和 4 接在已有的元素后面。",
+      values: [
+        { name: "L", value: "[3, 4]" },
+        { name: "结果", value: "[1, 2, 3, 4]" },
+      ],
+    },
+    {
+      code: "[*L for L in lists]",
+      description: "第三轮展开 [5]，把 5 放到末尾，推导式完成。",
+      values: [
+        { name: "L", value: "[5]" },
+        { name: "结果", value: "[1, 2, 3, 4, 5]" },
+      ],
+    },
+  ]}
+/>
+
+<QuickQuiz
+  question={
+    "dicts = [{'a': 1}, {'a': 3}] 时，{**d for d in dicts} 的值是什么？"
+  }
+  options={[
+    "{'a': 1}",
+    "{'a': 3}",
+    "[{'a': 1}, {'a': 3}]",
+    "这个写法会引发 SyntaxError",
+  ]}
+  answerIndex={1}
+  explanation="{**d for d in dicts} 等价于按每个字典的项依次写入。键 a 被写两次，后一次的值 3 留下来。"
+/>
+
+把各组成员排成一个列表，再把几层配置合并成一个字典，后面的层覆盖前面的：
+
+<PythonExercise
+  label="在推导式里用 * 和 ** 展开"
+  starterCode={`teams = [["Ada", "Lin"], ["Bo"], ["Cy", "Lin"]]
+  layers = [{"theme": "light", "lang": "zh"}, {"theme": "dark"}]
+
+  # TODO：在列表推导式里用 * 展开每一组
+  members = []
+  # TODO：在字典推导式里用 ** 展开每一层
+  settings = {}
+
+  print(members)
+  print(settings)
+`}
+  solution={`teams = [["Ada", "Lin"], ["Bo"], ["Cy", "Lin"]]
+  layers = [{"theme": "light", "lang": "zh"}, {"theme": "dark"}]
+
+  members = [*team for team in teams]
+  settings = {**layer for layer in layers}
+
+  print(members)
+  print(settings)
+`}
+  expectedOutput={`['Ada', 'Lin', 'Bo', 'Cy', 'Lin']
+  {'theme': 'dark', 'lang': 'zh'}`}
+  checks={[
+    {
+      message: "列表推导式的表达式写成 *team",
+      test: "any(isinstance(c.elt, ast.Starred) for c in nodes(ast.ListComp))",
+    },
+    {
+      message: "字典推导式的表达式写成 **layer",
+      test: "any(c.value is None for c in nodes(ast.DictComp))",
+    },
+  ]}
+/>

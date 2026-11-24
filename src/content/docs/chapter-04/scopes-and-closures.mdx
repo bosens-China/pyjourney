@@ -1,0 +1,173 @@
+---
+title: 作用域与闭包
+description: 名称按局部、外层函数、全局、内置的顺序查找。要改外层变量用 nonlocal；要在定义时留下当前值，把它写成默认参数。
+---
+
+import ConceptStepper from "@/components/learning/ConceptStepper";
+import ClosureExplorer from "@/components/learning/ClosureExplorer";
+import QuickQuiz from "@/components/learning/QuickQuiz";
+import PythonExercise from "@/components/python/PythonExercise";
+
+名字按 LEGB 的顺序查找：
+
+1. **L（Local）**：当前函数的局部名字，最先搜索。
+2. **E（Enclosing）**：外层函数的名字，从紧挨着的一层向外找。
+3. **G（Global）**：当前模块的全局名字。
+4. **B（Built-in）**：内置名字，例如 `len`、`print` 和内置异常，最后搜索。
+
+作用域按源码的写法确定，跟函数后来在哪里被调用无关。
+
+只读取名字时，沿 LEGB 向外找，所以函数可以直接读取全局和外层函数的变量。赋值则不同：没有声明时，赋值总是绑定当前函数的局部名字，`import` 和 `def` 也一样。要给外层的名字重新绑定，得先声明。
+
+`global` 把名字指到模块全局作用域，赋值改的是模块里的绑定。`nonlocal` 把名字指到外层函数，赋值改的是那一层的绑定。没有 `nonlocal` 就在内层赋值，会新建一个局部名字，外层那个同名变量保持原样。
+
+```python
+def scope_test():
+    def do_local():
+        spam = "local spam"
+
+    def do_nonlocal():
+        nonlocal spam
+        spam = "nonlocal spam"
+
+    def do_global():
+        global spam
+        spam = "global spam"
+
+    spam = "test spam"
+    do_local()
+    print("After local assignment:", spam)
+    do_nonlocal()
+    print("After nonlocal assignment:", spam)
+    do_global()
+    print("After global assignment:", spam)
+
+scope_test()
+print("In global scope:", spam)
+```
+
+局部赋值之后，外层 `spam` 仍是 `"test spam"`。`nonlocal` 把它改成 `"nonlocal spam"`。`global` 改的是模块级名字，函数里打印的还是外层那个 `"nonlocal spam"`，模块里随后能读到 `"global spam"`。
+
+`global` 让函数之间通过模块变量悄悄传递状态，很少是好设计。需要在多次调用之间保留状态时，用下面的闭包，或者第 7 章的类。
+
+<ConceptStepper
+  label="nonlocal 改的是外层函数的绑定"
+  steps={[
+    {
+      code: "spam = 'test spam'\ndo_local()",
+      description: "内层赋值新建局部 spam，外层绑定不变。",
+      values: [{ name: "外层 spam", value: "test spam" }],
+    },
+    {
+      code: "def do_nonlocal():\n    nonlocal spam\n    spam = 'nonlocal spam'",
+      description: "nonlocal 声明之后，赋值重新绑定外层函数的 spam。",
+      values: [{ name: "外层 spam", value: "nonlocal spam" }],
+    },
+    {
+      code: "def do_global():\n    global spam\n    spam = 'global spam'",
+      description: "global 写入模块全局。外层函数的 spam 仍是上一行留下的值。",
+      values: [
+        { name: "外层 spam", value: "nonlocal spam" },
+        { name: "模块 spam", value: "global spam" },
+      ],
+    },
+  ]}
+/>
+
+## 闭包
+
+内层函数可以引用外层函数的变量。外层函数返回之后，内层函数仍然记得这些变量，这样的函数叫闭包。用闭包可以「先固定一部分参数，再得到一个新函数」：
+
+```python
+def make_multiplier(factor):
+    def multiply(x):
+        return x * factor
+    return multiply
+
+double = make_multiplier(2)
+triple = make_multiplier(3)
+print(double(5), triple(5))  # 10 15
+```
+
+每次调用 `make_multiplier` 都创建新的局部变量 `factor`，`double` 和 `triple` 各自记住自己的那一个。内层函数要重新绑定这个变量时，先声明 `nonlocal`。
+
+<ClosureExplorer />
+
+闭包记住的是变量，调用时才去读它的当前值。循环里的名字在循环结束后留着最后一轮的值，所以在循环里定义的几个函数若都引用它，调用时读到的是同一个值。
+
+要在定义时绑住这一轮的值，把该值写成默认参数。默认值在定义函数时求值。普通嵌套函数和 `lambda` 都用这个办法。
+
+```python
+def make_squares():
+    squares = []
+    for x in range(5):
+        def square(n=x):
+            return n**2
+
+        squares.append(square)
+    return squares
+```
+
+这里的 `n=x` 在每一轮定义 `square` 时读取当时的 `x`，得到 `square` 自己的局部默认值。
+
+<QuickQuiz
+  question="最后一行输出什么？"
+  code={`x = "全局"
+
+  def outer():
+      x = "外层"
+      def inner():
+          return x
+      return inner()
+
+  print(outer())`}
+options={["全局", "外层", "引发 NameError", "None"]}
+answerIndex={1}
+feedback={[
+"inner 自己没有 x，先找外层函数 outer，在那里就找到了，不会再找到模块全局。",
+"",
+"inner 读取 x 时沿 LEGB 向外找，outer 里就有 x。",
+"inner 返回 x 的值，outer 又返回 inner() 的结果。",
+]}
+explanation="inner 只读取 x。局部没有，就找外层函数 outer，找到「外层」。"
+/>
+
+## 随堂练习
+
+`make_squares` 返回五个函数，第 `i` 个函数返回 `i` 的平方。让每个 `square` 在定义时留下这一轮的 `x`。
+
+<PythonExercise
+  label="用默认参数留下循环中的当前值"
+  starterCode={`def make_squares():
+      squares = []
+      for x in range(5):
+          def square(n=...):  # TODO：把默认值换成这一轮的值
+              return n ** 2
+          squares.append(square)
+      return squares
+
+  squares = make_squares()
+  print(squares[2]())
+  print(squares[4]())
+`}
+  solution={`def make_squares():
+      squares = []
+      for x in range(5):
+          def square(n=x):
+              return n ** 2
+          squares.append(square)
+      return squares
+
+  squares = make_squares()
+  print(squares[2]())
+  print(squares[4]())
+`}
+  expectedOutput={`4
+  16`}
+checks={[
+{
+message: "square 用默认参数读取这一轮的 x",
+test: "any(f.name == 'square' and any(isinstance(d, ast.Name) and d.id == 'x' for d in f.args.defaults) for f in nodes(ast.FunctionDef))",
+},
+]}
+/>

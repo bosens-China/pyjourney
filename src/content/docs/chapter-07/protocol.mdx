@@ -1,0 +1,80 @@
+---
+title: 结构子类型
+description: 用 typing.Protocol 让静态类型检查按对象是否具备指定属性来接受它。
+---
+
+import QuickQuiz from "@/components/learning/QuickQuiz";
+
+静态类型里的名义子类型要求：需要 `B` 的地方只有 `B` 的子类才能通过。结构子类型看的是对象有没有协议里声明的那些属性。实现类不用把协议写进基类列表，类型检查器也会接受它。
+
+协议类继承 `typing.Protocol`：
+
+```python
+from typing import Protocol
+
+class Renderable(Protocol):
+    def render(self) -> str:
+        ...
+
+class MarkdownDoc:
+    def render(self) -> str:
+        return "# Title"
+
+def display(doc: Renderable) -> str:
+    return doc.render()
+```
+
+`display(MarkdownDoc())` 能通过静态检查，是因为 `MarkdownDoc` 有匹配的 `render`。运行这段函数时，Python 只查找并调用 `doc.render()`。协议不参与这次调用，也没有把 `MarkdownDoc` 收进 `Renderable` 的继承树。运行时“有这个方法就能调用”本来就成立；`Protocol` 负责的是类型检查器那一侧的结构判断。
+
+协议也可以带类型参数，写法与泛型类相同：`class Source[T](Protocol)`。
+
+需要描述「有某个方法的对象」时，用协议比要求调用方继承某个基类更灵活：别人写的类，甚至标准库的类，只要具备这些方法就能直接传进来。
+
+## 运行时检查是另一条规则
+
+要把协议传给 `isinstance`，直接在这个协议上加 `@runtime_checkable`。运行时只检查列出的属性在不在，忽略类型签名。
+
+```python
+from typing import Protocol, runtime_checkable
+
+@runtime_checkable
+class Closable(Protocol):
+    def close(self) -> None:
+        ...
+
+class Door:
+    def close(self) -> None:
+        return None
+
+door = Door()
+print(isinstance(door, Closable))  # True
+```
+
+| 检查方式 | 对 `Closable` 检查什么 |
+| --- | --- |
+| 静态类型检查 | 比对 `close` 的签名，确认可以无参调用且返回 `None` |
+| `isinstance(door, Closable)` | 检查实例有没有 `close`，忽略参数和返回值 |
+
+<QuickQuiz
+  question="最后一行输出什么？"
+  code={`from typing import Protocol, runtime_checkable
+
+  @runtime_checkable
+  class Closable(Protocol):
+      def close(self) -> None: ...
+
+  class Door:
+      def close(self, force: bool) -> str:
+          return "关上了"
+
+  print(isinstance(Door(), Closable))`}
+options={["True", "False", "引发 TypeError", "None"]}
+answerIndex={0}
+feedback={[
+"",
+"运行时检查只看 close 这个属性在不在，不比较参数和返回值。",
+"加了 @runtime_checkable 的协议可以用在 isinstance 里。",
+"isinstance 总是返回布尔值。",
+]}
+explanation="运行时协议只检查列出的属性是否存在。Door 有 close，结果为 True，尽管它的签名和协议不同；静态类型检查器才会指出签名不匹配。"
+/>

@@ -1,0 +1,153 @@
+---
+title: 用数据类建模
+description: 以字段为主的类用 dataclass 生成初始化、表示和比较。可变默认值用 default_factory，不可变的值对象用 frozen 与 slots，match 可以按类和属性拆开它们。
+---
+
+import Diagram from "@/components/learning/Diagram";
+import QuickQuiz from "@/components/learning/QuickQuiz";
+import PythonExercise from "@/components/python/PythonExercise";
+
+以字段为主的类，用 `@dataclass` 代替手写的 `__init__`、`__repr__` 和 `__eq__`。类体里用带类型标注的类变量声明字段，装饰器按字段定义的顺序生成这些方法。字段旁边可以照常写方法：
+
+```python
+from dataclasses import dataclass
+
+@dataclass
+class Point:
+    x: int
+    y: int
+
+    def moved(self, dx, dy):
+        return Point(self.x + dx, self.y + dy)
+
+p = Point(1, 2)
+print(p.moved(3, 4))     # Point(x=4, y=6)
+print(p == Point(1, 2))  # True
+```
+
+## 默认值与 default_factory
+
+字段可以有默认值，有默认值的字段要写在没有默认值的字段后面。默认值是列表、字典这样的可变对象时，用 `field(default_factory=...)`：每创建一个实例，就调用一次这个工厂，得到一个新对象。直接写 `tags: list = []` 会在创建类时引发 `ValueError`。
+
+```python
+from dataclasses import dataclass, field
+
+@dataclass
+class Article:
+    title: str
+    views: int = 0
+    tags: list[str] = field(default_factory=list)
+
+a = Article("入门")
+b = Article("进阶")
+a.tags.append("python")
+print(a.tags, b.tags)  # ['python'] []
+```
+
+<Diagram
+  diagram={{
+    kind: "refs",
+    names: [
+      { name: "a.tags", to: "['python']" },
+      { name: "b.tags", to: "[]" },
+    ],
+    objects: [
+      { id: "['python']", label: "['python']" },
+      { id: "[]", label: "[]" },
+    ],
+    highlight: ["['python']"],
+  }}
+/>
+
+两次创建 `Article` 各调用了一次 `list()`。给 `a.tags` 添加标签后，`b.tags` 指向的列表仍然是空的。
+
+## frozen 与 slots
+
+表示一个「值」的对象，例如坐标、金额、配置项，创建之后通常不该再改。`frozen=True` 让对字段的赋值和删除引发 `FrozenInstanceError`。保留默认的 `eq=True` 时，数据类会根据字段生成 `__hash__`。要把实例放进集合或当作字典的键，参与计算的字段也得可哈希。字段里如果放着列表，列表的内容仍然可以改，用它计算哈希还会引发 `TypeError`。
+
+`slots=True` 让实例只能拥有声明过的字段，写错属性名会立刻报错，实例也更省内存。两者经常一起用：
+
+```python
+@dataclass(frozen=True, slots=True)
+class Money:
+    amount: int
+    currency: str = "CNY"
+```
+
+需要比较大小时，传入 `order=True`，按字段组成的元组依次比较。
+
+## 在 match 里拆开对象
+
+第 3 章的模式匹配还能按类和属性匹配对象。类名后面写类似构造调用的参数列表：`Point(x=0, y=y)` 要求主语是 `Point`、属性 `x` 等于 `0`，并把属性 `y` 绑到名字 `y`。这里的 `x=`、`y=` 是属性名，不是赋值。数据类还支持按位置写：`Point(0, y)` 与上面相同，位置对应字段定义的顺序。
+
+```python
+match point:
+    case Point(0, 0):
+        print("原点")
+    case Point(0, y):
+        print(f"在 y 轴上，y={y}")
+    case Point(x, y) if x == y:
+        print(f"在对角线上：{x}")
+    case Point():
+        print("别处的点")
+```
+
+<QuickQuiz
+  question="最后一行输出什么？"
+  code={`from dataclasses import dataclass, field
+
+  @dataclass
+  class Cart:
+      items: list[str] = field(default_factory=list)
+
+  a = Cart()
+  b = Cart()
+  a.items.append("书")
+  print(len(a.items), len(b.items), a == b)`}
+options={["1 0 False", "1 1 True", "1 0 True", "1 1 False"]}
+answerIndex={0}
+feedback={[
+"",
+"default_factory 为每个实例各调用一次 list，a 和 b 的列表不是同一个。",
+"数据类生成的 **eq** 比较字段的值：['书'] 和 [] 不相等。",
+"b 有自己的空列表，a.items.append 不会影响它。",
+]}
+explanation="每个实例都从 default_factory 得到新列表，所以 b.items 仍是空的。生成的 **eq** 逐个比较字段，两个列表不相等，结果为 False。"
+/>
+
+## 随堂练习
+
+打印这个同时使用 `frozen=True` 和 `slots=True` 的点。
+
+<PythonExercise
+  label="定义并打印一个数据类"
+  starterCode={`from dataclasses import dataclass
+
+  # TODO：用 frozen=True 和 slots=True 定义数据类 Point3D，字段 x、y、z 都是 int
+
+  p = Point3D(10, 20, 30)
+  print(p)
+`}
+  solution={`from dataclasses import dataclass
+
+  @dataclass(frozen=True, slots=True)
+  class Point3D:
+      x: int
+      y: int
+      z: int
+
+  p = Point3D(10, 20, 30)
+  print(p)
+`}
+  expectedOutput={`Point3D(x=10, y=20, z=30)`}
+checks={[
+{
+message: "@dataclass 同时传入 frozen=True 和 slots=True",
+test: "any(isinstance(d, ast.Call) and name_of(d) == 'dataclass' and {k.arg for k in d.keywords if getattr(k.value, 'value', None) is True} >= {'frozen', 'slots'} for c in nodes(ast.ClassDef) for d in c.decorator_list)",
+},
+{
+message: "不手写 __init__ 和 __repr__",
+test: "not any(f.name in {'__init__', '__repr__'} for f in nodes(ast.FunctionDef))",
+},
+]}
+/>

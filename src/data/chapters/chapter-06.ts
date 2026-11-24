@@ -1,48 +1,54 @@
+import meta from "@/content/docs/chapter-06/_meta.json";
+import { lessonsOf } from "../lessons.ts";
+
 export const chapter06 = {
   id: "chapter-06",
-  label: "第 6 章 · 对象、引用与复制",
-  lessons: [
-    {
-      slug: "chapter-06/equality-and-identity",
-      label: "6.1 对象的相等与身份",
-    },
-    {
-      slug: "chapter-06/mutation-and-shallow-copy",
-      label: "6.2 原地修改与浅复制",
-    },
-    {
-      slug: "chapter-06/mutable-default-values",
-      label: "6.3 可变对象与参数默认值",
-    },
-  ],
+  label: "第 6 章 · 异常",
+  lessons: lessonsOf("chapter-06", meta),
   challenge: {
-    title: "为两组列表创建独立副本",
-    description:
-      "给定一个内含两组数据的列表。分别为两组制作独立副本，再给每组追加一个值，保留原数据。",
-    instructions: [
-      "题目提供 rows、first_value 和 second_value。rows 的两个元素都是列表。",
-      "复制两组内层列表，把两个副本放入新的外层列表。",
-      "给副本的第一组追加 first_value，给第二组追加 second_value。",
-      "第一行打印原列表 rows，第二行打印更新后的副本。",
-    ],
     starterCode:
-      "# 题目提供 rows、first_value 和 second_value。\n\n# 复制两组数据并追加元素，再打印原列表和副本。\n",
+      "# 已给定：raw 是一段文本\n\n# TODO 1：定义异常类 ConfigError，直接继承 Exception\n\ndef parse_port(raw):\n    # TODO 2：把 raw 转成整数；转换失败时抛出 ConfigError('端口必须是整数')，并用 from 标明原因\n    # TODO 3：端口不在 1 到 65535 之间时，抛出 ConfigError('端口超出范围')\n    ...\n\ntry:\n    port = parse_port(raw)\nexcept ConfigError as err:\n    print(f'配置错误: {err}')\nelse:\n    print(f'端口 {port}')\n",
+    solution:
+      "class ConfigError(Exception):\n    pass\n\ndef parse_port(raw):\n    try:\n        port = int(raw)\n    except ValueError as exc:\n        raise ConfigError('端口必须是整数') from exc\n    if not 1 <= port <= 65535:\n        raise ConfigError('端口超出范围')\n    return port\n\ntry:\n    port = parse_port(raw)\nexcept ConfigError as err:\n    print(f'配置错误: {err}')\nelse:\n    print(f'端口 {port}')\n",
+    checks: [
+      {
+        message: "ConfigError 直接继承 Exception",
+        test: "any(c.name == 'ConfigError' and [name_of(b) for b in c.bases] == ['Exception'] for c in nodes(ast.ClassDef))",
+      },
+      {
+        message: "只捕获 ValueError 和 ConfigError，不写宽泛的 except",
+        test: "all(name_of(h.type) in {'ValueError', 'ConfigError'} for h in nodes(ast.ExceptHandler))",
+      },
+      {
+        message: "用 raise ... from 把转换失败记为直接原因",
+        test: "any(r.cause is not None for r in nodes(ast.Raise))",
+      },
+    ],
     cases: [
       {
-        label: "复制两组普通列表",
-        setup: "rows = [[1], [2, 3]]\nfirst_value = 4\nsecond_value = 5",
-        expectedOutput: "[[1], [2, 3]]\n[[1, 4], [2, 3, 5]]",
+        label: "合法端口",
+        setup: "raw = '8080'",
+        expectedOutput: "端口 8080",
       },
       {
-        label: "内层列表为空",
-        setup: "rows = [[], []]\nfirst_value = 0\nsecond_value = 1",
-        expectedOutput: "[[], []]\n[[0], [1]]",
+        label: "不是整数",
+        setup: "raw = 'http'",
+        expectedOutput: "配置错误: 端口必须是整数",
       },
       {
-        label: "两组共享同一个列表",
-        setup:
-          "shared = [6]\nrows = [shared, shared]\nfirst_value = 7\nsecond_value = 8",
-        expectedOutput: "[[6], [6]]\n[[6, 7], [6, 8]]",
+        label: "超出上限",
+        setup: "raw = '70000'",
+        expectedOutput: "配置错误: 端口超出范围",
+      },
+      {
+        label: "端口不能是 0",
+        setup: "raw = '0'",
+        expectedOutput: "配置错误: 端口超出范围",
+      },
+      {
+        label: "两侧带空白",
+        setup: "raw = ' 443 '",
+        expectedOutput: "端口 443",
       },
     ],
   },

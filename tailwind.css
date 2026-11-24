@@ -1,0 +1,16 @@
+@layer theme, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@custom-variant dark (&:where(.rp-dark, .rp-dark *));
+
+@theme inline {
+  --color-rp-surface: var(--rp-c-bg);
+  --color-rp-soft: var(--rp-c-bg-soft);
+  --color-rp-line: var(--rp-c-divider-light);
+  --color-rp-text: var(--rp-c-text-1);
+  --color-rp-muted: var(--rp-c-text-2);
+  --color-rp-brand: var(--rp-c-brand);
+  --color-rp-tint: var(--rp-c-brand-tint);
+  --font-rp-mono: var(--rp-font-family-mono);
+}

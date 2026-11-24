@@ -1,0 +1,184 @@
+---
+title: 生成器
+description: 用 yield 写出可暂停的迭代器，再把几个生成器串成逐项传递的管道。
+---
+
+import ConceptStepper from "@/components/learning/ConceptStepper";
+import GeneratorExplorer from "@/components/learning/GeneratorExplorer";
+import QuickQuiz from "@/components/learning/QuickQuiz";
+import PythonExercise from "@/components/python/PythonExercise";
+
+生成器是写迭代器的一种方式。它看起来像普通函数，要用数据时写 `yield`。每次对生成器调用 `next()`，它从上次离开的地方继续，并记住当时的局部变量。生成器会自己提供 `__iter__` 和 `__next__`，结束时自己引发 `StopIteration`。同样的序列也可以写成上一课那种带 `__next__` 的类；生成器少写这些方法，也不必把进度存在 `self` 上。
+
+```python
+def countdown(n):
+    while n > 0:
+        yield n
+        n -= 1
+
+for i in countdown(3):
+    print(i)
+```
+
+循环依次打印 `3`、`2`、`1`。调用 `countdown(3)` 时函数体一行都不执行，只是得到一个生成器对象；每次向它要下一项，函数体才运行到下一个 `yield`。
+
+<GeneratorExplorer />
+
+## 逐项传递
+
+把几个生成器串起来，就是一条处理管道。每一级都 `yield` 当前这一项；后一级要下一项时，前一级才继续往下走。数据一项一项地穿过整条管道，中间不会为每一级各建一个列表。
+
+```python
+def stream_lines(data):
+    for line in data:
+        yield line.strip()
+
+def filter_errors(lines):
+    for line in lines:
+        if line.startswith("ERROR"):
+            yield line
+
+def extract_code(errors):
+    for err in errors:
+        yield err.split(":")[1].strip()
+
+raw = ["INFO: 启动", "ERROR: 502", "DEBUG: 探针", "ERROR: 504"]
+print(list(extract_code(filter_errors(stream_lines(raw)))))
+```
+
+打印 `['502', '504']`。上面的倒计时一次 `next()` 就得到一个数。这里 `list()` 也一次向管道要一项，但筛掉一行后，管道可以继续读下一行，直到找到符合条件的结果。
+
+<ConceptStepper
+  label="每一项单独穿过整条管道"
+  steps={[
+    {
+      code: '"INFO: 启动"',
+      description:
+        "list() 向 extract_code 要一项，请求一路传到 raw。第一行在 filter_errors 被过滤掉，于是 filter_errors 继续向上游要下一行。",
+      diagram: {
+        kind: "flow",
+        direction: "row",
+        nodes: [
+          { id: "raw", label: "raw" },
+          { id: "strip", label: "stream_lines" },
+          { id: "filter", label: "filter_errors" },
+          { id: "code", label: "extract_code" },
+          { id: "list", label: "list()" },
+        ],
+        active: ["raw", "strip", "filter"],
+      },
+    },
+    {
+      code: '"ERROR: 502"',
+      description:
+        "这一行通过了过滤，extract_code 取出代码，list() 收下第一项。",
+      output: "['502']",
+      diagram: {
+        kind: "flow",
+        direction: "row",
+        nodes: [
+          { id: "raw", label: "raw" },
+          { id: "strip", label: "stream_lines" },
+          { id: "filter", label: "filter_errors" },
+          { id: "code", label: "extract_code" },
+          { id: "list", label: "list()" },
+        ],
+        active: ["raw", "strip", "filter", "code", "list"],
+      },
+    },
+    {
+      code: '"DEBUG: 探针"',
+      description:
+        "list() 要第二项。filter_errors 跳过这行，继续向上游要下一行。",
+      diagram: {
+        kind: "flow",
+        direction: "row",
+        nodes: [
+          { id: "raw", label: "raw" },
+          { id: "strip", label: "stream_lines" },
+          { id: "filter", label: "filter_errors" },
+          { id: "code", label: "extract_code" },
+          { id: "list", label: "list()" },
+        ],
+        active: ["raw", "strip", "filter"],
+      },
+    },
+    {
+      code: '"ERROR: 504"',
+      description:
+        "这一行通过过滤，list() 收下第二项。它再要下一项时，raw 已经取尽，各级依次结束。",
+      output: "['502', '504']",
+      diagram: {
+        kind: "flow",
+        direction: "row",
+        nodes: [
+          { id: "raw", label: "raw" },
+          { id: "strip", label: "stream_lines" },
+          { id: "filter", label: "filter_errors" },
+          { id: "code", label: "extract_code" },
+          { id: "list", label: "list()" },
+        ],
+        active: ["raw", "strip", "filter", "code", "list"],
+      },
+    },
+  ]}
+/>
+
+## 生成器表达式
+
+只有一个循环加一个表达式的简单生成器，写成第 3 章的生成器表达式即可：`(line.strip() for line in data)` 与上面的 `stream_lines(data)` 效果相同。逻辑需要多行语句或者要复用时，再写成生成器函数。
+
+<QuickQuiz
+  question="这段代码输出什么？"
+  code={`def gen():
+      print("开始")
+      yield 1
+      print("继续")
+      yield 2
+
+  g = gen()
+  print(next(g))`}
+options={["开始 和 1", "只有 1", "开始、1 和 继续", "什么都不输出"]}
+answerIndex={0}
+feedback={[
+"",
+"第一次 next() 时函数体从头运行，会先执行 print(\"开始\")。",
+"函数体在 yield 1 处暂停，要等下一次 next() 才会打印「继续」。",
+"g = gen() 确实不执行函数体，但 next(g) 会让它运行到第一个 yield。",
+]}
+explanation="调用 gen() 只得到生成器对象。next(g) 让函数体从头运行到第一个 yield：先打印「开始」，再交出 1。"
+/>
+
+## 随堂练习
+
+`fib_stream` 从 `0, 1` 开始，依次交出小于 `limit` 的斐波那契数。
+
+<PythonExercise
+  label="用 yield 产生斐波那契数"
+  starterCode={`def fib_stream(limit):
+      a, b = 0, 1
+      # TODO：a 小于 limit 时，交出 a，再让 a、b 前进一步
+      ...
+
+  print(list(fib_stream(20)))
+`}
+  solution={`def fib_stream(limit):
+      a, b = 0, 1
+      while a < limit:
+          yield a
+          a, b = b, a + b
+
+  print(list(fib_stream(20)))
+`}
+  expectedOutput={`[0, 1, 1, 2, 3, 5, 8, 13]`}
+checks={[
+{
+message: "用 yield 逐个交出",
+test: "has(ast.Yield)",
+},
+{
+message: "不在函数里先建成列表",
+test: "not calls('append') and not has(ast.ListComp)",
+},
+]}
+/>

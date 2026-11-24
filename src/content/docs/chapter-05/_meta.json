@@ -1,0 +1,22 @@
+[
+  {
+    "type": "file",
+    "name": "imports",
+    "label": "5.1 导入"
+  },
+  {
+    "type": "file",
+    "name": "packages",
+    "label": "5.2 包与相对导入"
+  },
+  {
+    "type": "file",
+    "name": "lazy-imports",
+    "label": "5.3 惰性导入"
+  },
+  {
+    "type": "custom-link",
+    "label": "开始章节挑战",
+    "link": "/challenge/chapter-05"
+  }
+]

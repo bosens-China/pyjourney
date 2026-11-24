@@ -1,0 +1,32 @@
+[
+  {
+    "type": "file",
+    "name": "numbers",
+    "label": "2.1 数字、布尔值与 None"
+  },
+  {
+    "type": "file",
+    "name": "text",
+    "label": "2.2 文本与 f-字符串"
+  },
+  {
+    "type": "file",
+    "name": "collections",
+    "label": "2.3 列表、元组、集合与字典"
+  },
+  {
+    "type": "file",
+    "name": "unpacking",
+    "label": "2.4 解包"
+  },
+  {
+    "type": "file",
+    "name": "frozendict",
+    "label": "2.5 不可变映射"
+  },
+  {
+    "type": "custom-link",
+    "label": "开始章节挑战",
+    "link": "/challenge/chapter-02"
+  }
+]

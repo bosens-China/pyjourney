@@ -1,0 +1,36 @@
+---
+title: "解析配置里的端口"
+description: "用自定义异常报告配置错误，并用 raise ... from 留下底层原因。"
+---
+
+import ChallengeExample from "@/components/python/ChallengeExample";
+import ChapterWorkbench from "@/components/python/ChapterWorkbench";
+import { chapter06 } from "@/data/chapters/chapter-06";
+
+## 题目
+
+`raw` 是配置文件里读到的一段文本。定义 `ConfigError` 和 `parse_port(raw)`。编辑器里的调用方会捕获 `ConfigError` 并打印错误信息。
+
+| 输入情况 | `parse_port` 的行为 |
+| --- | --- |
+| 能转成 1 到 65535 之间的整数，含边界 | 返回端口 |
+| 文本无法转成整数 | 抛出 `ConfigError("端口必须是整数")` |
+| 整数超出范围 | 抛出 `ConfigError("端口超出范围")` |
+
+### 题目要求
+
+1. `ConfigError` 直接继承 `Exception`。
+2. 转换失败时，用 `from` 把原来的 `ValueError` 记为直接原因。
+3. 只捕获具体的异常类型。
+
+<ChallengeExample example={chapter06.challenge.cases[0]} />
+
+## 编辑器 \{#challenge-editor}
+
+<ChapterWorkbench
+  key={chapter06.id}
+  starterCode={chapter06.challenge.starterCode}
+  solution={chapter06.challenge.solution}
+  cases={chapter06.challenge.cases}
+  checks={chapter06.challenge.checks}
+/>

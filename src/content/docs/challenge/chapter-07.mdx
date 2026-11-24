@@ -1,0 +1,36 @@
+---
+title: "建模不可变的订单项"
+description: "用冻结的数据类保存订单项，给它加一个计算小计的方法。"
+---
+
+import ChallengeExample from "@/components/python/ChallengeExample";
+import ChapterWorkbench from "@/components/python/ChapterWorkbench";
+import { chapter07 } from "@/data/chapters/chapter-07";
+
+## 题目
+
+`rows` 是一组 `(名称, 单价, 数量)`。定义数据类 `Item`，并给它一个返回小计的方法 `total()`。编辑器里已经写好了创建订单项、打印小计和合计的代码，最后还会尝试修改第一项的数量。
+
+| 每行的位置 | 字段 | 类型 |
+| --- | --- | --- |
+| 第一项，名称 | `name` | `str` |
+| 第二项，单价 | `price` | `int` |
+| 第三项，数量 | `qty` | `int` |
+
+### 题目要求
+
+1. 用 `@dataclass(frozen=True)` 定义 `Item`，让修改字段引发 `FrozenInstanceError`。
+2. 按上表顺序声明字段，由数据类生成 `__init__`。
+3. `total()` 返回单价乘以数量。
+
+<ChallengeExample example={chapter07.challenge.cases[0]} />
+
+## 编辑器 \{#challenge-editor}
+
+<ChapterWorkbench
+  key={chapter07.id}
+  starterCode={chapter07.challenge.starterCode}
+  solution={chapter07.challenge.solution}
+  cases={chapter07.challenge.cases}
+  checks={chapter07.challenge.checks}
+/>

@@ -1,0 +1,32 @@
+---
+title: "写一个计数器工厂"
+description: "用参数边界约定调用方式，用闭包和 nonlocal 让每个计数器记住自己的当前值。"
+---
+
+import ChallengeExample from "@/components/python/ChallengeExample";
+import ChapterWorkbench from "@/components/python/ChapterWorkbench";
+import { chapter04 } from "@/data/chapters/chapter-04";
+
+## 题目
+
+`start`、`step` 和 `times` 已经给定。定义 `make_counter`，它返回一个计数函数：每调用一次，当前值加上 `step`，再返回新值。编辑器里已经写好了调用 `times` 次并打印结果的代码。
+
+### 题目要求
+
+1. `start` 只能按位置传入；`step` 只能按关键字传入，默认值是 `1`。
+2. 计数函数定义在 `make_counter` 里面，用 `nonlocal` 修改当前值，不使用 `global`。
+3. 输出必须与样例一致。
+
+需要复习时，可以回看[闭包怎样保留各自的变量](../chapter-04/scopes-and-closures.mdx#闭包)。
+
+<ChallengeExample example={chapter04.challenge.cases[0]} />
+
+## 编辑器 \{#challenge-editor}
+
+<ChapterWorkbench
+  key={chapter04.id}
+  starterCode={chapter04.challenge.starterCode}
+  solution={chapter04.challenge.solution}
+  cases={chapter04.challenge.cases}
+  checks={chapter04.challenge.checks}
+/>

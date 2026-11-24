@@ -1,42 +1,54 @@
+import meta from "@/content/docs/chapter-03/_meta.json";
+import { lessonsOf } from "../lessons.ts";
+
 export const chapter03 = {
   id: "chapter-03",
-  label: "第 3 章 · 字符串、列表与元组",
-  lessons: [
-    {
-      slug: "chapter-03/string-and-slices",
-      label: "3.1 用索引和切片读取字符串",
-    },
-    { slug: "chapter-03/lists", label: "3.2 用列表保存和更新一组值" },
-    { slug: "chapter-03/tuples", label: "3.3 用元组保存位置固定的值" },
-  ],
+  label: "第 3 章 · 控制流与推导",
+  lessons: lessonsOf("chapter-03", meta),
   challenge: {
-    title: "整理补录后的阅读记录",
-    description:
-      "把一条补录追加到当天的阅读记录，去掉书名两端的空白，再依次输出有效条目。",
-    instructions: [
-      "records 是一个列表，每条记录都是 (书名, 页数)。把 new_record 追加到列表末尾。",
-      "去掉每个书名两端的空白。跳过清理后书名为空或页数小于等于 0 的记录。",
-      "保留有效记录的原有顺序，从 1 开始连续编号。按样例格式输出每条记录。",
-      "如果没有有效记录，只输出一行“没有有效记录”。",
-    ],
     starterCode:
-      "# 题目已提供 records 和 new_record。\n\n# 追加新记录，清理和筛选，再输出有效记录。\n",
+      "# 已给定：command 是一个序列\n\nmatch command:\n    # TODO：['go', 方向] 打印「前往 方向」，方向绑定到 direction\n    # TODO：['stay'] 打印「停留」\n    case _:\n        print('未知')\n",
+    solution:
+      "match command:\n    case ['go', direction]:\n        print(f'前往 {direction}')\n    case ['stay']:\n        print('停留')\n    case _:\n        print('未知')\n",
+    checks: [
+      {
+        message: "使用 match 语句",
+        test: "has(ast.Match)",
+      },
+      {
+        message: "在序列模式里把方向绑定到 direction",
+        test: "any(isinstance(p, ast.MatchAs) and p.name == 'direction' for s in nodes(ast.MatchSequence) for p in s.patterns)",
+      },
+      {
+        message: "不用 isinstance 或下标判断形状",
+        test: "not calls('isinstance') and not any(name_of(s.value) == 'command' for s in nodes(ast.Subscript))",
+      },
+    ],
     cases: [
       {
-        label: "清理空白并跳过零页记录",
-        setup:
-          'records = [(" 散文 ", 18), ("历史", 0), (" 科幻", 24)]\nnew_record = (" 游记 ", 9)',
-        expectedOutput: "1. 散文 18 页\n2. 科幻 24 页\n3. 游记 9 页",
+        label: "带方向的移动",
+        setup: "command = ['go', 'north']",
+        expectedOutput: "前往 north",
       },
       {
-        label: "空列表接收第一条记录",
-        setup: 'records = []\nnew_record = ("小说", 7)',
-        expectedOutput: "1. 小说 7 页",
+        label: "停留",
+        setup: "command = ['stay']",
+        expectedOutput: "停留",
       },
       {
-        label: "展示没有有效记录时的提示",
-        setup: 'records = [(" ", 10), ("诗集", 0)]\nnew_record = ("", 3)',
-        expectedOutput: "没有有效记录",
+        label: "无法识别的指令",
+        setup: "command = ['jump']",
+        expectedOutput: "未知",
+      },
+      {
+        label: "缺少方向",
+        setup: "command = ['go']",
+        expectedOutput: "未知",
+      },
+      {
+        label: "多出一项",
+        setup: "command = ('stay', 'here')",
+        expectedOutput: "未知",
       },
     ],
   },

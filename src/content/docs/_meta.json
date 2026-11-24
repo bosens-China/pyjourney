@@ -1,0 +1,75 @@
+[
+  {
+    "type": "file",
+    "name": "preface",
+    "label": "前言"
+  },
+  {
+    "type": "dir",
+    "name": "chapter-01",
+    "label": "第 1 章 · 名字与对象",
+    "collapsible": true,
+    "collapsed": true
+  },
+  {
+    "type": "dir",
+    "name": "chapter-02",
+    "label": "第 2 章 · 数据",
+    "collapsible": true,
+    "collapsed": true
+  },
+  {
+    "type": "dir",
+    "name": "chapter-03",
+    "label": "第 3 章 · 控制流与推导",
+    "collapsible": true,
+    "collapsed": true
+  },
+  {
+    "type": "dir",
+    "name": "chapter-04",
+    "label": "第 4 章 · 函数",
+    "collapsible": true,
+    "collapsed": true
+  },
+  {
+    "type": "dir",
+    "name": "chapter-05",
+    "label": "第 5 章 · 模块",
+    "collapsible": true,
+    "collapsed": true
+  },
+  {
+    "type": "dir",
+    "name": "chapter-06",
+    "label": "第 6 章 · 异常",
+    "collapsible": true,
+    "collapsed": true
+  },
+  {
+    "type": "dir",
+    "name": "chapter-07",
+    "label": "第 7 章 · 类与类型",
+    "collapsible": true,
+    "collapsed": true
+  },
+  {
+    "type": "dir",
+    "name": "chapter-08",
+    "label": "第 8 章 · 迭代器与生成器",
+    "collapsible": true,
+    "collapsed": true
+  },
+  {
+    "type": "dir",
+    "name": "chapter-09",
+    "label": "第 9 章 · 包装机制",
+    "collapsible": true,
+    "collapsed": true
+  },
+  {
+    "type": "file",
+    "name": "engineering",
+    "label": "附录：工程实践"
+  }
+]

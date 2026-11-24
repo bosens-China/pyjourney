@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <defs>
+    <!-- Modern Neon Cyan Gradient -->
+    <linearGradient id="neonCyan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="45%" stop-color="#0ea5e9" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+
+    <!-- Modern Golden Amber Gradient -->
+    <linearGradient id="goldenAmber" x1="100%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#fbbf24" />
+      <stop offset="45%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+
+    <!-- Precision Edge Strokes -->
+    <linearGradient id="cyanStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#bae6fd" stop-opacity="0.8" />
+      <stop offset="50%" stop-color="#38bdf8" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#0284c7" stop-opacity="0.15" />
+    </linearGradient>
+
+    <linearGradient id="amberStroke" x1="100%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#fef08a" stop-opacity="0.8" />
+      <stop offset="50%" stop-color="#fbbf24" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#d97706" stop-opacity="0.15" />
+    </linearGradient>
+  </defs>
+
+  <!-- Futuristic Python Mark -->
+  <g id="python-icon">
+    <!-- Top Cyan Snake -->
+    <path fill="url(#neonCyan)"
+          stroke="url(#cyanStroke)"
+          stroke-width="0.8"
+          stroke-linejoin="round"
+          d="M49.7,5.2c-22.8,0-21.4,9.9-21.4,9.9l0,10.3h21.8v3.1H19.6c0,0-14.6-1.7-14.6,21.4c0,23.1,12.8,22.2,12.8,22.2h7.6V61.4c0,0-0.4-12.8,12.6-12.8h21.6c0,0,12.1,0.2,12.1-11.7V17.2C71.7,17.2,73.6,5.2,49.7,5.2z" />
+
+    <!-- Top Snake Eye Aperture -->
+    <circle cx="37.7" cy="16.0" r="3.6" fill="#ffffff" />
+    <circle cx="37.7" cy="16.0" r="1.8" fill="#0284c7" />
+
+    <!-- Bottom Amber Snake -->
+    <path fill="url(#goldenAmber)"
+          stroke="url(#amberStroke)"
+          stroke-width="0.8"
+          stroke-linejoin="round"
+          d="M50.3,94.8c22.8,0,21.4-9.9,21.4-9.9l0-10.3H49.9v-3.1h30.5c0,0,14.6,1.7,14.6-21.4c0-23.1-12.8-22.2-12.8-22.2h-7.6v10.7c0,0,0.4,12.8-12.6,12.8H40.4c0,0-12.1-0.2-12.1,11.7v19.7C28.3,82.8,26.4,94.8,50.3,94.8z" />
+
+    <!-- Bottom Snake Eye Aperture -->
+    <circle cx="62.3" cy="84.0" r="3.6" fill="#ffffff" />
+    <circle cx="62.3" cy="84.0" r="1.8" fill="#d97706" />
+  </g>
+</svg>

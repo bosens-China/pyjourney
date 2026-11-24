@@ -1,0 +1,151 @@
+---
+title: 导入
+description: import 绑定模块名，from 绑定模块里的名字，as 更换绑定名。__name__ 区分模块是被导入还是被直接运行。
+---
+
+import ConceptStepper from "@/components/learning/ConceptStepper";
+import QuickQuiz from "@/components/learning/QuickQuiz";
+import PythonExercise from "@/components/python/PythonExercise";
+
+模块是存有 Python 定义和语句的文件，文件名是模块名加 `.py`。模块里的全局变量 `__name__` 就是模块名。较长的程序按模块拆开，同一个函数就可以被多个脚本导入，不必复制定义。
+
+```python
+import fibo
+
+fibo.fib(1000)
+fibo.fib2(100)
+fibo.__name__  # 'fibo'
+```
+
+`import fibo` 只把名字 `fibo` 放进当前命名空间，不会把 `fib`、`fib2` 放进来。常用的函数可以再赋给一个局部名字：`fib = fibo.fib`。
+
+模块顶层的语句在第一次被导入时执行，用来初始化模块；同一个程序里，模块只导入一次。每个模块有自己的全局命名空间，所以模块作者的全局变量不会和使用者的全局变量撞名。
+
+`import` 写在文件开头，按标准库、第三方库、本项目模块分成三组，组与组之间空一行：
+
+```python
+import json
+from pathlib import Path
+
+import requests
+
+from myapp import settings
+```
+
+## from 与 as
+
+`from fibo import fib, fib2` 把这两个函数名放进导入方的命名空间，不会绑定 `fibo`。写出要导入的名字，不要用 `from fibo import *`：它会带进一批来源不明显的名字，还可能覆盖已有名字。
+
+`as` 把导入到的对象绑到新名字上：
+
+```python
+import fibo as fib
+from fibo import fib as fibonacci
+```
+
+`import fibo as fib` 仍然载入整个模块，只是本地名字是 `fib`。
+
+<ConceptStepper
+  label="导入后，当前文件里的名字指向什么？"
+  steps={[
+    {
+      code: "import fibo",
+      description: "当前文件绑定了 fibo，指向模块。调用函数时写 fibo.fib(50)。",
+      diagram: {
+        kind: "refs",
+        names: [{ name: "fibo", to: "fibo 模块" }],
+        objects: [
+          { id: "fibo 模块", label: "fibo 模块", refs: ["fib 函数"] },
+          { id: "fib 函数", label: "fib 函数" },
+        ],
+        highlight: ["fibo", "fibo 模块", "fib 函数"],
+      },
+    },
+    {
+      code: "from fibo import fib",
+      description: "单独执行这一条时，当前文件只绑定 fib，可以直接写 fib(50)。",
+      diagram: {
+        kind: "refs",
+        names: [{ name: "fib", to: "fib 函数" }],
+        objects: [{ id: "fib 函数", label: "fib 函数" }],
+        highlight: ["fib", "fib 函数"],
+      },
+    },
+    {
+      code: "from fibo import fib as fibonacci",
+      description: "单独执行这一条时，当前文件用 fibonacci 指向同一个函数，可以写 fibonacci(50)。",
+      diagram: {
+        kind: "refs",
+        names: [{ name: "fibonacci", to: "fib 函数" }],
+        objects: [{ id: "fib 函数", label: "fib 函数" }],
+        highlight: ["fibonacci", "fib 函数"],
+      },
+    },
+  ]}
+/>
+
+## 以脚本方式执行
+
+`python fibo.py <arguments>` 会执行模块里的代码，并把 `__name__` 设为 `"__main__"`。文件末尾可以据此只在直接运行时处理命令行：
+
+```python
+if __name__ == "__main__":
+    import sys
+    fib(int(sys.argv[1]))
+```
+
+同一个文件被别的模块导入时，`__name__` 是模块名，这段代码不运行。这用来提供一个简单的命令行入口，或者把模块当作测试脚本运行。
+
+## 模块搜索路径
+
+导入 `spam` 时，解释器先找内置模块，再按 `sys.path` 列出的目录依次找 `spam.py`。`sys.path` 的第一项是直接运行的脚本所在的目录，排在标准库前面。所以自己的文件不要和标准库模块同名：放在脚本旁边的 `json.py` 会挡住标准库的 `json`。
+
+<QuickQuiz
+  question="fibo.py 末尾有 if __name__ == '__main__':。哪种运行方式会执行这个分支？"
+  options={[
+    "import fibo",
+    "from fibo import fib",
+    "python fibo.py 50",
+    "import fibo as fib",
+  ]}
+  answerIndex={2}
+  feedback={[
+    "被导入时 __name__ 是模块名 'fibo'，不是 '__main__'。",
+    "from ... import 同样会载入并执行模块，__name__ 仍是 'fibo'。",
+    "",
+    "as 只改变本地绑定的名字，模块自己的 __name__ 仍是 'fibo'。",
+  ]}
+  explanation="直接运行模块时，__name__ 被设为 '__main__'。被 import 或 from ... import 载入时，__name__ 是 'fibo'，这个分支不执行。"
+/>
+
+## 随堂练习
+
+补上两条导入语句，让后面的 `m` 指向模块 `math`，`root` 指向 `math.sqrt`。
+
+<PythonExercise
+  label="用 as 更换模块名和函数名"
+  starterCode={`# TODO：导入 math，本地名字是 m
+  # TODO：从 math 导入 sqrt，本地名字是 root
+
+  print(m.floor(-1.2))
+  print(root(9))
+`}
+  solution={`import math as m
+  from math import sqrt as root
+
+  print(m.floor(-1.2))
+  print(root(9))
+`}
+  checks={[
+    {
+      message: "用 import ... as 把 math 绑定到 m",
+      test: "any(a.name == 'math' and a.asname == 'm' for n in nodes(ast.Import) for a in n.names)",
+    },
+    {
+      message: "用 from ... import ... as 把 sqrt 绑定到 root",
+      test: "any(n.module == 'math' and any(a.name == 'sqrt' and a.asname == 'root' for a in n.names) for n in nodes(ast.ImportFrom))",
+    },
+  ]}
+  expectedOutput={`-2
+  3.0`}
+/>

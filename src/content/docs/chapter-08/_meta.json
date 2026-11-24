@@ -1,0 +1,17 @@
+[
+  {
+    "type": "file",
+    "name": "iterator-protocol",
+    "label": "8.1 迭代器协议"
+  },
+  {
+    "type": "file",
+    "name": "generators",
+    "label": "8.2 生成器"
+  },
+  {
+    "type": "custom-link",
+    "label": "开始章节挑战",
+    "link": "/challenge/chapter-08"
+  }
+]

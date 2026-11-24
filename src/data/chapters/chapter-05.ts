@@ -1,46 +1,44 @@
+import meta from "@/content/docs/chapter-05/_meta.json";
+import { lessonsOf } from "../lessons.ts";
+
 export const chapter05 = {
   id: "chapter-05",
-  label: "第 5 章 · 函数与参数",
-  lessons: [
-    {
-      slug: "chapter-05/define-and-call",
-      label: "5.1 定义和调用函数",
-    },
-    {
-      slug: "chapter-05/positional-and-keyword-arguments",
-      label: "5.2 位置参数与关键字参数",
-    },
-    {
-      slug: "chapter-05/defaults-and-local-names",
-      label: "5.3 默认值与局部名字",
-    },
-  ],
+  label: "第 5 章 · 模块",
+  lessons: lessonsOf("chapter-05", meta),
   challenge: {
-    title: "封装费用计算",
-    description:
-      "用一个函数计算数量、单价和附加费产生的总费用。输出使用默认附加费和指定附加费的结果。",
-    instructions: [
-      "定义 total_cost(quantity, unit_price, fee=0)，用 return 交回数量乘单价再加附加费的结果。",
-      "第一行用位置参数传入 quantity 和 unit_price，省略 fee，打印函数返回值。",
-      "第二行用关键字参数传入 quantity、unit_price 和 handling_fee，后者是 fee 的值，打印函数返回值。",
-    ],
     starterCode:
-      "def total_cost(quantity, unit_price, fee=0):\n    # 计算费用并返回。\n    return 0\n\n\n# 题目提供 quantity、unit_price 和 handling_fee。\n# 调用函数两次，按要求分别打印结果。\n",
+      "# 已给定：scores 是一组分数\n\n# TODO 1：从 statistics 模块导入 mean 和 median\n\n# TODO 2：打印「平均 x 中位 y」，两个数都保留一位小数\n",
+    solution:
+      "from statistics import mean, median\n\nprint(f'平均 {mean(scores):.1f} 中位 {median(scores):.1f}')\n",
+    checks: [
+      {
+        message: "用 from statistics import 导入 mean 和 median",
+        test: "any(n.module == 'statistics' and {'mean', 'median'} <= {a.name for a in n.names} for n in nodes(ast.ImportFrom))",
+      },
+      {
+        message: "不使用星号导入",
+        test: "not any(a.name == '*' for n in nodes(ast.ImportFrom) for a in n.names)",
+      },
+      {
+        message: "不手写求和或排序",
+        test: "not (calls('sum') or calls('sorted') or calls('sort'))",
+      },
+    ],
     cases: [
       {
-        label: "基础费用与附加费用",
-        setup: "quantity = 3\nunit_price = 5\nhandling_fee = 2",
-        expectedOutput: "15\n17",
+        label: "奇数个分数",
+        setup: "scores = [80, 90, 100]",
+        expectedOutput: "平均 90.0 中位 90.0",
       },
       {
-        label: "数量为零",
-        setup: "quantity = 0\nunit_price = 10\nhandling_fee = 4",
-        expectedOutput: "0\n4",
+        label: "偶数个分数",
+        setup: "scores = [70, 80, 90, 100]",
+        expectedOutput: "平均 85.0 中位 85.0",
       },
       {
-        label: "附加费为零",
-        setup: "quantity = 6\nunit_price = 4\nhandling_fee = 0",
-        expectedOutput: "24\n24",
+        label: "未排序的分数",
+        setup: "scores = [95, 60, 70]",
+        expectedOutput: "平均 75.0 中位 70.0",
       },
     ],
   },

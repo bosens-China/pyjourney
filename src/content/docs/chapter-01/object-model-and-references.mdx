@@ -1,0 +1,124 @@
+---
+title: 名字、身份与可变性
+description: 赋值把名称绑定到对象。标识号、类型和值各自比较；修改可变对象和重新绑定名称是两件事。
+---
+
+import ConceptStepper from "@/components/learning/ConceptStepper";
+import Diagram from "@/components/learning/Diagram";
+import QuickQuiz from "@/components/learning/QuickQuiz";
+
+名称用来指代对象。赋值把名称绑定到对象上；这个名称已经绑定时，赋值会把它重新绑定到新对象。简单赋值不复制对象。多个名称可以绑定到同一个对象，包括不同作用域里的名称。处理数字、字符串、元组时，这种别名通常可以忽略；列表、字典以及其他可变对象被修改时，所有绑定到它的名称都会看到这次修改。
+
+## 标识号、类型和值
+
+对象一旦创建，标识号就不再改变。语言参考把标识号理解为对象在内存中的地址：`is` 比较两个标识号是否相同，`id()` 返回代表标识号的整数。`type()` 返回对象的类型，类型本身也不能改变。值用 `==` 比较。
+
+值可以改变的对象是可变对象，例如列表和字典。值不能改变的对象是不可变对象，例如数字、字符串和元组。不可变容器里如果放着可变对象，内部对象的值变了，容器的值也会变；容器直接包含的那组对象标识号没有变，所以它仍然是不可变对象。
+
+相同值的不可变字面值，求值时可能得到同一个对象，也可能得到值相同的另一个对象。`a = 1` 之后再写 `b = 1`，`a` 和 `b` 可能指向同一个整数，也可能不是。这取决于具体实现，不能写成程序所依赖的规则。比较值时用 `==`。两个空列表则一定是两个新对象：`c = []` 与 `d = []` 之后，`c` 和 `d` 指向不同的列表。`e = f = []` 把同一个列表同时绑给 `e` 和 `f`。
+
+<ConceptStepper
+  label="共享可变对象，以及重新绑定名称"
+  steps={[
+    {
+      code: "a = [1, 2]\nb = a",
+      description: "两个名称绑定到同一个列表，没有复制其中的元素。",
+      diagram: {
+        kind: "refs",
+        names: [
+          { name: "a", to: "x" },
+          { name: "b", to: "x" },
+        ],
+        objects: [{ id: "x", label: "[1, 2]" }],
+        highlight: ["a", "b"],
+      },
+    },
+    {
+      code: "a.append(3)",
+      description:
+        "append 修改这个列表对象。b 绑定的仍是它，因此读到的也是新内容。",
+      diagram: {
+        kind: "refs",
+        names: [
+          { name: "a", to: "x" },
+          { name: "b", to: "x" },
+        ],
+        objects: [{ id: "x", label: "[1, 2, 3]" }],
+        highlight: ["x"],
+      },
+    },
+    {
+      code: "a = [0]",
+      description: "这一次是把名称 a 重新绑定到新列表。b 仍指向原来的列表。",
+      diagram: {
+        kind: "refs",
+        names: [
+          { name: "a", to: "y" },
+          { name: "b", to: "x" },
+        ],
+        objects: [
+          { id: "y", label: "[0]" },
+          { id: "x", label: "[1, 2, 3]" },
+        ],
+        highlight: ["a", "y"],
+      },
+    },
+  ]}
+/>
+
+字符串不能按下标赋值。要得到另一个字符串，就新建一个，再把名称重新绑定过去。原来的名称如果还绑在旧字符串上，它的值不变：
+
+```python
+s = "py"
+t = s
+s = s + "thon"
+print(t)  # py
+print(s)  # python
+```
+
+## 需要副本时
+
+赋值不复制，需要独立的副本时要明确写出来。`items.copy()`、`list(items)` 和 `items[:]` 都会创建一个新列表，字典用 `d.copy()` 或 `dict(d)`。这些都是浅层复制：新容器里放的仍是原来那些元素对象。容器里还嵌套着可变对象、而且要连同它们一起复制时，用 `copy.deepcopy()`。
+
+```python
+original = [[1]]
+copied = original.copy()
+original[0].append(2)
+print(copied)  # [[1, 2]]
+```
+
+<Diagram
+  diagram={{
+    kind: "refs",
+    names: [
+      { name: "original", to: "原外层列表" },
+      { name: "copied", to: "新外层列表" },
+    ],
+    objects: [
+      { id: "原外层列表", label: "外层列表", refs: ["共同的内层列表"] },
+      { id: "新外层列表", label: "外层副本", refs: ["共同的内层列表"] },
+      { id: "共同的内层列表", label: "[1, 2]" },
+    ],
+    highlight: ["共同的内层列表"],
+  }}
+/>
+
+两个外层列表各有一份，但第一项都指向同一个内层列表。所以改了 `original[0]` 指向的列表内容，从 `copied[0]` 也能看到。
+
+<QuickQuiz
+  question="最后一行输出什么？"
+  code={`a = [1, 2]
+  b = a
+  c = a.copy()
+  a.append(3)
+  print(len(b), len(c))`}
+  options={["3 3", "3 2", "2 2", "2 3"]}
+  answerIndex={1}
+  feedback={[
+    "c 是 copy() 创建的新列表，a.append(3) 不会改到它。",
+    "",
+    "b = a 没有复制，b 和 a 是同一个列表，append 之后 b 也是三个元素。",
+    "b 和 a 是同一个列表，c 才是独立的副本。",
+  ]}
+  explanation="b 与 a 绑定同一个列表，append 之后长度是 3。c 是浅层复制出的新列表，长度仍是 2。"
+/>

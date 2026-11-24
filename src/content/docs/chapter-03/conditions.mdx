@@ -1,0 +1,205 @@
+---
+title: 条件与循环
+description: if 按条件分支，for 直接遍历元素。enumerate、zip 和 sorted 让循环保持简短；循环的 else 只在没有 break 时执行。
+---
+
+import ConceptStepper from "@/components/learning/ConceptStepper";
+import FlowPrediction from "@/components/learning/FlowPrediction";
+import PythonExercise from "@/components/python/PythonExercise";
+
+export const loopFlow = {
+  kind: "flow",
+  nodes: [
+    { id: "for", label: "for 取下一项" },
+    { id: "body", label: "if 检查条件" },
+    { id: "break", label: "break" },
+    { id: "else", label: "else 块" },
+    { id: "after", label: "循环之后" },
+  ],
+  edges: [
+    ["for", "body"],
+    ["body", "for", -1],
+    ["body", "break"],
+    ["break", "after", -1],
+    ["for", "else", 1],
+    ["else", "after"],
+  ],
+};
+
+## 条件
+
+`if` 可以带任意多个 `elif` 和一个可选的 `else`，`elif` 让多路分支不必一层层缩进。条件可以是任何对象，按上一章的真值规则判断：空容器、零和 `None` 为假。
+
+```python
+score = 82
+if score >= 90:
+    grade = "A"
+elif score >= 60:
+    grade = "B"
+else:
+    grade = "C"
+```
+
+比较可以连写：`0 <= score < 100` 判断两个条件，中间的 `score` 只求值一次。`and` 和 `or` 从左到右短路，`not` 取反。`in` 做成员检测。
+
+只是在两个值之间二选一时，用条件表达式写成一行：
+
+```python
+label = "及格" if score >= 60 else "不及格"
+```
+
+在条件里需要顺手保存某个中间结果时，用赋值表达式 `:=`，它要放在括号里：
+
+```python
+items = list(range(12))
+if (n := len(items)) > 10:
+    print(f"列表太长（{n} 项，最多 10 项）")
+```
+
+## 遍历元素
+
+`for` 直接遍历序列或其他可迭代对象里的元素，循环变量依次绑定每一项。不需要先取下标再取元素：
+
+```python
+for word in ["cat", "window", "defenestrate"]:
+    print(word, len(word))
+```
+
+需要一串等差整数时用 `range(start, stop, step)`，它不含终止值。需要下标时用 `enumerate`，同时遍历几个序列时用 `zip`，遍历字典的键和值时用 `items()`：
+
+```python
+names = ["Ada", "Bob"]
+scores = [95, 78]
+
+for i, name in enumerate(names, start=1):
+    print(i, name)
+
+for name, score in zip(names, scores, strict=True):
+    print(name, score)
+
+for name, score in {"Ada": 95, "Bob": 78}.items():
+    print(name, score)
+```
+
+`zip` 默认在最短的输入耗尽时停止；传入 `strict=True` 时，长度不一致会引发 `ValueError`，可以尽早发现数据对不上。
+
+`sorted()` 返回一个排好序的新列表，原序列不变。`key` 指定按什么排序，`reverse=True` 改为降序。`reversed()` 倒序遍历：
+
+```python
+words = ["banana", "Fig", "apple"]
+print(sorted(words, key=str.lower))  # ['apple', 'banana', 'Fig']
+print(sorted(words, key=len))        # ['Fig', 'apple', 'banana']
+```
+
+边遍历边增删同一个容器容易出错。要么遍历一份副本，要么把结果放进新容器。
+
+## while、break 与 continue
+
+`while` 在条件为真时反复执行。`break` 离开最近的一层循环，`continue` 直接进入下一次迭代。
+
+```python
+n = 27
+steps = 0
+while n != 1:
+    n = n // 2 if n % 2 == 0 else 3 * n + 1
+    steps += 1
+print(steps)  # 111
+```
+
+## 循环的 else
+
+`for` 和 `while` 都可以带 `else`。循环正常结束、没有执行 `break` 时，才执行这个 `else`。它适合「找一遍，没找到再处理」的场景，不必再设一个标志变量：
+
+```python
+for name in names:
+    if name.startswith("A"):
+        print("找到", name)
+        break
+else:
+    print("没有以 A 开头的名字")
+```
+
+<ConceptStepper
+  label="没有 break 时才执行 else"
+  steps={[
+    {
+      code: 'names = ["Bob", "Ada"]\n# 第一轮：name 是 "Bob"',
+      description: "Bob 不以 A 开头，循环体执行完，回到 for 取下一项。",
+      diagram: {
+        ...loopFlow,
+        active: ["for", "body", "for"],
+      },
+    },
+    {
+      code: '# 第二轮：name 是 "Ada"',
+      description: "Ada 满足条件，打印后 break 离开循环。else 块被跳过。",
+      output: "找到 Ada",
+      diagram: {
+        ...loopFlow,
+        active: ["for", "body", "break", "after"],
+      },
+    },
+    {
+      code: 'names = ["Bob", "Eve"]\n# 两轮都不满足条件',
+      description: "循环把元素取完，没有遇到 break，于是执行 else 块。",
+      output: "没有以 A 开头的名字",
+      diagram: {
+        ...loopFlow,
+        active: ["for", "body", "for", "body", "for", "else", "after"],
+      },
+    },
+  ]}
+/>
+
+<FlowPrediction
+  question="遇到 8 时，判断条件之后会走哪一步？"
+  code={`for n in [3, 5, 8]:
+      if n % 2 == 0:
+          print("偶数", n)
+          break
+  else:
+      print("全是奇数")`}
+  diagram={{ ...loopFlow, active: ["for", "body"] }}
+  choices={[
+    { label: "回到 for 取下一项", feedback: "8 满足条件，先执行 if 块里的两条语句。" },
+    { label: "进入 else 块", feedback: "先看 if 块里的 break。执行它之后，循环的 else 会被跳过。" },
+    {
+      label: "打印后执行 break",
+      feedback: "输出「偶数 8」后，break 直接离开循环，跳过 else。",
+      path: ["for", "body", "break", "after"],
+    },
+  ]}
+/>
+
+## 随堂练习
+
+按分数从高到低给选手排名，打印成 `名次. 名字 分数`。不要用 `range(len(...))` 取下标。
+
+<PythonExercise
+  label="zip、sorted 与 enumerate"
+  starterCode={`names = ["Ada", "Bob", "Cy"]
+  scores = [88, 95, 70]
+
+  # TODO：用 zip 把分数和名字配成对，sorted 降序排列，
+  #       再用 enumerate 从 1 开始编号
+`}
+  solution={`names = ["Ada", "Bob", "Cy"]
+  scores = [88, 95, 70]
+
+  ranking = sorted(zip(scores, names), reverse=True)
+  for rank, (score, name) in enumerate(ranking, start=1):
+      print(f"{rank}. {name} {score}")
+`}
+  expectedOutput={`1. Bob 95
+  2. Ada 88
+  3. Cy 70`}
+checks={[
+{ message: "用 zip 同时遍历两个列表", test: "calls('zip')" },
+{ message: "用 sorted 排序", test: "calls('sorted')" },
+{ message: "用 enumerate 编号", test: "calls('enumerate')" },
+{
+message: "不用 range(len(...)) 取下标",
+test: "not any(name_of(c.func) == 'range' and any(name_of(a) == 'len' for a in c.args) for c in nodes(ast.Call))",
+},
+]}
+/>

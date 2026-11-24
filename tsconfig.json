@@ -1,12 +1,25 @@
 {
-  "extends": "astro/tsconfigs/strict",
-  "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist"],
   "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
-    "jsxImportSource": "react",
+    "resolveJsonModule": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "allowJs": true,
+    "checkJs": true,
     "paths": {
       "@/*": ["./src/*"]
     }
-  }
+  },
+  "include": [
+    "rspress.config.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/lib/python/*.mjs",
+    "theme/**/*.tsx"
+  ]
 }

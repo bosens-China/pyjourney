@@ -1,0 +1,123 @@
+---
+title: 程序的样子
+description: 语句从上往下执行，缩进划出代码块，# 开始注释。名字用赋值绑定到值，命名遵循 PEP 8。
+---
+
+import ConceptStepper from "@/components/learning/ConceptStepper";
+import QuickQuiz from "@/components/learning/QuickQuiz";
+import PythonExercise from "@/components/python/PythonExercise";
+
+一个 Python 程序就是一串语句，解释器从上往下逐条执行。`print()` 是内置函数，把参数输出成一行文本，多个参数之间用空格隔开：
+
+```python
+print("你好，Python")
+print("1 + 2 =", 1 + 2)
+```
+
+```text
+你好，Python
+1 + 2 = 3
+```
+
+`#` 到这一行末尾是注释，解释器不执行它。字符串里的 `#` 只是一个字符。注释最好单独占一行，说明代码为什么这样写。
+
+```python
+# 运费按件计算
+fee = 12  # 单位：元
+print("# 不是注释")
+```
+
+## 缩进就是代码块
+
+以冒号结尾的语句头，例如 `if`、`for`、`def`，后面跟着一个代码块。Python 不用花括号，而是用缩进划出这个块：同一块里的每一行缩进相同，缩进结束，块也就结束了。缩进用 4 个空格，不用制表符。
+
+```python
+total = 120
+if total >= 100:
+    print("满 100 元")  # [!code highlight]
+    print("免运费")    # [!code highlight]
+print("结算完成")
+```
+
+最后一行没有缩进，它不属于 `if`，无论条件真假都会执行。条件判断和循环在第 3 章细讲，这里只需要认出缩进的作用。
+
+## 名字与赋值
+
+`=` 把右边的值绑定到左边的名字。右边先求值，再绑定，所以 `count = count + 1` 是先读出旧值、算出新值，再让 `count` 指向新值。它通常写成增强赋值 `count += 1`。还没有绑定的名字不能读取，读取会引发 `NameError`。
+
+<ConceptStepper
+  label="右边先求值，再绑定左边的名字"
+  steps={[
+    {
+      code: "count = 2",
+      description: "名字 count 绑定到整数 2。",
+      values: [{ name: "count", value: "2" }],
+    },
+    {
+      code: "count += 1",
+      description: "先算出 count + 1 得到 3，再让 count 指向 3。",
+      values: [{ name: "count", value: "3" }],
+    },
+    {
+      code: "print(count)",
+      description: "读取 count 当前绑定的值并输出。",
+      output: "3",
+    },
+  ]}
+/>
+
+一行里可以同时绑定几个名字：`width, height = 20, 45`。下一章会看到，这其实是元组解包。
+
+## 命名与风格
+
+Python 社区普遍遵循 PEP 8 风格指南：
+
+- 变量和函数用小写加下划线，例如 `total_count`、`load_config`。
+- 类用首字母大写的驼峰式，例如 `OrderItem`。
+- 运算符两边、逗号后面各留一个空格：`area = width * height`。
+- 用空行分隔函数、类和函数里较大的代码块。
+
+名字要说明用途。`total_count` 比 `tc` 好读，`items` 比 `lst` 好读。
+
+<QuickQuiz
+  question="下面的代码在 total 为 50 时输出什么？"
+  code={`total = 50
+  if total >= 100:
+      print("免运费")
+  print("结算完成")`}
+  options={["免运费", "结算完成", "免运费 和 结算完成 各一行", "什么都不输出"]}
+  answerIndex={1}
+  feedback={[
+    "条件 50 >= 100 为假，缩进的那一行不执行。",
+    "",
+    "最后一行没有缩进，不属于 if；但缩进的那一行要在条件为真时才执行。",
+    "最后一行不属于 if 的代码块，无论条件真假都会执行。",
+  ]}
+  explanation="缩进划出 if 的代码块。条件为假时跳过整块，没有缩进的 print 照常执行。"
+/>
+
+## 随堂练习
+
+已知长和宽，算出面积并打印 `面积 900`。
+
+<PythonExercise
+  label="绑定名字并输出"
+  starterCode={`width = 20
+  height = 45
+
+  # TODO：把面积绑定到名字 area，再打印「面积」和 area
+`}
+  solution={`width = 20
+  height = 45
+
+  area = width * height
+  print("面积", area)
+`}
+  expectedOutput={`面积 900`}
+checks={[
+{
+message: "把面积绑定到名字 area",
+test: "any(any(name_of(t) == 'area' for t in n.targets) for n in nodes(ast.Assign))",
+},
+]}
+/>

@@ -1,0 +1,155 @@
+---
+title: 定义函数
+description: 用 def 定义函数，用 return 给出返回值，把文档字符串和函数对象本身当成接口的一部分。
+---
+
+import ConceptStepper from "@/components/learning/ConceptStepper";
+import QuickQuiz from "@/components/learning/QuickQuiz";
+import PythonExercise from "@/components/python/PythonExercise";
+
+`def` 后面是函数名和形参列表，下一行起是必须缩进的函数体。函数执行时使用自己的局部符号表：赋值写进这张表，实参也放进这张表。实参传递的值是对象的引用。
+
+```python
+def fib(n):
+    """Print a Fibonacci series less than n."""
+    a, b = 0, 1
+    while a < n:
+        print(a, end=" ")
+        a, b = b, a + b
+    print()
+```
+
+函数体的第一条语句如果是字符串，它就是文档字符串，保存在 `__doc__` 里，`help()` 和编辑器都会显示它。第一行是一句简短摘要，不必重复函数名或类型；还有更多说明时，第二行留空，再写调用约定和副作用。
+
+形参和返回值可以写类型标注：`def fib2(n: int) -> list[int]:`。标注不影响运行，但能让读者和编辑器知道该传什么、会得到什么。第 7 章再细讲类型标注。
+
+## 返回值
+
+`return` 带上表达式，就把该值返回给调用方。`return` 不带表达式，或者函数执行完没有遇到 `return`，返回值都是 `None`。
+
+```python
+def fib2(n: int) -> list[int]:
+    """Return a list containing the Fibonacci series up to n."""
+    result = []
+    a, b = 0, 1
+    while a < n:
+        result.append(a)
+        a, b = b, a + b
+    return result
+```
+
+## 函数是对象
+
+`def` 在当前符号表里把函数名绑定到函数对象。这个对象可以赋给另一个名字，也可以传给别的函数、从函数里返回。
+
+<ConceptStepper
+  label="函数名绑定的是函数对象"
+  steps={[
+    {
+      code: "def square(n):\n    return n * n",
+      description: "定义把名字 square 绑定到这个函数对象。",
+      diagram: {
+        kind: "refs",
+        names: [{ name: "square", to: "fn" }],
+        objects: [{ id: "fn", label: "函数 square" }],
+        highlight: ["square"],
+      },
+    },
+    {
+      code: "f = square",
+      description: "没有括号，不调用。另一个名字指向同一个函数对象。",
+      diagram: {
+        kind: "refs",
+        names: [
+          { name: "square", to: "fn" },
+          { name: "f", to: "fn" },
+        ],
+        objects: [{ id: "fn", label: "函数 square" }],
+        highlight: ["f"],
+      },
+    },
+    {
+      code: "f(4)",
+      description: "通过新名字调用，仍然执行 square 的函数体。",
+      output: "16",
+      diagram: {
+        kind: "refs",
+        names: [
+          { name: "square", to: "fn" },
+          { name: "f", to: "fn" },
+        ],
+        objects: [{ id: "fn", label: "函数 square" }],
+        highlight: ["fn", "f"],
+      },
+    },
+  ]}
+/>
+
+## Lambda 表达式
+
+`lambda` 创建匿名函数，函数体只能是一个表达式。语义上它是常规函数定义的语法糖，也可以引用外层作用域里的变量。它适合当场需要一个很小的函数对象：作为 `list.sort()` 的 `key`，或者从外层函数返回。
+
+```python
+pairs = [(1, "one"), (2, "two"), (3, "three"), (4, "four")]
+pairs.sort(key=lambda pair: pair[1])
+```
+
+```python
+def make_incrementor(n):
+    return lambda x: x + n
+```
+
+<QuickQuiz
+  question="这段代码输出哪两行？"
+  code={`def greet(name):
+      print("你好", name)
+
+  result = greet("Ada")
+  print(result)`}
+options={["你好 Ada，然后 你好 Ada", "你好 Ada，然后 None", "只有 None", "你好 Ada，然后空行"]}
+answerIndex={1}
+feedback={[
+"greet 打印之后没有 return，返回值不是它打印的内容。",
+"",
+"调用 greet 时函数体执行了 print，会先输出一行。",
+"没有 return 的函数返回 None，print(None) 输出的是 None 四个字母。",
+]}
+explanation="调用时先执行函数体里的 print。函数没有 return，返回 None，于是 result 是 None。"
+/>
+
+## 随堂练习
+
+给 `square` 写上文档字符串 `Return the square of n.`，让它返回参数的平方。再把这个函数对象绑定到名字 `f`，通过 `f` 调用。
+
+<PythonExercise
+  label="把函数对象交给另一个名字"
+  starterCode={`def square(n):
+      # TODO：第一行写文档字符串，然后返回 n 的平方
+      ...
+
+  # TODO：把 square 绑定到名字 f
+
+  print(f(4))
+  print(square.__doc__)
+`}
+  solution={`def square(n):
+      """Return the square of n."""
+      return n * n
+
+  f = square
+  print(f(4))
+  print(square.__doc__)
+`}
+  expectedOutput={`16
+  Return the square of n.`}
+checks={[
+{
+message: "square 有文档字符串",
+test: "any(f.name == 'square' and ast.get_docstring(f) for f in nodes(ast.FunctionDef))",
+},
+{
+message: "把函数对象 square 赋给 f，不调用它",
+test: "any(isinstance(n.value, ast.Name) and n.value.id == 'square' and any(name_of(t) == 'f' for t in n.targets) for n in nodes(ast.Assign))",
+},
+]}
+/>

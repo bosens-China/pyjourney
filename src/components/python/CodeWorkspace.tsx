@@ -1,19 +1,26 @@
-import { useEffect, useState } from "react";
-import type { PythonCase, PythonResult } from "@/lib/python/protocol";
+import { useEffect, useId, useState } from "react";
+import ActionButton from "@/components/ui/ActionButton";
+import type {
+  PythonCase,
+  PythonCheck,
+  PythonResult,
+} from "@/lib/python/protocol";
 import { usePythonRunner } from "@/lib/python/usePythonRunner";
 import PythonEditor from "./PythonEditor";
-import "./python.css";
 
 type Props = {
   starterCode: string;
+  solution?: string;
   label: string;
   cases: PythonCase[];
+  checks?: PythonCheck[];
   chapter?: boolean;
 };
 
 type Execution = {
   code: string;
   cases: PythonCase[];
+  checks: PythonCheck[];
   check: boolean;
 };
 
@@ -30,6 +37,9 @@ function passed(result: PythonResult, test: PythonCase) {
   );
 }
 
+const outputCode =
+  "rounded-lg border border-rp-line bg-rp-soft px-3 py-2.5 font-rp-mono text-xs/relaxed wrap-anywhere whitespace-pre-wrap";
+
 function CaseResult({
   result,
   test,
@@ -43,33 +53,133 @@ function CaseResult({
   const status = result.error ? "运行出错" : success ? "通过" : "输出不符";
 
   return (
-    <li className="pj-python__result">
-      <div className="pj-python__result-header">
+    <li className="grid gap-1.5 rounded-lg border border-rp-line p-3">
+      <div className="flex flex-wrap items-center justify-between gap-1.5 text-rp-text">
         <strong>{test.label}</strong>
         {(check || result.error) && (
-          <span data-status={success ? "passed" : "failed"}>{status}</span>
+          <span
+            className={
+              success
+                ? "font-semibold text-green-700 dark:text-green-300"
+                : "font-semibold text-red-700 dark:text-red-300"
+            }
+          >
+            {status}
+          </span>
         )}
       </div>
-      <pre aria-label="实际输出">{result.stdout || "暂无输出"}</pre>
-      {result.stderr && <pre aria-label="错误输出">{result.stderr}</pre>}
-      {result.error && <pre aria-label="运行错误">{result.error}</pre>}
+      <pre className={outputCode} aria-label="实际输出">
+        {result.stdout || "暂无输出"}
+      </pre>
+      {result.stderr && (
+        <pre
+          className={`${outputCode} text-red-700 dark:text-red-300`}
+          aria-label="错误输出"
+        >
+          {result.stderr}
+        </pre>
+      )}
+      {result.error && (
+        <pre
+          className={`${outputCode} text-red-700 dark:text-red-300`}
+          aria-label="运行错误"
+        >
+          {result.error}
+        </pre>
+      )}
       {result.truncated && <p>输出过长，已截断。</p>}
       {check && !success && test.expectedOutput !== undefined && (
-        <div className="pj-python__expected">
-          <span>预期输出</span>
-          <pre>{test.expectedOutput}</pre>
+        <div className="grid gap-1.5">
+          <span className="text-amber-800 dark:text-amber-300">预期输出</span>
+          <pre className={outputCode}>{test.expectedOutput}</pre>
         </div>
       )}
     </li>
   );
 }
 
+function CheckResults({
+  checks,
+  outcome,
+}: {
+  checks: PythonCheck[];
+  outcome: boolean[] | null;
+}) {
+  if (!checks.length) return null;
+  if (!outcome) return <p>代码有语法错误，暂未检查写法要求。</p>;
+
+  return (
+    <div className="grid gap-1.5 rounded-lg border border-rp-line p-3">
+      <strong className="text-rp-text">写法要求</strong>
+      <ul className="grid gap-1">
+        {checks.map(({ message }, index) => (
+          <li
+            key={message}
+            className={
+              outcome[index]
+                ? "text-green-700 dark:text-green-300"
+                : "text-red-700 dark:text-red-300"
+            }
+          >
+            {outcome[index] ? "✓ " : "✗ "}
+            {message}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function Summary({
+  chapter,
+  passedCases,
+  totalCases,
+  checks,
+}: {
+  chapter?: boolean;
+  passedCases: number;
+  totalCases: number;
+  checks: boolean[] | null;
+}) {
+  const passedChecks = checks?.filter(Boolean).length ?? 0;
+  const totalChecks = checks?.length ?? 0;
+
+  if (chapter) {
+    return (
+      <p>
+        通过 {passedCases} / {totalCases} 组测试
+        {totalChecks > 0 &&
+          `，满足 ${passedChecks} / ${totalChecks} 条写法要求`}
+      </p>
+    );
+  }
+
+  if (passedCases < totalCases || !totalChecks) return null;
+  const complete = passedChecks === totalChecks;
+  return (
+    <p
+      className={
+        complete
+          ? "font-semibold text-green-700 dark:text-green-300"
+          : "font-semibold text-amber-800 dark:text-amber-300"
+      }
+    >
+      {complete
+        ? "输出和写法要求全部满足。"
+        : `输出正确，还有 ${totalChecks - passedChecks} 条写法要求未满足。`}
+    </p>
+  );
+}
+
 export default function CodeWorkspace({
   starterCode,
+  solution,
   label,
   cases,
+  checks = [],
   chapter,
 }: Props) {
+  const resultHeadingId = useId();
   const [code, setCode] = useState(starterCode);
   const [execution, setExecution] = useState<Execution>();
   const [ready, setReady] = useState(false);
@@ -79,17 +189,20 @@ export default function CodeWorkspace({
 
   useEffect(() => setReady(true), []);
 
-  function execute(check: boolean) {
-    const selected = check ? cases : cases.slice(0, 1);
+  function execute(checkAll: boolean) {
+    const selected = checkAll ? cases : cases.slice(0, 1);
     const inputs: PythonCase[] = selected.length
       ? selected
       : [{ label: "本次运行", setup: "" }];
-    setExecution({
+    const check =
+      checkAll || (!chapter && inputs[0]?.expectedOutput !== undefined);
+    const selectedChecks = check ? checks : [];
+    setExecution({ code, cases: inputs, checks: selectedChecks, check });
+    run({
       code,
-      cases: inputs,
-      check: check || (!chapter && inputs[0]?.expectedOutput !== undefined),
+      setups: inputs.map(({ setup }) => setup),
+      checks: selectedChecks,
     });
-    run({ code, setups: inputs.map(({ setup }) => setup) });
   }
 
   function restore() {
@@ -99,68 +212,74 @@ export default function CodeWorkspace({
   }
 
   return (
-    <section className="pj-python not-content" aria-label={label}>
-      <div className="pj-python__panel">
-        <div className="pj-python__section-header">
+    <section
+      className={`rp-not-doc min-w-0 overflow-hidden rounded-xl border border-rp-line bg-rp-surface text-rp-text ${chapter ? "" : "my-6"}`}
+      aria-label={label}
+    >
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 border-b border-rp-line px-4 py-3 text-sm">
           <strong>{label}</strong>
-          <span>Python</span>
+          <span className="font-rp-mono text-xs text-rp-muted">Python</span>
         </div>
         <PythonEditor code={code} onChange={setCode} />
-        <div className="pj-python__actions">
-          <button
-            type="button"
-            data-variant={chapter ? "secondary" : "primary"}
+        <div className="flex flex-wrap gap-2 border-t border-rp-line px-4 py-3">
+          <ActionButton
+            primary={!chapter}
             disabled={!ready || busy}
             onClick={() => execute(false)}
           >
             {chapter ? "运行示例" : "运行代码"}
-          </button>
+          </ActionButton>
           {chapter && cases.length > 0 && (
-            <button
-              type="button"
-              data-variant="primary"
+            <ActionButton
+              primary
               disabled={!ready || busy}
               onClick={() => execute(true)}
             >
               检查答案
-            </button>
+            </ActionButton>
           )}
           {busy ? (
-            <button type="button" onClick={stop}>
-              停止
-            </button>
+            <ActionButton onClick={stop}>停止</ActionButton>
           ) : (
-            <button
-              type="button"
-              disabled={code === starterCode}
-              onClick={restore}
-            >
+            <ActionButton disabled={code === starterCode} onClick={restore}>
               重置代码
-            </button>
+            </ActionButton>
           )}
         </div>
       </div>
-      <div className="pj-python__output" aria-live="polite">
-        <p className="pj-python__output-title">运行结果</p>
+      <div
+        className="grid gap-2 border-t border-rp-line px-4 py-3 text-sm text-rp-muted"
+        role="region"
+        aria-labelledby={resultHeadingId}
+        aria-live="polite"
+      >
+        <p id={resultHeadingId} className="font-semibold text-rp-text">
+          运行结果
+        </p>
         {state.phase === "idle" && <p>运行代码后，输出会出现在这里。</p>}
         {state.phase === "loading" && <p>正在加载 Python 环境⋯⋯</p>}
         {state.phase === "running" && <p>正在执行代码⋯⋯</p>}
-        {state.phase === "error" && <p data-status="failed">{state.message}</p>}
+        {state.phase === "error" && (
+          <p className="font-semibold text-red-700 dark:text-red-300">
+            {state.message}
+          </p>
+        )}
         {showResults && (
           <>
-            {execution.check && chapter && (
-              <p>
-                通过{" "}
-                {
+            {execution.check && (
+              <Summary
+                chapter={chapter}
+                passedCases={
                   state.results.filter((result, index) =>
                     passed(result, execution.cases[index]),
                   ).length
                 }
-                {" / "}
-                {execution.cases.length} 组测试
-              </p>
+                totalCases={execution.cases.length}
+                checks={execution.checks.length ? state.checks : []}
+              />
             )}
-            <ul className="pj-python__results">
+            <ul className="grid gap-2.5">
               {state.results.map((result, index) => (
                 <CaseResult
                   key={index}
@@ -170,12 +289,31 @@ export default function CodeWorkspace({
                 />
               ))}
             </ul>
+            <CheckResults checks={execution.checks} outcome={state.checks} />
           </>
         )}
         {state.phase === "complete" && !showResults && (
           <p>代码已更改，请重新运行。</p>
         )}
       </div>
+      {solution && (
+        <details className="border-t border-rp-line px-4 py-3 text-sm">
+          <summary className="cursor-pointer font-semibold text-rp-text">
+            查看参考答案
+          </summary>
+          <div className="mt-3 grid gap-2.5">
+            <pre className={outputCode}>{solution}</pre>
+            <div>
+              <ActionButton
+                disabled={!ready || busy || code === solution}
+                onClick={() => setCode(solution)}
+              >
+                放进编辑器
+              </ActionButton>
+            </div>
+          </div>
+        </details>
+      )}
     </section>
   );
 }

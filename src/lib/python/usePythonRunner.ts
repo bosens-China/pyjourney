@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { version } from "pyodide/package.json";
 import type {
   PythonResult,
   PythonWorkerReply,
@@ -7,7 +8,7 @@ import type {
 
 type RunState =
   | { phase: "idle" | "loading" | "running" }
-  | { phase: "complete"; results: PythonResult[] }
+  | { phase: "complete"; results: PythonResult[]; checks: boolean[] | null }
   | { phase: "error"; message: string };
 
 const loadDeadline = 45_000;
@@ -41,11 +42,11 @@ export function usePythonRunner() {
 
     setState({ phase: worker.current ? "running" : "loading" });
     try {
+      // 将 Worker 作为独立文件发布，浏览器按 ES 模块加载。
+      const workerUrl = new URL("./python.worker.mjs", import.meta.url);
+      workerUrl.searchParams.set("version", version);
       const current =
-        worker.current ??
-        new Worker(new URL("./python.worker.ts", import.meta.url), {
-          type: "module",
-        });
+        worker.current ?? new Worker(workerUrl, { type: "module" });
       worker.current = current;
       const unavailable = "Python 环境启动失败。请检查网络后重试。";
 
@@ -66,7 +67,11 @@ export function usePythonRunner() {
             );
             break;
           case "complete":
-            setState({ phase: "complete", results: event.data.results });
+            setState({
+              phase: "complete",
+              results: event.data.results,
+              checks: event.data.checks,
+            });
             break;
           case "unavailable":
             fail(unavailable);

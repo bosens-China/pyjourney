@@ -1,0 +1,136 @@
+---
+title: 类型标注与泛型
+description: 给变量、参数和返回值写类型标注；用 type 语句声明类型别名，用类型参数写出泛型函数和泛型类。
+---
+
+import ConceptStepper from "@/components/learning/ConceptStepper";
+import QuickQuiz from "@/components/learning/QuickQuiz";
+import PythonExercise from "@/components/python/PythonExercise";
+
+## 类型标注
+
+类型标注写在名字后面的冒号之后，返回值的标注写在 `->` 之后：
+
+```python
+def average(scores: list[float]) -> float:
+    return sum(scores) / len(scores)
+
+counts: dict[str, int] = {}
+nickname: str | None = None
+```
+
+容器类型直接写内置类名，方括号里写元素类型：`list[int]`、`dict[str, int]`、`tuple[int, str]`、`set[str]`。`X | Y` 表示两者之一，`str | None` 表示「字符串，或者没有值」。
+
+Python 运行时不检查标注。它们是写给读者、编辑器和静态类型检查器的：检查器读源码，在程序运行之前指出类型对不上的调用。公开的函数和类写上标注，局部变量通常让检查器自己推断。
+
+## 类型别名
+
+类型写得很长、又多处重复时，用 `type` 语句给它起个名字：
+
+```python
+type Point = tuple[float, float]
+type Polygon = list[Point]
+
+def perimeter(shape: Polygon) -> float: ...
+```
+
+## 泛型
+
+有的函数对任何类型都成立，但参数和返回值的类型之间有联系：`first` 返回列表的第一项，传入 `list[int]` 就得到 `int`，传入 `list[str]` 就得到 `str`。把这种联系写成类型参数，放在名字后面的方括号里：
+
+```python
+def first[T](items: list[T]) -> T:  # [!code highlight]
+    return items[0]
+
+class Box[T]:
+    def __init__(self, item: T) -> None:
+        self.item = item
+
+    def get(self) -> T:
+        return self.item
+
+type Pair[T] = tuple[T, T]
+```
+
+类型参数只在这个函数、类或别名里可见，写完 `first` 之后，模块里并没有名字 `T`。`T: int` 限定它必须是 `int` 或其子类，`T: (str, bytes)` 限定它只能是列出的类型之一。运行时，泛型函数和泛型类的用法与普通函数、普通类相同。
+
+<ConceptStepper
+  label="类型检查器怎样推断 T"
+  steps={[
+    {
+      code: "def first[T](items: list[T]) -> T:\n    return items[0]",
+      description:
+        "T 只属于 first，表示「列表元素的类型」和「返回值的类型」是同一个。",
+      values: [{ name: "T", value: "尚未确定" }],
+    },
+    {
+      code: "n = first([8, 1])",
+      description:
+        "实参是 list[int]，检查器推断 T 为 int，于是 n 的类型是 int。",
+      values: [
+        { name: "T", value: "int" },
+        { name: "n", value: "8" },
+      ],
+    },
+    {
+      code: 's = first(["a", "b"])',
+      description: "每次调用单独推断。这一次 T 是 str，s 的类型是 str。",
+      values: [
+        { name: "T", value: "str" },
+        { name: "s", value: "'a'" },
+      ],
+    },
+  ]}
+/>
+
+<QuickQuiz
+  question="最后一行会怎样？"
+  code={`def add(a: int, b: int) -> int:
+      return a + b
+
+  print(add("1", "2"))`}
+options={["输出 3", "输出 12", "引发 TypeError", "引发 SyntaxError"]}
+answerIndex={1}
+feedback={[
+"标注不会把实参转换成 int，传进去的仍是字符串。",
+"",
+"Python 运行时不检查标注，字符串相加是合法操作。类型检查器会在运行前指出这里的问题。",
+"标注只是附加信息，代码的语法完全正确。",
+]}
+explanation="运行时不检查标注，'1' + '2' 得到 '12'。静态类型检查器会在运行之前报告这次调用不符合 int 标注。"
+/>
+
+## 随堂练习
+
+用类型参数 `T` 写出泛型函数 `first`：参数是 `list[T]`，返回值是 `T`。它运行时就是一个普通函数，返回列表的第一项。
+
+<PythonExercise
+  label="定义带类型参数的函数"
+  starterCode={`# TODO：定义 first，类型参数写在函数名后面，参数标注为 list[T]，返回值标注为 T
+
+  print(first([8, 1]))
+  print(first(["a", "b"]))
+`}
+  solution={`def first[T](items: list[T]) -> T:
+      return items[0]
+
+  print(first([8, 1]))
+  print(first(["a", "b"]))
+`}
+  expectedOutput={`8
+  a`}
+checks={[
+{
+message: "first 声明了类型参数 T",
+test: "any(f.name == 'first' and [p.name for p in f.type_params] == ['T'] for f in nodes(ast.FunctionDef))",
+},
+{
+message: "输入参数标注为 list[T]",
+test: "any(arg.annotation is not None and ast.unparse(arg.annotation) == 'list[T]' for f in nodes(ast.FunctionDef) if f.name == 'first' for arg in (f.args.posonlyargs + f.args.args)[:1])",
+},
+{
+message: "返回值标注为 T",
+test: "any(f.name == 'first' and name_of(f.returns) == 'T' for f in nodes(ast.FunctionDef))",
+},
+]}
+/>

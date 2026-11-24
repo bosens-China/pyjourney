@@ -1,0 +1,32 @@
+---
+title: "用装饰器改变返回值"
+description: "包装 greet，让它的返回文本变成大写，并保留原函数的名字。"
+---
+
+import ChallengeExample from "@/components/python/ChallengeExample";
+import ChapterWorkbench from "@/components/python/ChapterWorkbench";
+import { chapter09 } from "@/data/chapters/chapter-09";
+
+## 题目
+
+`message` 已经给定。写一个装饰器，把被包装函数返回的文本转成大写，然后用它装饰 `greet`。
+
+### 题目要求
+
+1. 使用 `functools.wraps` 保留原函数元数据。
+2. `greet` 原样返回传入的文本，大写转换放在装饰器里。
+3. 编辑器会打印 `greet(message)` 和 `greet.__name__`，第二行应当仍是 `greet`。
+
+需要复习时，可以回看[装饰器怎样把函数名绑到包装函数](../chapter-09/decorators.mdx)。
+
+<ChallengeExample example={chapter09.challenge.cases[0]} />
+
+## 编辑器 \{#challenge-editor}
+
+<ChapterWorkbench
+  key={chapter09.id}
+  starterCode={chapter09.challenge.starterCode}
+  solution={chapter09.challenge.solution}
+  cases={chapter09.challenge.cases}
+  checks={chapter09.challenge.checks}
+/>

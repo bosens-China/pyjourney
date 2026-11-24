@@ -1,0 +1,30 @@
+---
+title: "从标准库导入统计函数"
+description: "用 from 导入 statistics 里的 mean 和 median，算出一组分数的平均数和中位数。"
+---
+
+import ChallengeExample from "@/components/python/ChallengeExample";
+import ChapterWorkbench from "@/components/python/ChapterWorkbench";
+import { chapter05 } from "@/data/chapters/chapter-05";
+
+## 题目
+
+`scores` 已经给定。标准库模块 `statistics` 里的 `mean` 返回平均数，`median` 返回中位数。导入这两个函数，打印这组分数的平均数和中位数。
+
+### 题目要求
+
+1. 用 `from statistics import ...` 写出要导入的两个名字，不使用星号导入。
+2. 不要手写求和或排序。
+3. 打印 `平均 x 中位 y`，两个数都保留一位小数。
+
+<ChallengeExample example={chapter05.challenge.cases[0]} />
+
+## 编辑器 \{#challenge-editor}
+
+<ChapterWorkbench
+  key={chapter05.id}
+  starterCode={chapter05.challenge.starterCode}
+  solution={chapter05.challenge.solution}
+  cases={chapter05.challenge.cases}
+  checks={chapter05.challenge.checks}
+/>

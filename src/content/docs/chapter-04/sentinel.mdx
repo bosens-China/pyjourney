@@ -1,0 +1,198 @@
+---
+title: 默认值与哨兵
+description: 默认值在定义时求值一次，可变的默认值用 None 表示。需要区分「没有传入」和 None 时，用内置 sentinel。
+---
+
+import ConceptStepper from "@/components/learning/ConceptStepper";
+import QuickQuiz from "@/components/learning/QuickQuiz";
+import PythonExercise from "@/components/python/PythonExercise";
+
+默认值在执行 `def` 时、在定义所在的作用域里求值，而且只求值一次。之后每次调用都用这同一个对象。
+
+<ConceptStepper
+  label="默认值在定义时求值一次"
+  steps={[
+    {
+      code: "i = 5",
+      description: "名字 i 绑定到整数 5。",
+      diagram: {
+        kind: "refs",
+        names: [{ name: "i", to: "five" }],
+        objects: [{ id: "five", label: "5" }],
+        highlight: ["i"],
+      },
+    },
+    {
+      code: "def f(arg=i):\n    print(arg)",
+      description:
+        "执行 def 时求出默认值。函数对象记住的是 i 当时指向的那个对象。",
+      diagram: {
+        kind: "refs",
+        names: [
+          { name: "i", to: "five" },
+          { name: "f 的默认值", to: "five" },
+        ],
+        objects: [{ id: "five", label: "5" }],
+        highlight: ["f 的默认值"],
+      },
+    },
+    {
+      code: "i = 6\nf()",
+      description: "i 重新绑定到 6，默认值仍指向原来的 5。",
+      output: "5",
+      diagram: {
+        kind: "refs",
+        names: [
+          { name: "i", to: "six" },
+          { name: "f 的默认值", to: "five" },
+        ],
+        objects: [
+          { id: "six", label: "6" },
+          { id: "five", label: "5" },
+        ],
+        highlight: ["i", "six"],
+      },
+    },
+  ]}
+/>
+
+所以默认值如果是列表或字典这样的可变对象，所有调用都会共用它，一次调用里的修改会留到下一次。需要「没传就用一个新的空容器」时，默认值写 `None`，在函数体里再创建：
+
+```python
+def append_to(item, target=None):
+    if target is None:
+        target = []
+    target.append(item)
+    return target
+```
+
+默认值适合用数字、字符串、`None`、元组这样的不可变对象。
+
+## 随堂练习
+
+`collect` 把 `item` 放进 `bucket` 并打印。没有传入 `bucket` 时，每次调用都要得到一个新列表。
+
+<PythonExercise
+  label="在函数体内创建新列表"
+  starterCode={`def collect(item, bucket=None):
+      # TODO：bucket 是 None 时，在函数体里创建新列表
+      bucket.append(item)
+      print(bucket)
+
+  collect("a")
+  collect("b")
+  collect("c", ["x"])
+`}
+  solution={`def collect(item, bucket=None):
+      if bucket is None:
+          bucket = []
+      bucket.append(item)
+      print(bucket)
+
+  collect("a")
+  collect("b")
+  collect("c", ["x"])
+`}
+  expectedOutput={`['a']
+  ['b']
+  ['x', 'c']`}
+checks={[
+{
+message: "默认值是 None，不是列表",
+test: "any(f.name == 'collect' and all(isinstance(d, ast.Constant) and d.value is None for d in f.args.defaults) for f in nodes(ast.FunctionDef))",
+},
+{
+message: "用 is None 判断有没有传入 bucket",
+test: "any(isinstance(op, ast.Is) for n in nodes(ast.Compare) for op in n.ops)",
+},
+]}
+/>
+
+## 没有传入，还是传入了 None
+
+有时 `None` 本身就是合法实参，它不能再兼任「调用方没有传这个参数」的标记。这时用内置的 `sentinel` 制作一个专用对象：
+
+```python
+MISSING = sentinel("MISSING")
+
+def get_setting(key, default=MISSING):
+    if default is MISSING:
+        print(f"必须提供 {key}")
+    else:
+        print(f"{key}={default}")
+```
+
+| 调用 | 函数收到的 `default` | 打印 |
+| --- | --- | --- |
+| `get_setting("theme")` | `MISSING` | `必须提供 theme` |
+| `get_setting("theme", None)` | `None` | `theme=None` |
+| `get_setting("theme", "dark")` | `"dark"` | `theme=dark` |
+
+`sentinel(name)` 的 `name` 只能按位置传，表示形式就是这个名字：上面的对象显示为 `MISSING`。按惯例，变量名和哨兵名一致，并且放在模块顶层。每次调用 `sentinel()` 都返回一个新的唯一对象，所以只创建一次，之后用 `is` 和它比较。哨兵的布尔值为真，不能用 `if not default` 判断「没有传入」。
+
+<QuickQuiz
+  question="最后一行输出什么？"
+  code={`MISSING = sentinel("MISSING")
+
+  def get(key, default=MISSING):
+      if default is MISSING:
+          return "未提供"
+      return default
+
+  print(get("a"), get("a", None))`}
+options={["未提供 None", "未提供 未提供", "None None", "MISSING None"]}
+answerIndex={0}
+feedback={[
+"",
+"第二次调用显式传了 None，None is MISSING 为假，直接返回 None。",
+"第一次调用没有传 default，它是 MISSING，函数返回「未提供」。",
+"函数在 default is MISSING 时返回的是字符串「未提供」，不是哨兵本身。",
+]}
+explanation="没传 default 时它是 MISSING，返回「未提供」。显式传入的 None 不是 MISSING，于是原样返回。"
+/>
+
+`lookup` 在 `table` 里查 `key`。找不到时，调用方传了 `default` 就返回它，即使传的是 `None`；没有传就返回 `缺少 键名`。
+
+<PythonExercise
+  label="用 sentinel 区分没有传入和 None"
+  starterCode={`# TODO：在模块顶层创建名为 MISSING 的哨兵，并把它作为 default 的默认值
+  def lookup(table, key, default=None):
+      if key in table:
+          return table[key]
+      # TODO：没有传入 default 时返回 f"缺少 {key}"
+      return default
+
+  table = {"a": 1}
+  print(lookup(table, "a"))
+  print(lookup(table, "b", None))
+  print(lookup(table, "b"))
+`}
+  solution={`MISSING = sentinel("MISSING")
+
+  def lookup(table, key, default=MISSING):
+      if key in table:
+          return table[key]
+      if default is MISSING:
+          return f"缺少 {key}"
+      return default
+
+  table = {"a": 1}
+  print(lookup(table, "a"))
+  print(lookup(table, "b", None))
+  print(lookup(table, "b"))
+`}
+  expectedOutput={`1
+  None
+  缺少 b`}
+  checks={[
+    { message: "用 sentinel() 创建哨兵", test: "calls('sentinel')" },
+    {
+      message: "default 的默认值是哨兵 MISSING",
+      test: "any(f.name == 'lookup' and any(isinstance(d, ast.Name) and d.id == 'MISSING' for d in f.args.defaults) for f in nodes(ast.FunctionDef))",
+    },
+    {
+      message: "用 is 和哨兵比较",
+      test: "any(isinstance(op, ast.Is) for n in nodes(ast.Compare) for op in n.ops)",
+    },
+  ]}
+/>

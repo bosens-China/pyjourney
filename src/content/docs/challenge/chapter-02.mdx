@@ -1,0 +1,35 @@
+---
+title: "拆开一条访问记录"
+description: "用扩展解包取出方法和路径，并数出其余字段。"
+---
+
+import ChallengeExample from "@/components/python/ChallengeExample";
+import ChapterWorkbench from "@/components/python/ChapterWorkbench";
+import { chapter02 } from "@/data/chapters/chapter-02";
+
+## 题目
+
+`record` 是一条至少包含方法和路径的序列。取出前两个字段，将其余字段收进一个列表，并打印方法、路径和其余字段的个数。
+
+| 记录中的位置 | 内容 | 绑定到 |
+| --- | --- | --- |
+| 第一项 | 请求方法 | `method` |
+| 第二项 | 请求路径 | `path` |
+| 后续各项 | 可选字段 | `rest`，没有可选字段时是空列表 |
+
+### 题目要求
+
+1. 用带星号的赋值解包 `record`。
+2. 按顺序打印方法、路径和 `rest` 的长度，中间用一个空格分隔。
+
+<ChallengeExample example={chapter02.challenge.cases[0]} />
+
+## 编辑器 \{#challenge-editor}
+
+<ChapterWorkbench
+  key={chapter02.id}
+  starterCode={chapter02.challenge.starterCode}
+  solution={chapter02.challenge.solution}
+  cases={chapter02.challenge.cases}
+  checks={chapter02.challenge.checks}
+/>

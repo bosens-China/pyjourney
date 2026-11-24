@@ -1,0 +1,74 @@
+---
+title: 文本与 f-字符串
+description: 字符串的下标和切片，常用的文本操作，以及用 f-字符串把表达式嵌进文本。
+---
+
+import SliceExplorer from "@/components/learning/SliceExplorer";
+import PythonExercise from "@/components/python/PythonExercise";
+
+文本的类型是 `str`。单引号和双引号标出的字符串相同，选一种不需要转义的即可。`\n` 是换行。三重引号的字符串可以跨行。在引号前加 `r` 得到原始字符串，反斜杠不再引出转义，常用于正则表达式和 Windows 路径。
+
+## 下标与切片
+
+字符串是序列。下标从 `0` 开始，负数下标从右端的 `-1` 开始。`word = "Python"` 时，`word[0]` 取出 `P`，`word[-1]` 取出 `n`。
+
+切片 `word[start:stop]` 含起点、不含终点。可以把两个端点想成字符之间的边界。顺着字符串取字符时，省略起点就从头开始，省略终点就取到末尾。
+
+第三项 `word[start:stop:step]` 是步长，控制每次下标加多少。步长默认是 `1`，不能为 `0`。正数往右取，负数往左取，绝对值越大，一次跨过的下标越多。两个端点都省略时，`word[::2]` 从左端开始隔一个取一个，`word[::-2]` 则从右端开始。
+
+<SliceExplorer />
+
+`word[:i] + word[i:]` 总是等于 `word`。下标越界会引发 `IndexError`，切片则会把越界的位置收进有效范围。`len()` 返回长度。
+
+字符串不可变，不能给下标或切片赋值。要得到不同的文本，就新建一个字符串：`"J" + word[1:]`。
+
+## 常用操作
+
+字符串方法都返回新字符串，原字符串不变。最常用的是这几个：
+
+```python
+line = "  name,age,city  "
+fields = line.strip().split(",")
+print(fields)                # ['name', 'age', 'city']
+print(" | ".join(fields))    # name | age | city
+print("age" in line)         # True
+print(line.startswith("name"))  # False，开头还有空白
+```
+
+`in` 检查子串。`split` 按分隔符切开；不传参数时按空白切开，连续的空白算一处，两端的空白不会留下空字符串。`strip` 去掉两端空白。把许多片段拼成一个字符串时，用分隔符的 `join` 一次拼好，不要在循环里反复用 `+`。
+
+## f-字符串
+
+在引号前写 `f`，花括号里就可以放变量或任意表达式，它们会在运行时求值并转换成文本。要输出花括号本身，写成 `{{` 和 `}}`。
+
+```python
+name = "Ada"
+total = 1234.5
+print(f"{name} 共消费 {total:,.2f} 元")  # Ada 共消费 1,234.50 元
+print(f"{name!r:>8}")                    #    'Ada'
+print(f"{total=}")                       # total=1234.5
+```
+
+冒号后面是格式说明符：`.2f` 保留两位小数，`,` 加千位分隔符，`>8` 右对齐到 8 个字符宽。`!r` 用 `repr()` 而不是 `str()` 转换。表达式后面写 `=` 时，输出会带上表达式本身，调试时很方便。
+
+## 随堂练习
+
+一行标签之间夹着长短不一的空白。把它们整理成用 `/` 连接的一行，打印 `python / 入门 / 精粹`。
+
+<PythonExercise
+  label="切分、清理、再连接"
+  starterCode={`raw = "  python   入门 精粹  "
+
+  # TODO：不传参数调用 split 切开，再用 " / " 的 join 连接
+`}
+  solution={`raw = "  python   入门 精粹  "
+
+  tags = raw.split()
+  print(" / ".join(tags))
+`}
+  expectedOutput={`python / 入门 / 精粹`}
+checks={[
+{ message: "用 split 切开字符串", test: "calls('split')" },
+{ message: "用 join 拼接结果", test: "calls('join')" },
+]}
+/>

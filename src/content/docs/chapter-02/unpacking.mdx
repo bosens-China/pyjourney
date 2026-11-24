@@ -1,0 +1,49 @@
+---
+title: 解包
+description: 不带星号的解包要求两侧项数一致；一个星号接收剩余项，两个星号把字典展开成关键字或并进新字典。
+---
+
+import UnpackingGroups from "@/components/figures/UnpackingGroups";
+
+逗号会把右侧的值打包成元组。反向操作是解包：右侧可以是任意可迭代对象，各项从左到右赋给左侧的名称。左侧没有星号时，两侧项数必须相同。多重赋值就是先打包、再解包，右侧会先全部求值，所以 `a, b = b, a` 可以交换两个名称。
+
+```python
+t = 12345, 54321, "hello!"
+x, y, z = t
+```
+
+## 星号
+
+左侧可以有一个带 `*` 的目标。右侧至少要为每个不带星号的目标提供一项。星号前面的目标接走开头的项，星号后面的目标接走末尾的项，中间剩下的项做成一个列表交给星号目标，这个列表可以是空的。
+
+<UnpackingGroups />
+
+在元组或列表字面值里，`*` 则把一个可迭代对象展开进新序列：
+
+```python
+head, *middle, tail = [1, 2, 3, 4]
+print(middle)  # [2, 3]
+
+x = [1, 2, 3]
+print((0, *x, 4))  # (0, 1, 2, 3, 4)
+```
+
+调用函数时，`*` 把序列展开成位置参数：
+
+```python
+args = [3, 6]
+print(list(range(*args)))  # [3, 4, 5]
+```
+
+## 字典
+
+在字典字面值里，`**` 把已有字典的键值对并进新字典，后面的同名键覆盖前面的。只合并两个字典时，`|` 更直接：
+
+```python
+defaults = {"color": "blue", "size": 10}
+custom = {"size": 12}
+print({**defaults, **custom, "debug": True})  # {'color': 'blue', 'size': 12, 'debug': True}
+print(defaults | custom)                      # {'color': 'blue', 'size': 12}
+```
+
+调用函数时，`**` 把字典展开成关键字参数。第 4 章讲参数时会用到。

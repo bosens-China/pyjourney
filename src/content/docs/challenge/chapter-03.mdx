@@ -1,0 +1,36 @@
+---
+title: "用模式匹配分发指令"
+description: "按序列形状区分移动、停留和无法识别的指令。"
+---
+
+import ChallengeExample from "@/components/python/ChallengeExample";
+import ChapterWorkbench from "@/components/python/ChapterWorkbench";
+import { chapter03 } from "@/data/chapters/chapter-03";
+
+## 题目
+
+`command` 是一个序列。按它的形状决定输出。
+
+| 指令形状 | 输出 |
+| --- | --- |
+| `["go", 方向]`，正好两项 | `前往 ` 加上方向 |
+| `["stay"]`，正好一项 | `停留` |
+| 其他形状 | `未知` |
+
+### 题目要求
+
+1. 使用 `match` / `case`，不要写成一串 `isinstance` 判断。
+2. 方向绑定到 `direction`。
+3. 输出必须与样例一致。
+
+<ChallengeExample example={chapter03.challenge.cases[0]} />
+
+## 编辑器 \{#challenge-editor}
+
+<ChapterWorkbench
+  key={chapter03.id}
+  starterCode={chapter03.challenge.starterCode}
+  solution={chapter03.challenge.solution}
+  cases={chapter03.challenge.cases}
+  checks={chapter03.challenge.checks}
+/>

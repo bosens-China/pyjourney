@@ -1,0 +1,27 @@
+[
+  {
+    "type": "file",
+    "name": "defining-functions",
+    "label": "4.1 定义函数"
+  },
+  {
+    "type": "file",
+    "name": "parameter-boundaries",
+    "label": "4.2 参数边界"
+  },
+  {
+    "type": "file",
+    "name": "sentinel",
+    "label": "4.3 默认值与哨兵"
+  },
+  {
+    "type": "file",
+    "name": "scopes-and-closures",
+    "label": "4.4 作用域与闭包"
+  },
+  {
+    "type": "custom-link",
+    "label": "开始章节挑战",
+    "link": "/challenge/chapter-04"
+  }
+]

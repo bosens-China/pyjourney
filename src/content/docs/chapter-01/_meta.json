@@ -1,0 +1,17 @@
+[
+  {
+    "type": "file",
+    "name": "program-shape",
+    "label": "1.1 程序的样子"
+  },
+  {
+    "type": "file",
+    "name": "object-model-and-references",
+    "label": "1.2 名字、身份与可变性"
+  },
+  {
+    "type": "custom-link",
+    "label": "开始章节挑战",
+    "link": "/challenge/chapter-01"
+  }
+]

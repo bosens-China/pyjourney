@@ -1,0 +1,42 @@
+interface Layer {
+  title: string;
+  items: string[];
+  note: string;
+}
+
+interface LayerStackProps {
+  label: string;
+  layers: Layer[];
+}
+
+export default function LayerStack({ label, layers }: LayerStackProps) {
+  return (
+    <figure className="rp-not-doc my-6 grid gap-3 rounded-xl border border-rp-line bg-rp-surface p-4 sm:p-6">
+      <figcaption className="font-semibold text-rp-text">{label}</figcaption>
+      <ol className="grid gap-2">
+        {layers.map(({ title, items, note }, index) => (
+          <li
+            key={title}
+            className="grid gap-2 rounded-lg border border-rp-line bg-rp-soft px-4 py-3 sm:grid-cols-[6rem_1fr] sm:items-center"
+            style={{ marginInline: `${index * 0.75}rem` }}
+          >
+            <span className="text-sm font-semibold text-rp-brand">{title}</span>
+            <div className="grid gap-1.5">
+              <div className="flex flex-wrap gap-1.5">
+                {items.map((item) => (
+                  <code
+                    key={item}
+                    className="rounded-md border border-rp-line bg-rp-surface px-2 py-0.5 font-rp-mono text-xs text-rp-text"
+                  >
+                    {item}
+                  </code>
+                ))}
+              </div>
+              <p className="text-sm text-rp-muted">{note}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </figure>
+  );
+}

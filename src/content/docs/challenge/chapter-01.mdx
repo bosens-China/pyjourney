@@ -1,0 +1,32 @@
+---
+title: "确认两个名字是否共用一个列表"
+description: "把一个名字追加元素，观察另一个名字看到的内容和两者是否是同一个对象。"
+---
+
+import ChallengeExample from "@/components/python/ChallengeExample";
+import ChapterWorkbench from "@/components/python/ChapterWorkbench";
+import { chapter01 } from "@/data/chapters/chapter-01";
+
+## 题目
+
+`records` 和 `extra` 已经给定。让 `alias` 指向同一个列表，追加 `extra`，并打印列表最后一个元素，以及两个名字是否指向同一个对象。
+
+### 题目要求
+
+1. 令 `alias` 与 `records` 指向同一个列表。
+2. 把 `extra` 追加到这个列表。
+3. 打印最后一个元素，以及 `alias is records` 的结果，中间用一个空格分隔。
+
+需要复习时，可以回看[名字指向列表的图解](../chapter-01/object-model-and-references.mdx)。
+
+<ChallengeExample example={chapter01.challenge.cases[0]} />
+
+## 编辑器 \{#challenge-editor}
+
+<ChapterWorkbench
+  key={chapter01.id}
+  starterCode={chapter01.challenge.starterCode}
+  solution={chapter01.challenge.solution}
+  cases={chapter01.challenge.cases}
+  checks={chapter01.challenge.checks}
+/>
