@@ -44,7 +44,7 @@ empty = ()
 
 集合用花括号写出，元素没有固定顺序，相同的元素只保留一个。用 `in` 检查某项是否在集合里。空集合写成 `set()`，`{}` 表示空字典。集合支持并集 `|`、交集 `&`、差集 `-` 和对称差 `^`。
 
-```python
+```python run
 basket = {"apple", "orange", "apple"}
 print("orange" in basket)  # True
 ```
@@ -55,7 +55,7 @@ print("orange" in basket)  # True
 
 `{}` 是空字典。键不存在时，`d[key]` 会引发 `KeyError`，`d.get(key)` 则返回 `None`。也可以给 `get()` 传一个默认值。用 `del d[key]` 删除一项。
 
-```python
+```python run
 tel = {"jack": 4098, "sape": 4139}
 tel["guido"] = 4127
 print(tel.get("irv"))  # None

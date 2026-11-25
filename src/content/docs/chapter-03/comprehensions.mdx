@@ -42,7 +42,7 @@ squares_by_n = {x: x**2 for x in (2, 4, 6)}
 
 把列表推导式的方括号换成圆括号，就得到生成器表达式。它按需逐项产生结果，所以可以直接交给 `sum()`、`max()`、`any()` 或 `all()`。作为函数的唯一参数时，可以省掉表达式自己的圆括号。
 
-```python
+```python run
 prices = [12, 48, 7]
 print(sum(p * 2 for p in prices))    # 134
 print(any(p > 40 for p in prices))   # True，有一项大于 40

@@ -14,7 +14,7 @@ type RunState =
 const loadDeadline = 45_000;
 const runDeadline = 8_000;
 
-export function usePythonRunner() {
+export function usePythonRunner({ reuseWorker = true } = {}) {
   const worker = useRef<Worker>(null);
   const deadline = useRef<number>(null);
   const [state, setState] = useState<RunState>({ phase: "idle" });
@@ -67,6 +67,7 @@ export function usePythonRunner() {
             );
             break;
           case "complete":
+            if (!reuseWorker) close();
             setState({
               phase: "complete",
               results: event.data.results,

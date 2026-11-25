@@ -28,7 +28,7 @@ import PythonExercise from "@/components/python/PythonExercise";
 
 下面用 `strip()` 去掉两端空白，用 `split()` 拆成字段列表。随后用 `join()` 拼回字符串。要检查开头是否匹配，用 `startswith()`，它返回布尔值。
 
-```python
+```python run
 line = "  name,age,city  "
 fields = line.strip().split(",")
 print(fields)                # ['name', 'age', 'city']
@@ -43,7 +43,7 @@ print(line.startswith("name"))  # False，开头还有空白
 
 在引号前写 `f`，就可以把名字或表达式放进花括号。运行时，Python 会算出表达式的值，再把它填进文本。要输出花括号本身，把它写成 `{{` 或 `}}`。
 
-```python
+```python run
 name = "Ada"
 total = 1234.5
 print(f"{name} 共消费 {total:,.2f} 元")  # Ada 共消费 1,234.50 元

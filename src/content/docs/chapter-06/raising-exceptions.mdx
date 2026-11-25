@@ -9,7 +9,7 @@ import PythonExercise from "@/components/python/PythonExercise";
 
 先执行操作，再捕获预期的异常，是 Python 的一种惯用写法，简称 EAFP。例如，直接让 `int()` 尝试把文本转成整数，再处理转换失败的情况。
 
-```python
+```python run
 def to_int(text):
     try:
         return int(text)
@@ -46,7 +46,7 @@ class DatabaseError(Exception):
 
 把底层异常换成调用方更容易理解的异常时，可以用 `raise ... from ...` 标明直接原因。新异常的 `__cause__` 会保存原来的异常。回溯也会把原异常列为直接原因，并显示「The above exception was the direct cause of the following exception」。
 
-```python
+```python run
 def func():
     raise ConnectionError
 

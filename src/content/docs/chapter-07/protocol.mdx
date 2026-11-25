@@ -37,7 +37,7 @@ def display(doc: Renderable) -> str:
 
 要用 `isinstance` 检查对象是否符合某个协议，可以给协议加上 `@runtime_checkable`。这种检查只确认属性是否存在，忽略类型签名。
 
-```python
+```python run
 from typing import Protocol, runtime_checkable
 
 @runtime_checkable

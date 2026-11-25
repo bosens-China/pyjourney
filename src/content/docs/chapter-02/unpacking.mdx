@@ -22,7 +22,7 @@ x, y, z = t
 
 在元组或列表的写法里，`*` 会把可迭代对象的各项展开到新序列中。下面先用 `*` 接收剩余项，再用它展开一个列表。
 
-```python
+```python run
 head, *middle, tail = [1, 2, 3, 4]
 print(middle)  # [2, 3]
 
@@ -32,7 +32,7 @@ print((0, *x, 4))  # (0, 1, 2, 3, 4)
 
 函数调用也可以用 `*` 展开序列。下面的 `*args` 把 3 和 6 按位置传给 `range()`，就像直接写 `range(3, 6)`。
 
-```python
+```python run
 args = [3, 6]
 print(list(range(*args)))  # [3, 4, 5]
 ```
@@ -41,7 +41,7 @@ print(list(range(*args)))  # [3, 4, 5]
 
 写新字典时，可以用 `**` 展开已有字典的键值对。同一个键出现多次时，以最后填入的值为准。只合并两个字典时，可以直接用 `|`。
 
-```python
+```python run
 defaults = {"color": "blue", "size": 10}
 custom = {"size": 12}
 print({**defaults, **custom, "debug": True})  # {'color': 'blue', 'size': 12, 'debug': True}

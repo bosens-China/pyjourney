@@ -9,7 +9,7 @@ import PythonExercise from "@/components/python/PythonExercise";
 
 类主要用来存储数据时，可以用 `@dataclass` 生成 `__init__`、`__repr__` 和 `__eq__`。比如在类体里写 `x: int`，就声明了一个类型标注为整数的字段。生成的方法按声明顺序处理字段。需要其他操作时，照常定义方法即可。
 
-```python
+```python run
 from dataclasses import dataclass
 
 @dataclass
@@ -29,7 +29,7 @@ print(p == Point(1, 2))  # True
 
 把有默认值的字段写在没有默认值的字段后面。列表、字典这样的可变默认值用 `field(default_factory=...)` 声明。创建实例时如果需要默认值，Python 会调用这个工厂函数，得到一个新对象。直接写 `tags: list = []` 会在创建类时引发 `ValueError`。
 
-```python
+```python run
 from dataclasses import dataclass, field
 
 @dataclass

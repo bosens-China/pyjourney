@@ -21,7 +21,7 @@ import PythonExercise from "@/components/python/PythonExercise";
 
 要重新绑定模块中的名字，用 `global` 声明。要重新绑定外层函数中已有的名字，用 `nonlocal` 声明。Python 从最近的外层函数开始查找，找到绑定就停下。
 
-```python
+```python run
 def scope_test():
     def do_local():
         spam = "local spam"
@@ -76,7 +76,7 @@ print("In global scope:", spam)
 
 内层函数可以引用外层函数的变量。即使外层函数已经返回，内层函数仍能访问这些变量，这样的函数叫闭包。下面用闭包把不同的乘数留给不同的函数。
 
-```python
+```python run
 def make_multiplier(factor):
     def multiply(x):
         return x * factor

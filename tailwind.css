@@ -39,6 +39,57 @@
   --ui-destructive: var(--color-red-300);
 }
 
+.pyjourney-runnable-source .rp-codeblock__content {
+  padding-top: 1.75rem;
+}
+
+.rp-code-button-group.pyjourney-run-toolbar {
+  align-items: center;
+  gap: 0.375rem;
+  top: 0.375rem;
+  right: 0.75rem;
+}
+
+.pyjourney-run-toolbar > .rp-code-button-group {
+  position: static;
+  gap: inherit;
+}
+
+.pyjourney-run-toolbar .rp-code-button-group__button {
+  width: 1.75rem;
+  height: 1.75rem;
+  opacity: 1;
+}
+
+.rp-code-button-group .rp-code-button-group__button {
+  border-radius: 0.5rem;
+  color: var(--rp-c-gray);
+}
+
+.rp-code-button-group
+  .rp-code-button-group__button
+  .rp-code-button-group__icon {
+  color: inherit;
+}
+
+.rp-code-button-group
+  .rp-code-button-group__button:is(
+    :hover,
+    :focus-visible,
+    :active,
+    .rp-code-wrap-button--wrapped,
+    .rp-code-copy-button--copied
+  ) {
+  color: var(--rp-c-link);
+  background-color: var(--rp-c-brand-tint);
+  opacity: 1;
+}
+
+.rp-code-button-group .rp-code-button-group__button:focus-visible {
+  outline: 2px solid var(--rp-c-link);
+  outline-offset: 2px;
+}
+
 @layer utilities {
   .python-code {
     .tok-keyword {

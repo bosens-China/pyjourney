@@ -1,11 +1,13 @@
 import { useLocation } from "@rspress/core/runtime";
 import {
-  getCustomMDXComponent,
   HomeLayout as DefaultHomeLayout,
   type HomeLayoutProps,
 } from "@rspress/core/theme-original";
 import HomeContent from "@/content/docs/index.mdx";
 import { chapters } from "@/data/chapters";
+import { getCustomMDXComponent } from "./runnable-code";
+
+export { CodeButtonGroup, getCustomMDXComponent } from "./runnable-code";
 
 const appendix = { link: "/engineering", text: "附录：工程实践" };
 

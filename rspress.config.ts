@@ -19,6 +19,18 @@ export default defineConfig({
     shiki: {
       transformers: [
         {
+          name: "pyjourney:runnable-python",
+          pre(node) {
+            const { lang, meta } = this.options;
+            if (
+              (lang === "python" || lang === "py") &&
+              /^run(?:\s|$)/.test(meta?.__raw?.trimStart() ?? "")
+            ) {
+              node.properties["data-run-source"] = this.source;
+            }
+          },
+        },
+        {
           name: "pyjourney:lazy-import",
           tokens(tokens) {
             if (this.options.lang !== "python" && this.options.lang !== "py")

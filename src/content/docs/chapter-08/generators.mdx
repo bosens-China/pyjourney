@@ -10,7 +10,7 @@ import PythonExercise from "@/components/python/PythonExercise";
 
 在函数里用 `yield` 逐项交出数据，这个函数就成了生成器函数。调用它会得到一个生成器对象。生成器提供迭代器需要的 `__iter__` 和 `__next__`，取尽时会引发 `StopIteration`。和上一课手写的类相比，生成器把保存进度的工作交给了 Python。
 
-```python
+```python run
 def countdown(n):
     while n > 0:
         yield n
@@ -28,7 +28,7 @@ for i in countdown(3):
 
 把几个生成器串起来，就能让数据逐项经过多个处理步骤。后一个生成器需要取值时，前一个才继续运行，并通过 `yield` 交出下一项。各个步骤可以边读取边处理，省去保存中间结果的列表。
 
-```python
+```python run
 def stream_lines(data):
     for line in data:
         yield line.strip()

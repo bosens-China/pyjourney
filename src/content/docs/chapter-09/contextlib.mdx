@@ -128,7 +128,7 @@ def override(store, key, value):
 
 确定可以忽略 `KeyError` 时，可以用 `suppress(KeyError)` 包住这段操作。遇到 `KeyError` 时，程序结束 `with` 代码块，从下一条语句继续。其他异常照常传播。
 
-```python
+```python run
 from contextlib import suppress
 
 counts = {"known": 1}

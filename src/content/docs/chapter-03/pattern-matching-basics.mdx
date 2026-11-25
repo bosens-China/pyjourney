@@ -29,7 +29,7 @@ export const matchFlow = {
 
 可以直接用字面值来匹配。多个字面值可以用 `|` 连起来，匹配其中任何一个即可。`_` 是通配符，可以匹配任意值。`True`、`False` 和 `None` 各自只匹配对应的那个对象，其他字面值按值比较。
 
-```python
+```python run
 status = 404
 match status:
     case 400:

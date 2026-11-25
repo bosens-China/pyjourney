@@ -41,7 +41,7 @@ with open("notes.txt", encoding="utf-8") as f:
 
 下面的 `Edit` 在进入时保存字典的键值对。代码块出错时，它用保存的键值对恢复字典。
 
-```python
+```python run
 class Edit:
     def __init__(self, store):
         self.store = store

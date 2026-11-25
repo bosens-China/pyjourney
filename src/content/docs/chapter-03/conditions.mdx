@@ -52,7 +52,7 @@ label = "及格" if score >= 60 else "不及格"
 
 在条件里需要保存中间结果时，可以用赋值表达式 `:=`。下面的括号让 `n` 先得到列表的长度，再拿这个长度与 10 比较。
 
-```python
+```python run
 items = list(range(12))
 if (n := len(items)) > 10:
     print(f"列表太长（{n} 项，最多 10 项）")
@@ -64,7 +64,7 @@ if (n := len(items)) > 10:
 
 `for` 可以直接遍历序列和其他可迭代对象。每一轮，循环变量都绑定到当前取出的元素。
 
-```python
+```python run
 for word in ["cat", "window", "defenestrate"]:
     print(word, len(word))
 ```
@@ -73,7 +73,7 @@ for word in ["cat", "window", "defenestrate"]:
 
 同时需要编号和元素时，用 `enumerate()`。把几个序列的元素一一配对时，用 `zip()`。需要遍历字典的键和值时，用 `items()`。
 
-```python
+```python run
 names = ["Ada", "Bob"]
 scores = [95, 78]
 
@@ -91,7 +91,7 @@ for name, score in {"Ada": 95, "Bob": 78}.items():
 
 `sorted()` 把元素排好序，放进一个新列表。`key` 指定按什么排序，例如按小写字母或元素长度。想反转排序方向时，传入 `reverse=True`。想直接从末尾开始遍历时，用 `reversed()`。
 
-```python
+```python run
 words = ["banana", "Fig", "apple"]
 print(sorted(words, key=str.lower))  # ['apple', 'banana', 'Fig']
 print(sorted(words, key=len))        # ['Fig', 'apple', 'banana']
@@ -103,7 +103,7 @@ print(sorted(words, key=len))        # ['Fig', 'apple', 'banana']
 
 `while` 在条件为真时反复执行循环体。`break` 结束当前所在的最内层循环。`continue` 跳过本轮剩余语句，进入下一轮。
 
-```python
+```python run
 n = 27
 steps = 0
 while n != 1:

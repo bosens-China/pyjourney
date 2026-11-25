@@ -42,7 +42,7 @@ def f(pos1, pos2, /, pos_or_kwd, *, kwd1, kwd2):
 
 当调用者只需知道实参的顺序时，可以把形参设为仅限位置。公开函数以后改动这些形参的名字，调用代码也能照常运行。形参名能帮助读者理解传入的值时，可以把它设为仅限关键字。
 
-```python
+```python run
 def combined_example(pos_only, /, standard, *, kwd_only):
     print(pos_only, standard, kwd_only)
 

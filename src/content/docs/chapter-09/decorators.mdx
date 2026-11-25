@@ -121,7 +121,7 @@ def func():
 
 给包装函数加上 `@functools.wraps(fn)`，就能保留原函数的名字、模块名和文档字符串。需要访问原函数时，可以从包装函数的 `__wrapped__` 属性取得。
 
-```python
+```python run
 import functools
 
 def log_call(fn):

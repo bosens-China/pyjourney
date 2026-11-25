@@ -18,7 +18,7 @@ lazy from json import loads
 
 `lazy from json import loads, dumps` 会给两个名字各绑定一个代理。第一次使用任意一个名字，Python 都会加载整个模块，并让用到的名字指向模块里对应的对象。另一个名字仍然指向代理，等到用到它时才更新绑定。
 
-```python
+```python run
 lazy import statistics
 import sys
 

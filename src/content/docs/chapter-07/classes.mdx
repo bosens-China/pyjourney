@@ -15,7 +15,7 @@ import PythonExercise from "@/components/python/PythonExercise";
 
 `self.value = start` 给当前实例设置 `value`，每个实例各有一份。直接写在类体里的 `step` 是类属性，供各个实例共用。
 
-```python
+```python run
 class Counter:
     step = 1
 
@@ -90,7 +90,7 @@ print(counter.bump())  # 2
 - `__repr__` 返回对象的表示形式，供 `repr()`、交互式解释器和调试输出使用。合适时，可以把它写成创建该对象的表达式。类未定义 `__str__` 时，`print()` 也会用这个表示形式。
 - `__eq__` 定义 `==` 的行为。沿用 `object` 的默认比较时，同一个对象才相等。
 
-```python
+```python run
 class Money:
     def __init__(self, amount, currency="CNY"):
         self.amount = amount
@@ -114,7 +114,7 @@ print(Money(5) == Money(5))  # True
 
 属性的值需要计算时，可以用 `@property`。下面的 `fahrenheit` 由 `celsius` 换算而来，读取时只要写 `t.fahrenheit`。
 
-```python
+```python run
 class Temperature:
     def __init__(self, celsius):
         self.celsius = celsius

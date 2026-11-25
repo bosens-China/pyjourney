@@ -11,7 +11,7 @@ import PythonExercise from "@/components/python/PythonExercise";
 
 每个键都固定指向原来的值。如果值是列表，仍可往列表里追加元素。这组标签也可以用元组保存，让标签本身也固定下来。
 
-```python
+```python run
 config = frozendict(tags=["python"])
 config["tags"].append("入门")
 print(config["tags"])  # ['python', '入门']
