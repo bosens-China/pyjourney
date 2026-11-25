@@ -116,7 +116,7 @@ function Assignment({ example }: { example: (typeof examples)[number] }) {
       </div>
       {!singleItem && (
         <div>
-          <p className="mb-1 text-sm text-rp-muted">我的分配</p>
+          <p className="mb-1 text-sm text-rp-muted">我的预测</p>
           <dl className="grid grid-cols-3 gap-2 text-center font-rp-mono text-sm">
             {example.targets.map((target) => {
               const items = example.items.filter(

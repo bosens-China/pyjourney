@@ -64,14 +64,24 @@ def greet():
 
 ## 叠加装饰器
 
-写了多个装饰器时，Python 先求值各个 `@` 后面的表达式，再应用得到的装饰器。离 `def` 最近的装饰器先接收原函数。
+叠加装饰器时，先分清三个动作。Python 要取得装饰器、用它们包装函数，最后才可能调用包装后的函数。
 
-```python
-@f1(arg)
-@f2
-def func():
-    pass
-```
+<QuickQuiz
+  question="执行这段函数定义时，哪一步最先发生？"
+  code={`@f1(arg)
+  @f2
+  def func():
+      pass`}
+  options={["调用 f1(arg) 取得外层装饰器", "求值表达式 f2", "把原函数传给 f2", "调用包装后的 func"]}
+  answerIndex={0}
+  feedback={[
+    "",
+    "Python 按书写顺序求值装饰器表达式，先执行 f1(arg)，再读取 f2。",
+    "f2 确实先接收原函数。执行到这一步之前，Python 已经求值了两行装饰器表达式。",
+    "执行函数定义只会完成装饰并绑定 func。之后显式调用 func()，才会进入包装函数。",
+  ]}
+  explanation="Python 先从上往下求值，调用 f1(arg)，再读取 f2。实际应用时，靠近 def 的 f2 先接收原函数。"
+/>
 
 <ConceptStepper
   label="叠加装饰器时的执行顺序"
@@ -117,7 +127,7 @@ def func():
   ]}
 />
 
-## functools.wraps
+## 保留原函数的信息
 
 给包装函数加上 `@functools.wraps(fn)`，就能保留原函数的名字、模块名和文档字符串。需要访问原函数时，可以从包装函数的 `__wrapped__` 属性取得。
 
@@ -127,7 +137,7 @@ import functools
 def log_call(fn):
     @functools.wraps(fn)
     def wrapper(*args, **kwargs):
-        print(f"调用函数: {fn.__name__}")
+        print(f"调用函数 {fn.__name__}")
         return fn(*args, **kwargs)
     return wrapper
 
@@ -136,64 +146,36 @@ def add(a, b):
     """计算两数之和。"""
     return a + b
 
-print(add.__name__)
-print(add.__doc__)
+print(add(2, b=3))  # 先记录函数名，再打印 5
+print(add.__name__)  # add
+print(add.__doc__)   # 计算两数之和。
 ```
 
-两次 `print` 依次打印原函数名 `add` 和文档字符串「计算两数之和。」。
-
-<QuickQuiz
-  question="最后一行输出什么？"
-  code={`def bracket(fn):
-      def wrapper():
-          return "[" + fn() + "]"
-      return wrapper
-
-  def exclaim(fn):
-      def wrapper():
-          return fn() + "!"
-      return wrapper
-
-  @bracket
-  @exclaim
-  def greet():
-      return "hi"
-
-  print(greet())`}
-options={["[hi!]", "[hi]!", "hi[]!", "[hi]"]}
-answerIndex={0}
-feedback={[
-"",
-"bracket 包在最外层，所以右方括号在感叹号后面。",
-"bracket 把 fn() 的结果放在两个方括号之间。",
-"调用内层函数时，exclaim 会给 hi 加上感叹号。",
-]}
-explanation="装饰时，exclaim 先接收原函数，bracket 再接收 exclaim 的结果。调用 greet() 时，内层先得到 hi!，外层再加上方括号。"
-/>
+包装函数把位置实参和关键字实参转交给原函数，再返回原函数的结果。最后两行打印原函数名和文档字符串。
 
 ## 随堂练习
 
-补全 `count_calls`。包装后的 `ping` 每调用一次，就打印当前次数，再执行原函数。用 `wraps` 保留原函数的名字和文档字符串。
+补全 `count_calls`。每次调用包装函数时，用 `nonlocal` 更新外层的计数，打印当前次数，再转交实参并返回原函数的结果。用 `wraps` 保留原函数的名字和文档字符串。
 
 <PythonExercise
-  label="用 wraps 保留原函数的名字和文档"
+  label="统计调用次数并返回原函数的结果"
   starterCode={`import functools
 
   def count_calls(fn):
       calls = 0
 
-      # TODO：定义 wrapper，并用 functools.wraps 保留 fn 的名字和文档
-      # 每次调用先把 calls 加一，打印「执行 名字 (第 n 次)」，再调用 fn
+      # TODO：用 functools.wraps 保留 fn 的名字和文档字符串
+      # 用 nonlocal 更新 calls，打印调用次数，再传参给 fn 并返回结果
 
       return wrapper
 
   @count_calls
-  def ping():
+  def ping(message):
       """健康检查。"""
-      return "pong"
+      return f"收到 {message}"
 
-  ping()
-  ping()
+  print(ping("测试 A"))
+  print(ping(message="测试 B"))
   print(ping.__name__)
   print(ping.__doc__)
 `}
@@ -206,23 +188,25 @@ explanation="装饰时，exclaim 先接收原函数，bracket 再接收 exclaim 
       def wrapper(*args, **kwargs):
           nonlocal calls
           calls += 1
-          print(f"执行 {fn.__name__} (第 {calls} 次)")
+          print(f"执行 {fn.__name__}（第 {calls} 次）")
           return fn(*args, **kwargs)
 
       return wrapper
 
   @count_calls
-  def ping():
+  def ping(message):
       """健康检查。"""
-      return "pong"
+      return f"收到 {message}"
 
-  ping()
-  ping()
+  print(ping("测试 A"))
+  print(ping(message="测试 B"))
   print(ping.__name__)
   print(ping.__doc__)
 `}
-  expectedOutput={`执行 ping (第 1 次)
-  执行 ping (第 2 次)
+  expectedOutput={`执行 ping（第 1 次）
+  收到 测试 A
+  执行 ping（第 2 次）
+  收到 测试 B
   ping
   健康检查。`}
 checks={[

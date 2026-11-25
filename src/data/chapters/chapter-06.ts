@@ -1,6 +1,10 @@
 import meta from "@/content/docs/chapter-06/_meta.json";
 import { lessonsOf } from "../lessons.ts";
 
+const configError = `class ConfigError(Exception):
+    pass
+`;
+
 const showPort = `
 try:
     port = parse_port(raw)
@@ -19,15 +23,14 @@ export const chapter06 = {
   challenge: {
     starterCode: `# 已给定文本 raw
 
-# TODO：定义异常类 ConfigError，直接继承 Exception
+${configError}
 
 def parse_port(raw):
     # TODO：转成整数。失败时抛出 ConfigError，并用 from 标明原因
     # TODO：检查端口范围，合法就返回端口
     ...
 ${showPort}`,
-    solution: `class ConfigError(Exception):
-    pass
+    solution: `${configError}
 
 def parse_port(raw):
     try:
@@ -39,10 +42,6 @@ def parse_port(raw):
     return port
 ${showPort}`,
     checks: [
-      {
-        message: "ConfigError 直接继承 Exception",
-        test: "any(c.name == 'ConfigError' and [name_of(b) for b in c.bases] == ['Exception'] for c in nodes(ast.ClassDef))",
-      },
       {
         message: "只捕获 ValueError 和 ConfigError，不写宽泛的 except",
         test: "all(name_of(h.type) in {'ValueError', 'ConfigError'} for h in nodes(ast.ExceptHandler))",

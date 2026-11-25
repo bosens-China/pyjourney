@@ -3,7 +3,6 @@ title: 类型标注与泛型
 description: 给变量、参数和返回值写类型标注，再用类型别名和类型参数描述更复杂的类型。
 ---
 
-import ConceptStepper from "@/components/learning/ConceptStepper";
 import QuickQuiz from "@/components/learning/QuickQuiz";
 import PythonExercise from "@/components/python/PythonExercise";
 
@@ -19,73 +18,11 @@ counts: dict[str, int] = {}
 nickname: str | None = None
 ```
 
-标注容器时，先写内置类名，再用方括号说明其中的类型。`list[int]` 表示整数列表，`dict[str, int]` 表示键是字符串、值是整数的字典。元组和集合也能用同样的写法，例如 `tuple[int, str]` 和 `set[str]`。
+标注容器时，先写内置类名，再用方括号说明其中的类型。`list[int]` 表示整数列表，`dict[str, int]` 表示键是字符串、值是整数的字典。`tuple[int, str]` 表示恰好有两项的元组，第一项是整数，第二项是字符串。
 
 `X | Y` 表示两种类型都可以。例如 `str | None` 表示值可以是字符串，也可以是 `None`。
 
 类型标注方便读者和工具理解代码。静态类型检查器读源码，可以在运行前指出类型不匹配的调用。Python 本身在运行时不检查标注。通常可以为公开的函数和类加上标注，把局部变量的类型留给检查器推断。
-
-## 类型别名
-
-同一个复杂的类型在多处用到时，可以用 `type` 语句给它起个名字。
-
-```python
-type Point = tuple[float, float]
-type Polygon = list[Point]
-
-def perimeter(shape: Polygon) -> float: ...
-```
-
-## 泛型
-
-`first` 返回列表的第一项。传入 `list[int]` 就得到 `int`，传入 `list[str]` 就得到 `str`。类型参数把这种联系写明。声明时，把类型参数放进名字后面的方括号。
-
-```python
-def first[T](items: list[T]) -> T:  # [!code highlight]
-    return items[0]
-
-class Box[T]:
-    def __init__(self, item: T) -> None:
-        self.item = item
-
-    def get(self) -> T:
-        return self.item
-
-type Pair[T] = tuple[T, T]
-```
-
-类型参数只在声明它的函数、类或类型别名里可见。因此，`first` 的 `T` 只在它自己的定义中使用。可以用 `T: int` 允许 `int` 及其子类，也可以用 `T: (str, bytes)` 让检查器把 `T` 确定为列出的类型之一。
-
-运行时，泛型函数照常调用，泛型类也照常创建实例。
-
-<ConceptStepper
-  label="类型检查器怎样推断 T"
-  steps={[
-    {
-      code: "def first[T](items: list[T]) -> T:\n    return items[0]",
-      description:
-        "T 由 first 声明。列表元素和返回值用同一个 T 标注。",
-      values: [{ name: "T", value: "尚未确定" }],
-    },
-    {
-      code: "n = first([8, 1])",
-      description:
-        "传入的是整数列表。检查器据此推断 T 为 int，于是 n 的类型也是 int。",
-      values: [
-        { name: "T", value: "int" },
-        { name: "n", value: "8" },
-      ],
-    },
-    {
-      code: 's = first(["a", "b"])',
-      description: "检查器为这次调用重新推断。传入的是字符串列表，所以 T 和 s 的类型都是 str。",
-      values: [
-        { name: "T", value: "str" },
-        { name: "s", value: "'a'" },
-      ],
-    },
-  ]}
-/>
 
 <QuickQuiz
   question="最后一行会怎样？"
@@ -104,37 +41,79 @@ feedback={[
 explanation="Python 按实际收到的值运算，'1' + '2' 得到 '12'。静态类型检查器可以指出两个实参与 int 标注不符。"
 />
 
+## 类型别名
+
+同一个复杂的类型在多处用到时，可以用 `type` 语句给它起个名字。
+
+```python
+type Point = tuple[float, float]
+type Polygon = list[Point]
+
+def perimeter(shape: Polygon) -> float: ...
+```
+
+## 泛型
+
+`first` 返回非空列表的第一项。传入 `list[int]` 就得到 `int`，传入 `list[str]` 就得到 `str`。类型参数把这种联系写明。声明时，把类型参数放进名字后面的方括号。
+
+```python
+def first[T](items: list[T]) -> T:  # [!code highlight]
+    return items[0]
+
+class Box[T]:
+    def __init__(self, item: T) -> None:
+        self.item = item
+
+    def get(self) -> T:
+        return self.item
+
+type Pair[T] = tuple[T, T]
+```
+
+类型参数只在声明它的函数、类或类型别名里可见。`first`、`Box` 和 `Pair` 各自声明了自己的 `T`。
+
+类型检查器根据每个调用处的实参推断 `T`。运行时，`first` 依然直接取出列表的第一项。
+
+| 调用 | 静态推断 | 运行值 |
+| --- | --- | --- |
+| `n = first([8, 1])` | `T` 和 `n` 的类型都是 `int` | `n` 得到 `8` |
+| `s = first(["a", "b"])` | `T` 和 `s` 的类型都是 `str` | `s` 得到 `"a"` |
+
 ## 随堂练习
 
-定义泛型函数 `first`，用 `list[T]` 标注参数，用 `T` 标注返回值。函数返回列表的第一项。
+定义泛型函数 `last`，用 `list[T]` 标注参数，用 `T` 标注返回值。函数返回非空列表的最后一项。
 
 <PythonExercise
   label="定义带类型参数的函数"
-  starterCode={`# TODO：定义 first，类型参数写在函数名后面，参数标注为 list[T]，返回值标注为 T
+  starterCode={`# TODO：定义泛型函数 last，返回列表的最后一项
 
-  print(first([8, 1]))
-  print(first(["a", "b"]))
+  print(last([8, 1]))
+  print(last(["a", "b"]))
 `}
-  solution={`def first[T](items: list[T]) -> T:
-      return items[0]
+  solution={`def last[T](items: list[T]) -> T:
+      return items[-1]
 
-  print(first([8, 1]))
-  print(first(["a", "b"]))
+  print(last([8, 1]))
+  print(last(["a", "b"]))
 `}
-  expectedOutput={`8
-  a`}
+  expectedOutput={`1
+  b`}
 checks={[
 {
-message: "first 声明了类型参数 T",
-test: "any(f.name == 'first' and [p.name for p in f.type_params] == ['T'] for f in nodes(ast.FunctionDef))",
+message: "last 声明了类型参数 T",
+test: "any(f.name == 'last' and [p.name for p in f.type_params] == ['T'] for f in nodes(ast.FunctionDef))",
 },
 {
 message: "输入参数标注为 list[T]",
-test: "any(arg.annotation is not None and ast.unparse(arg.annotation) == 'list[T]' for f in nodes(ast.FunctionDef) if f.name == 'first' for arg in (f.args.posonlyargs + f.args.args)[:1])",
+test: "any(arg.annotation is not None and ast.unparse(arg.annotation) == 'list[T]' for f in nodes(ast.FunctionDef) if f.name == 'last' for arg in (f.args.posonlyargs + f.args.args)[:1])",
 },
 {
 message: "返回值标注为 T",
-test: "any(f.name == 'first' and name_of(f.returns) == 'T' for f in nodes(ast.FunctionDef))",
+test: "any(f.name == 'last' and name_of(f.returns) == 'T' for f in nodes(ast.FunctionDef))",
 },
 ]}
 />
+
+## 限制类型参数的范围（选读）
+
+用 `T: int` 把 `int` 设为上界，类型检查器可以推断出更具体的子类。用 `T: (str, bytes)` 列出候选类型，检查器会把 `T` 确定为其中一个。

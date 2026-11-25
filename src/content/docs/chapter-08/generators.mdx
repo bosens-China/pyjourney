@@ -8,6 +8,19 @@ import GeneratorExplorer from "@/components/learning/GeneratorExplorer";
 import QuickQuiz from "@/components/learning/QuickQuiz";
 import PythonExercise from "@/components/python/PythonExercise";
 
+export const messageFlow = {
+  kind: "flow",
+  direction: "row",
+  labelPrefix: "值经过的位置",
+  nodes: [
+    { id: "raw", label: "raw" },
+    { id: "strip", label: "stream_lines" },
+    { id: "filter", label: "filter_errors" },
+    { id: "code", label: "extract_code" },
+    { id: "list", label: "list()" },
+  ],
+};
+
 在函数里用 `yield` 逐项交出数据，这个函数就成了生成器函数。调用它会得到一个生成器对象。生成器提供迭代器需要的 `__iter__` 和 `__next__`，取尽时会引发 `StopIteration`。和上一课手写的类相比，生成器把保存进度的工作交给了 Python。
 
 ```python run
@@ -23,6 +36,28 @@ for i in countdown(3):
 循环依次打印 `3`、`2` 和 `1`。调用 `countdown(3)` 时，Python 先创建生成器。第一次取值时，函数体运行到 `yield`，交出 `3` 并暂停。再取下一项时，生成器保留原来的局部变量，从暂停处继续执行。
 
 <GeneratorExplorer />
+
+<QuickQuiz
+  question="程序会按什么顺序输出？"
+  code={`def gen():
+      print("开始")
+      yield 1
+      print("继续")
+      yield 2
+
+  g = gen()
+  print("已创建")
+  print(next(g))`}
+  options={["已创建 → 开始 → 1", "开始 → 已创建 → 1", "已创建 → 1 → 开始", "已创建 → 开始 → 继续 → 1"]}
+  answerIndex={0}
+  feedback={[
+    "",
+    "调用 gen() 只会创建生成器。打印「已创建」时，函数体还没运行。",
+    "next(g) 要先运行函数体，才能把 1 交给外层的 print。",
+    "函数体在 yield 1 处暂停。等下次调用 next() 才会打印「继续」。",
+  ]}
+  explanation="gen() 先创建生成器。打印「已创建」后，next(g) 让函数体运行到第一个 yield。它先打印「开始」，再把 1 交给外层的 print。"
+/>
 
 ## 逐项传递
 
@@ -48,6 +83,8 @@ print(list(extract_code(filter_errors(stream_lines(raw)))))
 
 这段代码打印 `['502', '504']`。`list()` 每次向最后一个生成器取一项，中间的 `filter_errors` 会继续读取输入，直到下一条错误消息出现，或输入已经取尽。
 
+图中箭头表示值从左向右传递。取值请求从右侧的 `list()` 发起，再逐级向左取值。
+
 <ConceptStepper
   label="每一项单独穿过整条管道"
   steps={[
@@ -56,33 +93,17 @@ print(list(extract_code(filter_errors(stream_lines(raw)))))
       description:
         "list() 向 extract_code 要一项，各步依次往前取值，直到读到 raw 的第一行。filter_errors 跳过这行，继续读取。",
       diagram: {
-        kind: "flow",
-        direction: "row",
-        nodes: [
-          { id: "raw", label: "raw" },
-          { id: "strip", label: "stream_lines" },
-          { id: "filter", label: "filter_errors" },
-          { id: "code", label: "extract_code" },
-          { id: "list", label: "list()" },
-        ],
+        ...messageFlow,
         active: ["raw", "strip", "filter"],
       },
     },
     {
       code: '"ERROR: 502"',
       description:
-        "这是错误消息，extract_code 取出错误码 502。正在构建的列表现在有了第一项。",
-      output: "['502']",
+        "extract_code 取出错误码 502。list() 还在取值，print() 要等整个列表构建完成。",
+      visual: <p>正在构建的列表 <code>['502']</code></p>,
       diagram: {
-        kind: "flow",
-        direction: "row",
-        nodes: [
-          { id: "raw", label: "raw" },
-          { id: "strip", label: "stream_lines" },
-          { id: "filter", label: "filter_errors" },
-          { id: "code", label: "extract_code" },
-          { id: "list", label: "list()" },
-        ],
+        ...messageFlow,
         active: ["raw", "strip", "filter", "code", "list"],
       },
     },
@@ -90,36 +111,28 @@ print(list(extract_code(filter_errors(stream_lines(raw)))))
       code: '"DEBUG: 探针"',
       description:
         "list() 继续取值。filter_errors 跳过调试消息，再向 stream_lines 读取下一行。",
+      visual: <p>正在构建的列表 <code>['502']</code></p>,
       diagram: {
-        kind: "flow",
-        direction: "row",
-        nodes: [
-          { id: "raw", label: "raw" },
-          { id: "strip", label: "stream_lines" },
-          { id: "filter", label: "filter_errors" },
-          { id: "code", label: "extract_code" },
-          { id: "list", label: "list()" },
-        ],
+        ...messageFlow,
         active: ["raw", "strip", "filter"],
       },
     },
     {
       code: '"ERROR: 504"',
       description:
-        "extract_code 取出错误码 504，list() 把它加到列表里。下一次取值时，raw 已经取尽，各个生成器依次结束。",
-      output: "['502', '504']",
+        "extract_code 取出错误码 504，list() 把它加入列表，然后再次取值。",
+      visual: <p>正在构建的列表 <code>['502', '504']</code></p>,
       diagram: {
-        kind: "flow",
-        direction: "row",
-        nodes: [
-          { id: "raw", label: "raw" },
-          { id: "strip", label: "stream_lines" },
-          { id: "filter", label: "filter_errors" },
-          { id: "code", label: "extract_code" },
-          { id: "list", label: "list()" },
-        ],
+        ...messageFlow,
         active: ["raw", "strip", "filter", "code", "list"],
       },
+    },
+    {
+      code: "# 读取完毕，打印完整列表",
+      description:
+        "raw 已经取尽，各生成器依次结束。list() 返回完整列表，print() 这时才输出。",
+      output: "['502', '504']",
+      diagram: { ...messageFlow, active: ["list"] },
     },
   ]}
 />
@@ -128,28 +141,7 @@ print(list(extract_code(filter_errors(stream_lines(raw)))))
 
 简单的逐项转换可以写成[生成器表达式](../chapter-03/comprehensions.mdx)。给定同一份列表，`(line.strip() for line in data)` 和上面的 `stream_lines(data)` 会依次交出相同的值。
 
-两种写法取得迭代器的时机不同。创建生成器表达式时，Python 就会求值最左边 `for` 子句中的可迭代对象并取得迭代器。`stream_lines(data)` 要到第一次取值才运行函数体并取得迭代器。需要多行逻辑或想复用这一段转换时，可以写成生成器函数。
-
-<QuickQuiz
-  question="这段代码输出什么？"
-  code={`def gen():
-      print("开始")
-      yield 1
-      print("继续")
-      yield 2
-
-  g = gen()
-  print(next(g))`}
-options={["先打印「开始」，再打印 1", "只打印 1", "打印「开始」、1 和「继续」", "没有输出"]}
-answerIndex={0}
-feedback={[
-"",
-"第一次调用 next() 会从函数体开头运行，所以会先打印「开始」。",
-"函数体在 yield 1 处暂停，要等下一次 next() 才会打印「继续」。",
-"gen() 创建生成器，紧接着 next(g) 开始运行函数体。",
-]}
-explanation="gen() 先创建生成器。next(g) 让函数体运行到第一个 yield，先打印「开始」，再把 1 交给外层的 print。"
-/>
+两种写法取得迭代器的时机不同。创建生成器表达式时，Python 立即对最左边 `for` 子句中 `in` 后面的表达式求值，再从结果取得迭代器。`stream_lines(data)` 要到第一次取值才运行函数体并取得迭代器。需要多行逻辑或想复用这一段转换时，可以写成生成器函数。
 
 ## 随堂练习
 

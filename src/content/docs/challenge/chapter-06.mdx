@@ -9,7 +9,7 @@ import { chapter06 } from "@/data/chapters/chapter-06";
 
 ## 题目
 
-`raw` 是从配置文件读到的端口文本。定义 `ConfigError` 和 `parse_port(raw)`，按下表处理输入。编辑器里的调用代码会捕获 `ConfigError` 并打印错误信息。异常有直接原因时，它还会打印原因的类型，例如 `直接原因: ValueError`。
+`raw` 是从配置文件读到的端口文本。补全 `parse_port(raw)`，按下表处理输入。编辑器已提供 `ConfigError`。调用代码会捕获它并打印错误信息。异常有直接原因时，还会打印原因的类型，例如 `直接原因: ValueError`。
 
 | 输入情况 | `parse_port` 的行为 |
 | --- | --- |
@@ -19,9 +19,8 @@ import { chapter06 } from "@/data/chapters/chapter-06";
 
 ### 题目要求
 
-1. `ConfigError` 直接继承 `Exception`。
-2. 转换失败时，用 `from` 把原来的 `ValueError` 记为直接原因。
-3. 只捕获具体的异常类型。
+1. 转换失败时，捕获 `ValueError`，并用 `from` 把它记为新异常的直接原因。
+2. 整数超出范围时，直接抛出 `ConfigError`。
 
 <ChallengeExample example={chapter06.challenge.cases[0]} />
 

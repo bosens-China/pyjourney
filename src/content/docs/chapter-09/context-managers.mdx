@@ -3,7 +3,7 @@ title: with 语句
 description: 用 with 管理需要及时释放的资源，并了解 __enter__ 和 __exit__ 分别何时执行。
 ---
 
-import ConceptStepper from "@/components/learning/ConceptStepper";
+import ContextExitTimeline from "@/components/learning/ContextExitTimeline";
 import QuickQuiz from "@/components/learning/QuickQuiz";
 
 export const withFlow = {
@@ -23,6 +23,13 @@ export const withFlow = {
   ],
 };
 
+export const editEnter = {
+  code: "with Edit(store) as current:",
+  description: "Python 调用 __enter__，保存字典中的键值对，再把返回的原字典绑定到 current。",
+  values: [{ name: 'store["n"]', value: "1" }],
+  diagram: { ...withFlow, active: ["enter"] },
+};
+
 读取文件时，常把 `open()` 放进 `with`。
 
 ```python
@@ -39,7 +46,7 @@ with open("notes.txt", encoding="utf-8") as f:
 
 代码块因异常中断时，`__exit__` 的返回值决定接下来怎么走。返回假值（包括默认的 `None`），异常就会继续传播。返回真值，Python 会抑制异常，接着执行 `with` 之后的语句。
 
-下面的 `Edit` 在进入时保存字典的键值对。代码块出错时，它用保存的键值对恢复字典。
+下面的 `Edit` 在进入时对字典做一次浅拷贝。代码块出错时，它恢复保存的键值对。如果值是列表这样的可变对象，原字典和副本仍指向同一个对象，列表内部的修改也会保留。
 
 ```python run
 class Edit:
@@ -66,21 +73,14 @@ print(store["n"])
 
 一个 `with` 里可以写多个上下文管理器，效果和嵌套写法一样。`with A() as a, B() as b` 会先进入 `A`，再进入 `B`。退出顺序相反，先离开 `B`，再离开 `A`。
 
-<ConceptStepper
+<ContextExitTimeline
   label="一次 with 的进入和离开"
-  steps={[
-    {
-      code: "with Edit(store) as current:",
-      description:
-        "Python 调用 __enter__，并把返回值绑定到 current。离开时会调用 __exit__。",
-      diagram: {
-        ...withFlow,
-        active: ["enter"],
-      },
-    },
+  normal={[
+    editEnter,
     {
       code: 'current["n"] = 2',
       description: "代码块把字典中的 n 改成 2，然后正常结束。",
+      values: [{ name: 'store["n"]', value: "2" }],
       diagram: {
         ...withFlow,
         active: ["enter", "block"],
@@ -89,16 +89,28 @@ print(store["n"])
     {
       code: "# 正常离开代码块",
       description:
-        "调用 __exit__(None, None, None)，然后继续执行 with 之后的语句。",
+        "Python 调用 __exit__(None, None, None)。字典中的 n 保持为 2。",
+      values: [{ name: 'store["n"]', value: "2" }],
       diagram: {
         ...withFlow,
         active: ["enter", "block", "exit", "after"],
       },
     },
+  ]}
+  exception={[
+    editEnter,
     {
       code: 'current["n"] = 2\nraise KeyError("x")',
       description:
-        "这次代码块引发了异常。__exit__ 收到异常信息，恢复字典后返回 False，让异常继续传播。",
+        "代码块先把 n 改成 2，再引发异常。",
+      values: [{ name: 'store["n"]', value: "2" }],
+      diagram: { ...withFlow, active: ["enter", "block"] },
+    },
+    {
+      code: "self.store.update(self._saved)",
+      description:
+        "__exit__ 收到异常信息，把字典中的 n 恢复为 1，再返回 False，让异常继续传播。",
+      values: [{ name: 'store["n"]', value: "1" }],
       diagram: {
         ...withFlow,
         active: ["enter", "block", "exit", "raise"],
@@ -131,7 +143,7 @@ feedback={[
 "",
 "__exit__ 返回 True，Python 会抑制异常并继续执行。",
 "代码块因异常中断时，Python 仍会调用 __exit__。",
-"离开 with 时一定会调用 __exit__，它会打印「离开」。",
+"本例的 __enter__ 已经正常返回。离开代码块时，Python 会调用 __exit__，打印「离开」。",
 ]}
 explanation={"1 / 0 引发异常后，Python 调用 __exit__，打印「离开」。__exit__ 返回 True，Python 抑制异常，再执行 with 后面的 print。"}
 />

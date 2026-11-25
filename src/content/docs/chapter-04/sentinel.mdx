@@ -1,6 +1,6 @@
 ---
 title: 默认值与哨兵
-description: 理解默认值何时求值，用 None 表示省略容器，用 sentinel 区分省略参数和传入 None。
+description: 理解默认值何时求值，省略容器实参时创建新容器，用 sentinel 区分省略实参和传入 None。
 ---
 
 import ConceptStepper from "@/components/learning/ConceptStepper";
@@ -56,7 +56,7 @@ Python 执行 `def` 时，会在定义所在的作用域里求出默认值。之
   ]}
 />
 
-如果默认值是列表或字典，省略该实参的调用都会共用它。一次调用留下的修改，下次调用还能看到。要让每次调用都能得到一个新的空容器，可以把默认值设为 `None`，再在函数体里创建容器。
+如果默认值是列表或字典，省略该实参的调用都会共用它。一次调用留下的修改，下次调用还能看到。要让每次省略实参时都得到一个新的空容器，可以把默认值设为 `None`，再在函数体里创建容器。
 
 ```python
 def append_to(item, target=None):
@@ -66,7 +66,7 @@ def append_to(item, target=None):
     return target
 ```
 
-默认值适合用数字、字符串、`None`、元组这样的不可变对象。
+数字、字符串和 `None` 都适合用作默认值。
 
 ## 随堂练习
 
@@ -130,27 +130,29 @@ def get_setting(key, default=MISSING):
 
 `sentinel(name)` 的 `name` 只能按位置传入，默认也用作对象的显示名称。因此，上面的哨兵显示为 `MISSING`。通常把哨兵定义在模块顶层，让变量名和传给 `sentinel` 的名字一致。
 
-每次调用 `sentinel()` 都会得到一个新对象。为同一种用途创建一次哨兵，之后用 `is` 检查实参是否就是这个对象。哨兵在布尔判断中为真，判断是否省略实参时要用 `default is MISSING`。
+即使两次都写 `sentinel("MISSING")`，得到的也是两个不同的对象。为同一种用途创建一次哨兵，之后用 `default is MISSING` 判断调用方是否省略了实参。
 
 <QuickQuiz
   question="最后一行输出什么？"
   code={`MISSING = sentinel("MISSING")
 
-  def get(key, default=MISSING):
+  def get(settings, key, default=MISSING):
+      if key in settings:
+          return settings[key]
       if default is MISSING:
           return "未提供"
       return default
 
-  print(get("a"), get("a", None))`}
-options={["未提供 None", "未提供 未提供", "None None", "MISSING None"]}
-answerIndex={0}
-feedback={[
-"",
-"第二次调用显式传了 None，None is MISSING 为假，直接返回 None。",
-"第一次调用没有传 default，它是 MISSING，函数返回「未提供」。",
-"函数在 default is MISSING 时返回的是字符串「未提供」，不是哨兵本身。",
-]}
-explanation="第一次调用省略了 default，默认值是 MISSING，因此函数返回「未提供」。第二次显式传入 None，函数原样返回它。"
+  settings = {"theme": None}
+  print(get(settings, "theme", "dark"), get(settings, "lang"))`}
+  options={["dark 未提供", "None None", "None 未提供"]}
+  answerIndex={2}
+  feedback={[
+    "settings 已经包含 theme，函数会先返回它的值 None。",
+    "lang 不在 settings 里，调用也省略了 default。default 是 MISSING，函数返回「未提供」。",
+    "",
+  ]}
+  explanation="theme 存在，函数返回它保存的 None。lang 不存在，调用也省略了 default，所以函数返回「未提供」。"
 />
 
 `lookup` 在 `table` 里查找 `key`。找不到时，如果调用方传了 `default`，就返回传入的值，包括 `None`。如果省略了 `default`，就返回 `缺少 键名`。

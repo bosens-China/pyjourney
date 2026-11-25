@@ -50,7 +50,7 @@ combined_example(1, 2, kwd_only=3)
 combined_example(1, standard=2, kwd_only=3)
 ```
 
-两次调用都把 `1` 按位置传给 `pos_only`，用 `kwd_only=3` 传入第三个值。中间的 `standard` 支持两种传法。布尔开关尤其适合设为仅限关键字。看到 `send(to, subject, urgent=True)`，就知道这一参数用来标记紧急消息。
+两次调用都把 `1` 按位置传给 `pos_only`，用 `kwd_only=3` 传入第三个值。中间的 `standard` 支持两种传法。布尔开关尤其适合设为仅限关键字。看到 `send(to, subject=subject, urgent=True)`，就知道这条消息标记为紧急。
 
 <ArgumentBinding />
 
@@ -68,7 +68,7 @@ concat("earth", "mars", "venus", sep=".")
 
 调用时，`*` 会把可迭代对象拆成位置实参，如 `concat(*planets)`。`**` 会把以字符串为键的映射拆成关键字实参，如 `connect(**options)`。
 
-Python 允许把 `*planets` 写在 `sep="."` 之后。日常可以把拆开的位置实参写在前面，例如 `concat(*planets, sep=".")`，这样更容易对照函数定义。
+把拆开的位置实参写在关键字实参前面，例如 `concat(*planets, sep=".")`，这样更容易对照函数定义。
 
 <QuickQuiz
   question="def send(to, *, subject, urgent=False) 哪一次调用合法？"

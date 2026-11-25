@@ -11,6 +11,7 @@ export type RefsDiagram = {
 export type FlowDiagram = {
   kind: "flow";
   direction?: "row" | "column";
+  labelPrefix?: string;
   nodes: { id: string; label: string }[];
   /** 分支的连线。可用负数走左侧、正数走右侧，绝对值区分走线。 */
   edges?: [from: string, to: string, lane?: number][];
@@ -89,7 +90,22 @@ function Svg({
 
 type Box = { x: number; y: number; width: number };
 
-function Refs({ names, objects, highlight = [] }: RefsDiagram) {
+function referenceRelations({ names, objects }: RefsDiagram) {
+  return objects.flatMap(({ id, label }) => {
+    const sources = [
+      ...names.filter(({ to }) => to === id).map(({ name }) => name),
+      ...objects
+        .filter(({ refs }) => refs?.includes(id))
+        .map(({ label }) => label),
+    ];
+    if (!sources.length) return [];
+    const shared = sources.length > 1 ? "同一个 " : "";
+    return [`${sources.join(" 和 ")} 指向 ${shared}${label}`];
+  });
+}
+
+function Refs(diagram: RefsDiagram) {
+  const { names, objects, highlight = [] } = diagram;
   const markerId = useId();
   const nested = new Set(objects.flatMap((object) => object.refs ?? []));
   const outer = objects.filter(({ id }) => !nested.has(id));
@@ -135,7 +151,7 @@ function Refs({ names, objects, highlight = [] }: RefsDiagram) {
     <Svg
       width={x - COLUMN_GAP}
       height={height}
-      label={names.map(({ name, to }) => `${name} 指向 ${to}`).join("，")}
+      label={referenceRelations(diagram).join("，")}
       markerId={markerId}
     >
       {edges.map(([from, to, owner]) => {
@@ -199,7 +215,20 @@ function Refs({ names, objects, highlight = [] }: RefsDiagram) {
   );
 }
 
-function Flow({ nodes, active, edges, direction = "column" }: FlowDiagram) {
+function describeFlow({
+  nodes,
+  active,
+  edges,
+  labelPrefix = "执行经过",
+}: FlowDiagram) {
+  const path = edges
+    ? active.map((id) => nodes.find((node) => node.id === id)?.label ?? id)
+    : nodes.filter(({ id }) => active.includes(id)).map(({ label }) => label);
+  return `${labelPrefix}：${path.join(" → ")}`;
+}
+
+function Flow(diagram: FlowDiagram) {
+  const { nodes, active, edges, direction = "column" } = diagram;
   const markerId = useId();
   const row = !edges && direction === "row";
   const gap = row ? 40 : 22;
@@ -240,15 +269,11 @@ function Flow({ nodes, active, edges, direction = "column" }: FlowDiagram) {
     cursor += (row ? box.width : BOX_HEIGHT) + gap;
   }
   const total = cursor - gap;
-  const pathLabels = edges
-    ? active.map((id) => nodes[indexById.get(id) ?? -1]?.label ?? id)
-    : nodes.filter(({ id }) => active.includes(id)).map(({ label }) => label);
-
   return (
     <Svg
       width={row ? total : left + widest + right}
       height={row ? BOX_HEIGHT : total}
-      label={`执行经过：${pathLabels.join(" → ")}`}
+      label={describeFlow(diagram)}
       markerId={markerId}
     >
       {connections
@@ -347,18 +372,19 @@ export function sliceIndices(
   return picked;
 }
 
-function Slice({ items, slice, index, showBounds }: SliceDiagram) {
+function selectedSliceIndices({ items, slice, index }: SliceDiagram) {
+  if (slice) return sliceIndices(items.length, slice);
+  if (index === undefined) return [];
+  return [index < 0 ? index + items.length : index];
+}
+
+function Slice(diagram: SliceDiagram) {
+  const { items, slice, showBounds } = diagram;
   const cell = 44;
   const bounds = showBounds && slice ? sliceBounds(items.length, slice) : null;
   const top = bounds ? 36 : 20;
   const width = items.length * cell + 20;
-  const picked = new Set(
-    slice
-      ? sliceIndices(items.length, slice)
-      : index === undefined
-        ? []
-        : [index < 0 ? index + items.length : index],
-  );
+  const picked = new Set(selectedSliceIndices(diagram));
   // 向左取字符时，端点画在对应字符的右侧。
   const shift = bounds && bounds.step < 0 ? 1 : 0;
   const markers = bounds

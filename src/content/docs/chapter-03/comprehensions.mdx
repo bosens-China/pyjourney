@@ -8,28 +8,34 @@ import ConceptStepper from "@/components/learning/ConceptStepper";
 import QuickQuiz from "@/components/learning/QuickQuiz";
 import PythonExercise from "@/components/python/PythonExercise";
 
-列表推导式逐项计算，用结果组成一个新列表，也可以先按条件筛选。它把「建立空列表、循环、追加元素」缩成一个表达式。推导式（如下面的平方列表）把循环变量留在自己的作用域内。
+列表推导式逐项计算，用结果组成一个新列表，也可以先按条件筛选。它把「建立空列表、循环、追加元素」缩成一个表达式。推导式里的循环变量只在推导式内使用。
 
-方括号里先写要计算的表达式，再写 `for` 指定从哪里取值。后面还可以接 `for` 或 `if`，顺序和嵌套循环里相同。直接写元组时，用圆括号把逗号分隔的各项括起来，例如 `(x, y)`。
+方括号里先写要计算的表达式，再写 `for` 指定从哪里取值。要筛选元素，就在 `for` 后写 `if`。
 
 ```python
 squares = [x**2 for x in range(10)]
+evens = [x for x in range(10) if x % 2 == 0]
+```
+
+需要从两组数据取值时，可以接着写第二个 `for`。下面每次取一个 `x`，遍历所有 `y`，再把不相等的两项组成元组 `(x, y)`。
+
+```python
 pairs = [(x, y) for x in [1, 2, 3] for y in [3, 1, 4] if x != y]
-flat = [num for elem in [[1, 2], [4, 5]] for num in elem]
 ```
 
 <ComprehensionPairs />
 
-下面的循环也会得到相同的 `flat`。外层逐个取子列表，内层再把子列表中的数逐项追加到 `flat`。
+把这段推导式写成普通循环时，两个 `for` 和 `if` 的顺序相同。条件成立时，把 `(x, y)` 追加到 `pairs` 中。
 
 ```python
-flat = []
-for elem in [[1, 2], [4, 5]]:
-    for num in elem:
-        flat.append(num)
+pairs = []
+for x in [1, 2, 3]:
+    for y in [3, 1, 4]:
+        if x != y:
+            pairs.append((x, y))
 ```
 
-集合推导式用花括号包住表达式，重复元素只保留一个。字典推导式也用花括号，冒号左边计算键，右边计算值。
+集合推导式用大括号包住表达式，重复元素只保留一个。字典推导式也用大括号，冒号左边计算键，右边计算值。
 
 ```python
 vowels = {letter for letter in "pineapple" if letter in "aeiou"}
@@ -84,49 +90,49 @@ test: "any(name_of(c.func) == 'any' and c.args and isinstance(c.args[0], ast.Gen
 可以在列表、集合推导式和生成器表达式里用 `*` 展开各项，也可以在字典推导式里用 `**` 展开键值对。
 
 ```python
-lists = [[1, 2], [3, 4], [5]]
-[*L for L in lists]  # 等价于 [x for L in lists for x in L]
+groups = [[1, 2], [3, 4], [5]]
+[*group for group in groups]
 
 sets = [{1, 2}, {2, 3}, {3, 4}]
-{*s for s in sets}  # 等价于 {x for s in sets for x in s}
+{*s for s in sets}
 
 dicts = [{"a": 1}, {"b": 2}, {"a": 3}]
-{**d for d in dicts}  # 等价于 {k: v for d in dicts for k, v in d.items()}
+{**d for d in dicts}
 ```
 
 上面三个推导式依次得到 `[1, 2, 3, 4, 5]`、`{1, 2, 3, 4}` 和 `{'a': 3, 'b': 2}`。字典里的键 `"a"` 写入两次，最后一次写入的 `3` 会留下。
 
-生成器表达式 `(*L for L in lists)` 和 `(x for L in lists for x in L)` 会按相同顺序产生各项。
+生成器表达式 `(*group for group in groups)` 也按相同顺序产生各项。
 
 <ConceptStepper
   label="星号把每个内层序列展开进新列表"
   steps={[
     {
-      code: "lists = [[1, 2], [3, 4], [5]]",
-      description: "lists 的每一项都是列表。开始时，结果列表是空的。",
+      code: "groups = [[1, 2], [3, 4], [5]]",
+      description: "groups 的每一项都是列表。开始时，结果列表是空的。",
       values: [{ name: "结果", value: "[]" }],
     },
     {
-      code: "[*L for L in lists]",
-      description: "第一轮取到 [1, 2]。*L 把 1 和 2 依次放进结果。",
+      code: "[*group for group in groups]",
+      description: "第一轮取到 [1, 2]。*group 把 1 和 2 依次放进结果。",
       values: [
-        { name: "L", value: "[1, 2]" },
+        { name: "group", value: "[1, 2]" },
         { name: "结果", value: "[1, 2]" },
       ],
     },
     {
-      code: "[*L for L in lists]",
+      code: "[*group for group in groups]",
       description: "第二轮取到 [3, 4]。3 和 4 接在已有的元素后面。",
       values: [
-        { name: "L", value: "[3, 4]" },
+        { name: "group", value: "[3, 4]" },
         { name: "结果", value: "[1, 2, 3, 4]" },
       ],
     },
     {
-      code: "[*L for L in lists]",
+      code: "[*group for group in groups]",
       description: "第三轮展开 [5]，把 5 追加到结果列表的末尾。",
       values: [
-        { name: "L", value: "[5]" },
+        { name: "group", value: "[5]" },
         { name: "结果", value: "[1, 2, 3, 4, 5]" },
       ],
     },
@@ -134,17 +140,23 @@ dicts = [{"a": 1}, {"b": 2}, {"a": 3}]
 />
 
 <QuickQuiz
-  question={
-    "dicts = [{'a': 1}, {'a': 3}] 时，{**d for d in dicts} 的值是什么？"
-  }
+  question="两层配置合并后，输出是什么？"
+  code={`layers = [{"port": 8000, "host": "localhost"}, {"port": 8080}]
+  print({**layer for layer in layers})`}
   options={[
-    "{'a': 1}",
-    "{'a': 3}",
-    "[{'a': 1}, {'a': 3}]",
-    "这个写法会引发 SyntaxError",
+    "{'port': 8000, 'host': 'localhost'}",
+    "{'port': 8080, 'host': 'localhost'}",
+    "{'port': 8080}",
+    "[{'port': 8000, 'host': 'localhost'}, {'port': 8080}]",
   ]}
   answerIndex={1}
-  explanation="{**d for d in dicts} 依次把每个字典的键值对写入结果。键 a 写入两次，最后保留的是 3。"
+  feedback={[
+    "port 在两层都出现了。想想哪一层最后写入结果。",
+    "",
+    "第二层只提供了 port。想想第一层的 host 有没有被覆盖。",
+    "大括号里的 ** 会把各层的键值对展开到同一个字典里。",
+  ]}
+  explanation="第二层只覆盖 port，结果里的端口变成 8080，host 保留第一层的值。"
 />
 
 把各组成员放进一个列表，再把几层配置合并成一个字典。遇到重复的配置项时，用后一层的值。

@@ -3,30 +3,11 @@ title: 捕获与清理
 description: 区分语法错误和运行时异常，用 try、except、else 和 finally 处理具体异常并清理资源。
 ---
 
-import ConceptStepper from "@/components/learning/ConceptStepper";
+import ExceptionPaths, { exceptionFlow } from "@/components/learning/ExceptionPaths";
 import FlowPrediction from "@/components/learning/FlowPrediction";
 import PythonExercise from "@/components/python/PythonExercise";
 
-export const exceptionFlow = {
-  kind: "flow",
-  nodes: [
-    { id: "try", label: "try" },
-    { id: "else", label: "else" },
-    { id: "except", label: "except" },
-    { id: "finally", label: "finally" },
-    { id: "propagate", label: "异常向外传播" },
-  ],
-  edges: [
-    ["try", "else"],
-    ["try", "except", 1],
-    ["try", "finally", 2],
-    ["else", "finally", -1],
-    ["except", "finally"],
-    ["finally", "propagate"],
-  ],
-};
-
-Python 在运行代码前会检查语法，遇到语法错误时会标出发现问题的位置。语法正确的代码在运行时也可能引发异常。例如，`10 * (1/0)` 会引发 `ZeroDivisionError`，`'2' + 2` 会引发 `TypeError`。回溯列出异常经过的调用位置，通常在末尾显示异常类型和错误信息。
+Python 在运行代码前会检查语法，遇到语法错误时会标出发现问题的位置。运行时也可能引发异常。例如，`1 / 0` 会引发 `ZeroDivisionError`。回溯列出异常经过的调用位置，通常在末尾显示异常类型和错误信息。
 
 ## try、except、else、finally
 
@@ -34,7 +15,7 @@ Python 先执行 `try` 子句。遇到异常时，会跳过其中剩余的语句
 
 `except` 匹配指定类及其派生类的实例。若派生类和基类都有各自的处理器，把派生类写在前面。几种具体异常共用一个处理器时，可以把类型写成元组，如 `except (OSError, ValueError) as err:`。
 
-`except ValueError as err` 会把名字 `err` 绑定到捕获的异常实例。可以直接打印 `err` 来查看错误信息，也可以通过 `err.args` 查看异常的参数。
+`except ValueError as err` 会把名字 `err` 绑定到捕获的异常。打印 `err` 就能看到它的错误信息。
 
 `else` 可选，写在所有 `except` 后面。`try` 子句顺利执行到末尾才会进入 `else`。用 `return`、`break` 或 `continue` 提前退出时，会直接跳过 `else`。把成功后要做的事放在 `else`，前面的 `except` 就只会处理 `try` 子句中的异常。
 
@@ -58,43 +39,23 @@ def divide(x, y):
         print("executing finally clause")
 ```
 
-<ConceptStepper
-  label="三种调用各自经过哪些子句"
-  steps={[
-    {
-      code: "divide(2, 1)",
-      description: "除法成功。else 打印结果，随后执行 finally。",
-      output: "result is 2.0\nexecuting finally clause",
-      diagram: {
-        ...exceptionFlow,
-        active: ["try", "else", "finally"],
-      },
-    },
-    {
-      code: "divide(2, 0)",
-      description:
-        "except 捕获 ZeroDivisionError。接下来跳过 else，直接执行 finally。",
-      output: "division by zero!\nexecuting finally clause",
-      diagram: {
-        ...exceptionFlow,
-        active: ["try", "except", "finally"],
-      },
-    },
-    {
-      code: 'divide("2", "1")',
-      description:
-        "没有处理器匹配 TypeError。执行完 finally 后，异常继续向外传播。",
-      output:
-        "executing finally clause\nTypeError: unsupported operand type(s) for /: 'str' and 'str'",
-      diagram: {
-        ...exceptionFlow,
-        active: ["try", "finally", "propagate"],
-      },
-    },
-  ]}
-/>
+<ExceptionPaths />
 
-用 `with open("myfile.txt") as f` 管理文件时，Python 会在离开 `with` 块时关闭文件，遇到异常也一样。第 9 章会介绍更多用法。
+实际清理时，可以在 `finally` 里调用资源提供的关闭方法。下面用 `StringIO` 在内存里模拟一个打开的文本文件。最后的 `True` 表示文件已经关闭。
+
+```python run
+from io import StringIO
+
+source = StringIO("Ada\n")
+try:
+    print(source.readline().strip())
+finally:
+    source.close()
+
+print(source.closed)
+```
+
+日常读写文件时，用 `with open("config.txt", encoding="utf-8") as f` 就能自动完成关闭。第 9 章会介绍 `with` 的用法。
 
 ## 捕获具体的异常
 
@@ -104,7 +65,7 @@ def divide(x, y):
 
 ```python
 try:
-    with open("config.txt") as f:
+    with open("config.txt", encoding="utf-8") as f:
         port = int(f.readline())
 except OSError as err:
     print("读不了配置文件：", err)
@@ -113,30 +74,30 @@ except ValueError:
 ```
 
 <FlowPrediction
-  question={'int("x") 引发异常后，先进入哪个子句？'}
+  question={'else 里的 int("x") 引发 ValueError。接下来会怎样？'}
   code={`try:
-      n = int("x")
+      n = int("1")
   except ValueError:
       print("A")
   else:
-      print("B")
+      print(n + int("x"))
   finally:
       print("C")`}
-  diagram={{ ...exceptionFlow, active: ["try"] }}
+  diagram={{ ...exceptionFlow, active: ["try", "else"] }}
   choices={[
-    { label: "else", feedback: "try 已经引发异常，不能进入 else。" },
-    { label: "finally", feedback: "Python 先寻找能捕获 ValueError 的 except，随后才执行 finally。" },
+    { label: "进入 except，打印 A", feedback: "这个 except 只处理 try 里的异常。错误发生在 else 里。" },
+    { label: "跳过 finally，异常直接传播", feedback: "离开这条 try 语句前，Python 仍然会执行 finally。" },
     {
-      label: "except ValueError",
-      feedback: "except ValueError 捕获异常并打印 A。随后跳到 finally，打印 C。",
-      path: ["try", "except", "finally"],
+      label: "打印 C，再传播异常",
+      feedback: "except 只处理 try 里的异常。else 引发的 ValueError 会在 finally 打印 C 后继续向外传播。",
+      path: ["try", "else", "finally", "propagate"],
     },
   ]}
 />
 
 ## 随堂练习
 
-用 `parse` 把文本转成整数。转换成功时打印 `数值 n`，失败时打印 `无效`。`try` 里只写转换语句。
+在 `parse` 的 `try` 里只用 `int(raw)` 转换文本。捕获 `ValueError` 时打印 `无效`，在 `else` 里打印 `数值 n`。
 
 <PythonExercise
   label="转换失败时走 except，成功时走 else"
@@ -160,18 +121,31 @@ except ValueError:
 `}
   expectedOutput={`数值 15
   无效`}
-checks={[
-{
-message: "只捕获 ValueError",
-test: "has(ast.ExceptHandler) and all(name_of(h.type) == 'ValueError' for h in nodes(ast.ExceptHandler))",
-},
-{
-message: "成功时的打印写在 else 里",
-test: "any(t.orelse for t in nodes(ast.Try))",
-},
-{
-message: "try 子句只有一句",
-test: "has(ast.Try) and all(len(t.body) == 1 for t in nodes(ast.Try))",
-},
-]}
+  checks={[
+    {
+      message: "只捕获 ValueError",
+      test: "has(ast.ExceptHandler) and all(name_of(h.type) == 'ValueError' for h in nodes(ast.ExceptHandler))",
+    },
+    {
+      message: "try 子句只保存 int(raw) 的转换结果",
+      test: [
+        "any(len(t.body) == 1 and isinstance(t.body[0], (ast.Assign, ast.AnnAssign))",
+        "and isinstance(call, ast.Call) and isinstance(call.func, ast.Name) and call.func.id == 'int'",
+        "and len(call.args) == 1 and isinstance(call.args[0], ast.Name) and call.args[0].id == 'raw'",
+        "and not call.keywords",
+        "for f in nodes(ast.FunctionDef) if f.name == 'parse'",
+        "for t in f.body if isinstance(t, ast.Try)",
+        "for call in [getattr(t.body[0], 'value', None)])",
+      ].join(" "),
+    },
+    {
+      message: "成功时的打印写在 else 里",
+      test: [
+        "any(isinstance(s, ast.Expr) and isinstance(s.value, ast.Call)",
+        "and isinstance(s.value.func, ast.Name) and s.value.func.id == 'print'",
+        "for f in nodes(ast.FunctionDef) if f.name == 'parse'",
+        "for t in f.body if isinstance(t, ast.Try) for s in t.orelse)",
+      ].join(" "),
+    },
+  ]}
 />

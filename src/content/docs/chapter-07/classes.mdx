@@ -7,7 +7,7 @@ import ConceptStepper from "@/components/learning/ConceptStepper";
 import QuickQuiz from "@/components/learning/QuickQuiz";
 import PythonExercise from "@/components/python/PythonExercise";
 
-类把数据和操作这些数据的方法放在一起。执行 `class` 语句时，Python 创建类对象，再把类名绑定到这个对象。调用类可以创建实例。如果类定义了 `__init__`，Python 会把调用时提供的参数交给它，用来初始化新实例。
+类把数据和操作这些数据的方法放在一起。执行 `class` 语句时，Python 创建类对象，再把类名绑定到这个对象。调用下面的 `Counter` 会创建实例，再把实参传给 `__init__` 来初始化实例。
 
 ## 实例方法与 self
 
@@ -62,21 +62,39 @@ print(counter.bump())  # 2
       },
     },
     {
-      code: "counter.bump()",
+      code: "Counter.bump(counter)",
       description:
-        "Python 在 Counter 类上找到 bump，再把 counter 作为 self 传入。方法更新 value 并返回 2。",
-      output: "2",
+        "调用 counter.bump() 时，Python 把实例传给 bump。进入方法后，self 和外面的 counter 指向同一个实例。",
       diagram: {
         kind: "refs",
         names: [
           { name: "Counter", to: "cls" },
           { name: "counter", to: "obj" },
+          { name: "self（方法内）", to: "obj" },
+        ],
+        objects: [
+          { id: "cls", label: "类 Counter" },
+          { id: "obj", label: "实例 value=1", refs: ["cls"] },
+        ],
+        highlight: ["counter", "self（方法内）", "obj"],
+      },
+    },
+    {
+      code: "self.value += self.step\nreturn self.value",
+      description: "方法通过 self 更新的是 counter 指向的实例。",
+      visual: <p>返回值 <code>2</code></p>,
+      diagram: {
+        kind: "refs",
+        names: [
+          { name: "Counter", to: "cls" },
+          { name: "counter", to: "obj" },
+          { name: "self（方法内）", to: "obj" },
         ],
         objects: [
           { id: "cls", label: "类 Counter" },
           { id: "obj", label: "实例 value=2", refs: ["cls"] },
         ],
-        highlight: ["obj", "cls"],
+        highlight: ["obj", "self（方法内）"],
       },
     },
   ]}
@@ -88,31 +106,32 @@ print(counter.bump())  # 2
 
 - `__init__` 在实例创建后初始化它。
 - `__repr__` 返回对象的表示形式，供 `repr()`、交互式解释器和调试输出使用。合适时，可以把它写成创建该对象的表达式。类未定义 `__str__` 时，`print()` 也会用这个表示形式。
-- `__eq__` 定义 `==` 的行为。沿用 `object` 的默认比较时，同一个对象才相等。
+- `__eq__` 定义 `==` 的行为。两个实例沿用 `object` 的默认比较时，只有同一个对象才相等。
 
-```python run
-class Money:
-    def __init__(self, amount, currency="CNY"):
-        self.amount = amount
-        self.currency = currency
+像坐标和金额这样以字段为主的类，可以让[数据类](./dataclass-modeling.mdx)生成 `__repr__` 和 `__eq__`。
 
-    def __repr__(self):
-        return f"Money({self.amount!r}, {self.currency!r})"
+<QuickQuiz
+  question="最后一行输出什么？"
+  code={`class Point:
+      def __init__(self, x, y):
+          self.x = x
+          self.y = y
 
-    def __eq__(self, other):
-        if not isinstance(other, Money):
-            return NotImplemented
-        return (self.amount, self.currency) == (other.amount, other.currency)
-
-print(Money(5))              # Money(5, 'CNY')
-print(Money(5) == Money(5))  # True
-```
-
-自定义的 `__eq__` 通常返回 `True` 或 `False`。如果它不支持与对方的类型比较，就返回 `NotImplemented`，让 Python 尝试对方的比较方法。像 `Money` 这样以字段为主的类，可以用数据类生成这些方法。
+  print(Point(1, 2) == Point(1, 2))`}
+options={["True", "False", "引发 TypeError", "None"]}
+answerIndex={1}
+feedback={[
+"两个点的坐标相同。Point 使用默认比较，检查两边是不是同一个对象。",
+"",
+"Point 继承了 object 提供的默认比较，所以这段代码可以正常运行。",
+"这次比较得到了 False，因为这两个 Point 实例是不同的对象。",
+]}
+explanation={"Point 沿用 object 的默认 __eq__。两次调用 Point(1, 2) 创建了两个不同的实例，所以比较结果是 False。"}
+/>
 
 ## property
 
-属性的值需要计算时，可以用 `@property`。下面的 `fahrenheit` 由 `celsius` 换算而来，读取时只要写 `t.fahrenheit`。
+属性的值需要计算时，可以用 `@property`。这一行把下面的方法变成可读取的属性。写 `t.fahrenheit` 时，Python 会调用这个方法来换算温度。第 9 章会解释 [`@` 的作用](../chapter-09/decorators.mdx)。
 
 ```python run
 class Temperature:
@@ -144,25 +163,6 @@ class LoudCounter(Counter):
 在这个例子里，`super().bump()` 会调用 `Counter` 的 `bump`，并自动传入 `self`。派生类要扩展初始化时，可以先调用 `super().__init__(...)`，再设置自己的属性。`obj` 属于 `cls` 或其派生类时，`isinstance(obj, cls)` 返回 `True`。
 
 继承适合表达「是一种」的关系，比如 `LoudCounter` 是一种 `Counter`。如果只是想用另一个对象提供的功能，通常把它存成属性就够了。这种做法叫组合。
-
-<QuickQuiz
-  question="最后一行输出什么？"
-  code={`class Point:
-      def __init__(self, x, y):
-          self.x = x
-          self.y = y
-
-  print(Point(1, 2) == Point(1, 2))`}
-options={["True", "False", "引发 TypeError", "None"]}
-answerIndex={1}
-feedback={[
-"两个点的坐标相同。Point 使用默认比较，检查两边是不是同一个对象。",
-"",
-"Point 继承了 object 提供的默认比较，所以这段代码可以正常运行。",
-"这次比较得到了 False，因为这两个 Point 实例是不同的对象。",
-]}
-explanation={"Point 沿用 object 的默认 __eq__。两次调用 Point(1, 2) 创建了两个不同的实例，所以比较结果是 False。"}
-/>
 
 ## 随堂练习
 

@@ -9,7 +9,7 @@ export const chapter07 = {
     starterCode:
       "from dataclasses import dataclass, FrozenInstanceError\n\n# 已给定：rows 是一组 (名称, 单价, 数量)\n\n# TODO 1：定义冻结的数据类 Item，字段依次是 name: str、price: int、qty: int\n# TODO 2：给 Item 加一个方法 total()，返回 price * qty\n\nitems = [Item(name, price, qty) for name, price, qty in rows]\nfor item in items:\n    print(f'{item.name} x{item.qty} = {item.total()}')\nprint(f'合计 {sum([item.total() for item in items])}')\n\ntry:\n    items[0].qty = 99\nexcept FrozenInstanceError:\n    print('订单项不可修改')\n",
     solution:
-      "from dataclasses import dataclass, FrozenInstanceError\n\n@dataclass(frozen=True, slots=True)\nclass Item:\n    name: str\n    price: int\n    qty: int\n\n    def total(self) -> int:\n        return self.price * self.qty\n\nitems = [Item(name, price, qty) for name, price, qty in rows]\nfor item in items:\n    print(f'{item.name} x{item.qty} = {item.total()}')\nprint(f'合计 {sum([item.total() for item in items])}')\n\ntry:\n    items[0].qty = 99\nexcept FrozenInstanceError:\n    print('订单项不可修改')\n",
+      "from dataclasses import dataclass, FrozenInstanceError\n\n@dataclass(frozen=True)\nclass Item:\n    name: str\n    price: int\n    qty: int\n\n    def total(self) -> int:\n        return self.price * self.qty\n\nitems = [Item(name, price, qty) for name, price, qty in rows]\nfor item in items:\n    print(f'{item.name} x{item.qty} = {item.total()}')\nprint(f'合计 {sum([item.total() for item in items])}')\n\ntry:\n    items[0].qty = 99\nexcept FrozenInstanceError:\n    print('订单项不可修改')\n",
     checks: [
       {
         message: "用 @dataclass(frozen=True) 装饰 Item",

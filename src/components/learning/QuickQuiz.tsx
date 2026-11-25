@@ -99,7 +99,7 @@ export default function QuickQuiz({
                     : "text-amber-800 dark:text-amber-300"
                 }
               >
-                {correct ? "答对了" : "再想一想"}
+                {correct ? "答对了" : hint ? "再想一想" : "答案解析"}
               </AlertTitle>
               <AlertDescription>
                 {correct || !hint ? explanation : hint}

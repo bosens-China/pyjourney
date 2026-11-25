@@ -9,9 +9,9 @@ import FlowPrediction from "@/components/learning/FlowPrediction";
 export const matchFlow = {
   kind: "flow",
   nodes: [
-    { id: "match", label: "match [1, 2]" },
-    { id: "one", label: "尝试 case [x]" },
-    { id: "two", label: "尝试 case [x, y]" },
+    { id: "match", label: 'match ["load", "app.py"]' },
+    { id: "one", label: "尝试固定长度模式" },
+    { id: "two", label: "尝试带星号的模式" },
     { id: "wildcard", label: "尝试 case _" },
     { id: "body", label: "执行匹配的分支" },
   ],
@@ -25,22 +25,22 @@ export const matchFlow = {
   ],
 };
 
-要按数据的值或形状选择分支，可以用 `match`。要匹配的值叫主语，Python 按顺序尝试每个 `case` 的模式，执行第一个匹配成功的分支。有的模式还可以取出主语的一部分，把它绑定到名字。所有模式都匹配失败时，程序继续执行 `match` 之后的语句。
+要按数据的值或形状选择分支，可以用 `match`。Python 按顺序用每个 `case` 的模式检查要匹配的值，执行第一个匹配成功的分支。有的模式还可以从这个值里取出一部分，把它绑定到名字。所有模式都匹配失败时，程序继续执行 `match` 之后的语句。
 
 可以直接用字面值来匹配。多个字面值可以用 `|` 连起来，匹配其中任何一个即可。`_` 是通配符，可以匹配任意值。`True`、`False` 和 `None` 各自只匹配对应的那个对象，其他字面值按值比较。
 
 ```python run
-status = 404
-match status:
-    case 400:
-        print("请求有误")
-    case 401 | 403 | 404:
-        print("无权访问")
+command = "?"
+match command:
+    case "help" | "?":
+        print("显示帮助")
+    case "quit":
+        print("退出程序")
     case _:
-        print("其他错误")
+        print("未知命令")
 ```
 
-在模式里直接写一个普通名字，会匹配任意值并把它绑定到这个名字，这叫捕获模式。要匹配已有常量的值，使用带点号的名字，例如 `Color.RED`。
+在模式里直接写一个普通名字，会匹配任意值并把它绑定到这个名字，这叫捕获模式。要匹配已有常量的值，用带点号的名字，比如 `Color.RED` 表示已有的颜色常量。
 
 ## 序列模式
 
@@ -84,22 +84,22 @@ match point:
 />
 
 <FlowPrediction
-  question="哪个 case 会最先匹配成功？"
-  code={`match [1, 2]:
-      case [x]:
-          print(x)
-      case [x, y]:
-          print(x + y)
+  question="程序会执行哪个分支？"
+  code={`match ["load", "app.py"]:
+      case ["load", filename]:
+          print("读取", filename)
+      case ["load", *files]:
+          print("批量读取", files)
       case _:
-          print("其他")`}
+          print("未知命令")`}
   diagram={{ ...matchFlow, active: ["match", "one"] }}
   choices={[
-    { label: "case [x]", feedback: "[x] 要求正好一项。这里有两项，程序会尝试下一个模式。" },
     {
-      label: "case [x, y]",
-      feedback: "[x] 的长度要求不符。[x, y] 把 1 和 2 分别绑定到 x 和 y，执行分支并输出 3。",
-      path: ["match", "one", "two", "body"],
+      label: 'case ["load", filename]',
+      feedback: "前两个模式都能匹配这条命令。程序遇到第一个匹配时就执行分支，输出「读取 app.py」。",
+      path: ["match", "one", "body"],
     },
-    { label: "case _", feedback: "[x, y] 先匹配成功，程序在那一项就选定了分支。" },
+    { label: 'case ["load", *files]', feedback: "带星号的模式确实可以匹配。想想排在它前面的模式是否也能匹配。" },
+    { label: "case _", feedback: "通配符可以匹配这条命令。检查前两个分支，程序有机会试到这里吗？" },
   ]}
 />

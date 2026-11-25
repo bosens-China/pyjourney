@@ -7,19 +7,25 @@ import ConceptStepper from "@/components/learning/ConceptStepper";
 import QuickQuiz from "@/components/learning/QuickQuiz";
 import PythonExercise from "@/components/python/PythonExercise";
 
-把可复用的函数写进 `.py` 文件，就能把这个文件当作模块，在多个脚本中使用同一份定义。例如，`import fibo` 可以导入 `fibo.py`，模块的 `__name__` 是 `"fibo"`。Python 也提供 `sys` 这样的内置模块，导入时无需对应的 `.py` 文件。
+把可复用的函数写进 `.py` 文件，就能把这个文件当作模块，在多个脚本中使用同一份定义。先在同一个目录里创建下面两个文件。
 
-```python
-import fibo
-
-fibo.fib(1000)
-fibo.fib2(100)
-fibo.__name__  # 'fibo'
+```python title="fibo.py"
+def fib(limit):
+    a, b = 0, 1
+    while a < limit:
+        print(a)
+        a, b = b, a + b
 ```
 
-`import fibo` 让当前文件里的 `fibo` 指向模块。访问模块里的函数时，写 `fibo.fib` 或 `fibo.fib2`。也可以写 `fib = fibo.fib`，让当前文件里的 `fib` 直接指向这个函数。
+```python title="show_series.py"
+import fibo
 
-Python 第一次加载模块时，先把模块放进 `sys.modules`，再执行顶层代码。再次用同一个模块名导入时，通常会复用缓存里的模块。每个模块都有自己的全局命名空间，可以用 `fibo.fib` 访问其中的名字。
+fibo.fib(5)
+```
+
+在这两个文件所在的目录执行 `python show_series.py`。脚本会逐行打印 `0`、`1`、`1`、`2` 和 `3`。导入后，`show_series.py` 里的名字 `fibo` 指向模块。用 `fibo.fib` 就能访问模块里的函数。
+
+Python 第一次加载模块时会执行它的顶层代码。之后按同一个名字导入，通常会复用已加载的模块。
 
 通常把导入语句放在文件开头。按标准库、第三方库和本项目模块分成三组，组与组之间空一行。
 
@@ -34,16 +40,18 @@ from myapp import settings
 
 ## from 与 as
 
-`from fibo import fib, fib2` 只绑定这两个名字，它们分别指向模块里的两个函数。逐个写出需要的名字，读者就能看出它们来自哪里。`from fibo import *` 会带进一批名字，也可能覆盖同名对象的绑定。
+`from fibo import fib` 在当前文件里绑定名字 `fib`，所以可以直接调用 `fib(5)`。需要从模块里导入多个名字时，把它们逐个写出来，读者就能看出这些名字来自哪里。
 
 用 `as` 可以为导入的对象指定一个本地名字。
 
 ```python
-import fibo as fib
+import fibo as series
 from fibo import fib as fibonacci
 ```
 
-第一行让本地的 `fib` 指向模块。第二行让本地的 `fibonacci` 指向模块里的 `fib` 函数。
+第一行让本地的 `series` 指向模块。第二行让本地的 `fibonacci` 指向模块里的 `fib` 函数。
+
+看每条导入语句时，先想想当前文件需要用哪个名字调用函数，再对照图里的绑定。
 
 <ConceptStepper
   label="导入后，当前文件里的名字指向什么？"
@@ -86,7 +94,7 @@ from fibo import fib as fibonacci
 
 ## 以脚本方式执行
 
-用 `python fibo.py <arguments>` 运行脚本时，Python 会把 `__name__` 设为 `"__main__"`。把处理命令行参数的代码放进下面的分支，它就只会在直接运行时执行。
+每个模块都有一个 `__name__`。直接用 `python fibo.py 5` 运行文件时，Python 会把它设为 `"__main__"`。把下面的分支加到 `fibo.py` 的末尾，就能从命令行指定上限。
 
 ```python
 if __name__ == "__main__":
@@ -95,10 +103,6 @@ if __name__ == "__main__":
 ```
 
 其他模块导入 `fibo` 时，`__name__` 是 `"fibo"`，导入会跳过这个分支。同一个文件因此既能作为命令行入口，也能让其他模块复用其中的函数。
-
-## 模块搜索路径
-
-在默认设置下，直接运行脚本时，Python 会在标准库目录之前搜索脚本所在的目录。给自己的模块取一个和标准库不同的名字。例如，脚本旁边的 `json.py` 可能让 `import json` 加载你写的文件。
 
 <QuickQuiz
   question="哪种运行方式会进入 fibo.py 的 if __name__ == '__main__' 分支？"
@@ -117,6 +121,10 @@ if __name__ == "__main__":
   ]}
   explanation="直接运行模块时，__name__ 被设为 '__main__'。被 import 或 from ... import 载入时，__name__ 是 'fibo'，这个分支不执行。"
 />
+
+## 模块搜索路径
+
+在默认设置下，直接运行脚本时，Python 会在标准库目录之前搜索脚本所在的目录。给自己的模块取一个和标准库不同的名字。例如，脚本旁边的 `json.py` 可能让 `import json` 加载你写的文件。
 
 ## 随堂练习
 

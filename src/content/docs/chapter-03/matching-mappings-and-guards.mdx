@@ -10,8 +10,8 @@ import PythonExercise from "@/components/python/PythonExercise";
 export const guardFlow = {
   kind: "flow",
   nodes: [
-    { id: "bind", label: "(x, y) 绑定成功" },
-    { id: "guard", label: "检查 x == y" },
+    { id: "bind", label: "匹配已付款订单，绑定 amount" },
+    { id: "guard", label: "检查 amount >= 100" },
     { id: "accept", label: "为真：执行当前 case" },
     { id: "next", label: "为假：尝试下一个 case" },
   ],
@@ -22,7 +22,9 @@ export const guardFlow = {
   ],
 };
 
-映射模式按键取值。`{"bandwidth": b, "latency": l}` 把指定键的值分别绑定到 `b` 和 `l`。字典里可以有额外的键，默认会忽略它们。需要保留这些键值对时，可以用 `**rest` 收进一个字典。双星号后要写一个接收这些键值对的普通名字。
+映射模式按键取值。指定的键都必须存在，键对应的值也要符合相应的子模式。例如，`{"bandwidth": b, "latency": l}` 要求两个键都存在，并把它们的值分别绑定到 `b` 和 `l`。
+
+映射模式会忽略额外的键。需要保留它们时，在模式末尾用 `**rest` 把额外的键值对收进一个字典。参见 [Python 3.15 的映射模式规则](https://docs.python.org/zh-cn/3.15/reference/compound_stmts.html#mapping-patterns)。
 
 ```python
 match event:
@@ -32,78 +34,71 @@ match event:
         print(kind, rest)
 ```
 
-模式里还可以嵌套其他模式。`as` 把子模式匹配到的值绑定到一个名字。下面先用 `|` 匹配一个方向，再用 `as` 把方向绑定到 `direction`。
-
-```python
-match command.split():
-    case ["go", ("north" | "south" | "east" | "west") as direction]:
-        print("前往", direction)
-```
+模式可以嵌套。比如 `("north" | "south") as direction` 可以匹配两个方向中的任意一个，再把匹配到的值绑定到 `direction`。
 
 ## 守卫
 
 写在模式后面的 `if` 条件叫作守卫。Python 先匹配模式并绑定名字，再检查守卫。守卫为真就执行这个分支。守卫为假就继续尝试下一个 `case`。
 
-```python
-match point:
-    case (x, y) if x == y:
-        print(f"在对角线上：{x}")
-    case (x, y):
-        print("不在对角线上")
+```python run
+order = {"id": "A101", "status": "paid", "amount": 120}
+match order:
+    case {"status": "paid", "amount": amount} if amount >= 100:
+        print("VIP 订单")
+    case {"status": "paid", "amount": _}:
+        print("普通订单")
+    case _:
+        print("其他订单")
 ```
 
 <ConceptStepper
-  label="先捕获，再用守卫决定是否接受"
+  label="先匹配订单，再用守卫判断金额"
   steps={[
     {
-      code: "point = (2, 2)",
-      description: "模式先把元组的两项分别绑定到 x 和 y。",
-      values: [
-        { name: "x", value: "2" },
-        { name: "y", value: "2" },
-      ],
+      code: 'order = {"id": "A101", "status": "paid", "amount": 120}',
+      description: "模式要求 status 的值是 paid。模式匹配成功，忽略额外的 id，把 120 绑定到 amount。",
+      values: [{ name: "amount", value: "120" }],
       diagram: { ...guardFlow, active: ["bind"] },
     },
     {
-      code: "case (x, y) if x == y:",
-      description: "x 和 y 都是 2。守卫 x == y 为真，程序执行当前分支。",
-      output: "在对角线上：2",
+      code: 'case {"status": "paid", "amount": amount} if amount >= 100:',
+      description: "金额达到 100，守卫为真，程序执行当前分支。",
+      output: "VIP 订单",
       diagram: { ...guardFlow, active: ["bind", "guard", "accept"] },
     },
     {
-      code: "point = (1, 2)",
-      description: "模式仍然匹配，x 是 1，y 是 2。守卫为假，所以程序继续尝试下一个 case。",
-      values: [
-        { name: "x", value: "1" },
-        { name: "y", value: "2" },
-      ],
-      output: "不在对角线上",
+      code: 'order = {"id": "A102", "status": "paid", "amount": 30}',
+      description: "换成金额为 30 的订单，重新匹配。第一个模式仍能匹配，但守卫为假。下一个 case 匹配成功。",
+      values: [{ name: "amount", value: "30" }],
+      output: "普通订单",
       diagram: { ...guardFlow, active: ["bind", "guard", "next"] },
     },
   ]}
 />
 
 <QuickQuiz
-  question="这段代码输出什么？"
-  code={`match {"a": 1, "b": 2}:
-      case {"a": n}:
-          print(n)
+  question="订单缺少 amount 时，这段代码输出什么？"
+  code={`match {"id": "A103", "status": "paid"}:
+      case {"status": "paid", "amount": amount} if amount >= 100:
+          print("VIP 订单")
+      case {"status": "paid", "amount": _}:
+          print("普通订单")
       case _:
-          print("没有匹配")`}
-  options={["没有匹配", "1", "什么都不输出", "{'a': 1, 'b': 2}"]}
-  answerIndex={1}
+          print("其他订单")`}
+  options={["VIP 订单", "普通订单", "其他订单", "引发异常"]}
+  answerIndex={2}
   feedback={[
-    "模式只要求键 a 存在。字典还包含键 b，它会被忽略。",
+    "第一个模式需要 amount 键。订单没有这个键，所以程序跳过第一个分支。",
+    "第二个模式也要求 amount 键。这里的 _ 会忽略键的值，但仍要求键存在。",
     "",
-    "第一个 case 匹配成功，程序会执行其中的 print()。",
-    "n 绑定到键 a 对应的值，也就是 1。",
+    "第一个模式匹配失败时，Python 不会检查它的守卫。",
   ]}
-  explanation="第一个模式只提取键 a 的值。它把 n 绑定到 1，然后执行这个分支，打印 1。"
+  explanation="两个映射模式都需要 amount 键。键缺失时，Python 跳过这两个分支，也不求值守卫。最后一个 case 匹配成功，程序打印「其他订单」。"
 />
 
 ## 随堂练习
 
-逐条遍历订单。匹配模式 `{"id": order_id, "status": "paid", "amount": amt}` 时，用守卫区分两种金额。每条订单输出一行。
+逐条遍历订单。匹配模式 `{"id": order_id, "status": "paid", "amount": amt}` 时，用守卫按金额划分订单等级。每条订单输出一行。
 
 - 匹配上述模式且 `amt >= 100` 时，输出 `VIP 订单 {order_id}: 已付款 {amt} 元`。
 - 其余匹配上述模式的订单，输出 `普通订单 {order_id}: 已付款 {amt} 元`。

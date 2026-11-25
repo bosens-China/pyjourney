@@ -3,51 +3,33 @@ title: 不可变映射
 description: 用 frozendict 保存固定的选项，了解什么时候可以把整个映射当作字典的键。
 ---
 
-import ConceptStepper from "@/components/learning/ConceptStepper";
 import QuickQuiz from "@/components/learning/QuickQuiz";
 import PythonExercise from "@/components/python/PythonExercise";
 
-`frozendict` 是内置的不可变映射，适合保存一组固定选项。和创建 `dict` 一样，可以传入关键字参数、另一个映射或一组键值对。试图给已有的 `frozendict` 按键赋值时，Python 会引发 `TypeError`。
+`frozendict` 是内置的不可变映射，适合保存一组固定选项。创建时可以像下面这样，用 `tags=` 指定键及其值。创建后，每个键都固定指向原来的值。按键赋值会引发 `TypeError`。
 
-每个键都固定指向原来的值。如果值是列表，仍可往列表里追加元素。这组标签也可以用元组保存，让标签本身也固定下来。
+如果值是列表，仍可往列表里追加元素。下面用元组保存标签，让标签也固定下来。
 
 ```python run
-config = frozendict(tags=["python"])
-config["tags"].append("入门")
-print(config["tags"])  # ['python', '入门']
+config = frozendict(tags=("python", "入门"))
+print(config["tags"])  # ('python', '入门')
 ```
 
 `frozendict` 保留键值对的插入顺序。两个 `frozendict` 包含相同的键值对就相等，它们的插入顺序可以不同。
+
+```python run
+a = frozendict(x=1, y=2)
+b = frozendict(y=2, x=1)
+print(a)       # frozendict({'x': 1, 'y': 2})
+print(b)       # frozendict({'y': 2, 'x': 1})
+print(a == b)  # True
+```
 
 :::note 什么时候可以当作字典的键
 
 `frozendict` 可以存放不可哈希的值，例如列表。如果里面的键和值都可哈希，就能把整个 `frozendict` 放进集合，或用作字典的键。
 
 :::
-
-<ConceptStepper
-  label="顺序不影响相等，赋值会被拒绝"
-  steps={[
-    {
-      code: "a = frozendict(x=1, y=2)",
-      description: "用关键字参数创建不可变映射。x 先插入，y 后插入。",
-      values: [{ name: "a", value: "frozendict({'x': 1, 'y': 2})" }],
-    },
-    {
-      code: "b = frozendict(y=2, x=1)",
-      description: "b 先插入 y，再插入 x。a 和 b 的键值对相同，所以两者相等，哈希值也相等。",
-      values: [
-        { name: "a == b", value: "True" },
-        { name: "hash(a) == hash(b)", value: "True" },
-      ],
-    },
-    {
-      code: "a['z'] = 3",
-      description: "a 已经创建。试图写入新键 z 时，Python 引发 TypeError。",
-      output: "TypeError: 'frozendict' object does not support item assignment",
-    },
-  ]}
-/>
 
 <QuickQuiz
   question="哪个 frozendict 可以直接当作字典的键？"
@@ -98,4 +80,4 @@ print(config["tags"])  # ['python', '入门']
   ]}
 />
 
-`frozendict` 直接继承自 `object`。要同时接受 `dict` 和 `frozendict`，可以用 `isinstance(value, (dict, frozendict))` 检查。要接受其他映射类型，可以用 `collections.abc.Mapping` 检查。参见 [Python 3.15 的 frozendict 说明](https://docs.python.org/zh-cn/3.15/builtins/stdtypes.html#frozendict)。
+参见 [Python 3.15 的 frozendict 说明](https://docs.python.org/zh-cn/3.15/builtins/stdtypes.html#frozendict)。

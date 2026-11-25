@@ -14,7 +14,7 @@ lazy import json
 lazy from json import loads
 ```
 
-执行 `lazy import json` 时，Python 先把 `json` 绑定到一个临时的代理对象。第一次使用这个名字时，Python 才加载模块，并让 `json` 指向模块。
+执行 `lazy import json` 时，Python 先让 `json` 指向一个代理。代理暂时代替模块。第一次使用这个名字时，Python 才加载模块，并让 `json` 指向它。
 
 `lazy from json import loads, dumps` 会给两个名字各绑定一个代理。第一次使用任意一个名字，Python 都会加载整个模块，并让用到的名字指向模块里对应的对象。另一个名字仍然指向代理，等到用到它时才更新绑定。
 
@@ -31,74 +31,79 @@ print(average([1, 2, 3]))           # 2
 print("statistics" in sys.modules)  # True
 ```
 
-Python 定义 `average` 时还没有执行函数体。调用 `average([1, 2, 3])` 后，第一次读取 `statistics`，模块就在这时加载。如果模块不存在，错误也在第一次读取时出现。回溯会显示读取名字的位置和原来的导入语句。
+Python 把已加载的模块保存在 `sys.modules` 里。这个示例开始时，`statistics` 还没有加载。定义 `average` 时还没有执行函数体。调用 `average([1, 2, 3])` 时，函数体第一次读取 `statistics`，Python 才加载模块。如果模块不存在，错误也在这时出现。回溯会显示读取名字的位置和原来的导入语句。
 
-惰性导入可以留在文件开头，把模块加载推迟到真正用到时。命令行工具的每个子命令通常只用一部分依赖，适合这样写。
+日常使用普通导入。命令行工具的子命令各用一部分依赖时，可以用惰性导入。把导入语句留在文件开头，等相应的子命令用到依赖时再加载。
 
 把惰性导入写在模块顶层。写进函数、类体或 `try` 语句会引发 `SyntaxError`。星号导入也不支持 `lazy`。
 
 <ConceptStepper
-  label="名字什么时候开始指向模块？"
+  label="两个名字分别在什么时候指向实际函数？"
   steps={[
     {
-      code: "lazy import statistics",
-      description: "statistics 先指向代理。这个例子里，sys.modules 还没有 statistics 模块。",
+      code: "lazy from statistics import mean, median",
+      description: "两个名字各有一个代理。这时 statistics 还没有加载。",
       diagram: {
         kind: "refs",
-        names: [{ name: "statistics", to: "proxy" }],
-        objects: [{ id: "proxy", label: "代理" }],
-        highlight: ["statistics", "proxy"],
+        names: [{ name: "mean", to: "meanProxy" }, { name: "median", to: "medianProxy" }],
+        objects: [{ id: "meanProxy", label: "mean 的代理" }, { id: "medianProxy", label: "median 的代理" }],
       },
     },
     {
-      code: "def average(values):\n    return statistics.mean(values)",
-      description:
-        "定义 average 时，Python 还没执行它的函数体，模块继续等待加载。",
+      code: "print(mean([1, 2, 9]))",
+      description: "第一次读取 mean 会加载 statistics。mean 开始指向函数，median 仍然指向它的代理。",
+      output: "4",
       diagram: {
         kind: "refs",
-        names: [{ name: "statistics", to: "proxy" }],
-        objects: [{ id: "proxy", label: "代理" }],
+        names: [{ name: "mean", to: "meanFunction" }, { name: "median", to: "medianProxy" }],
+        objects: [{ id: "meanFunction", label: "mean 函数" }, { id: "medianProxy", label: "median 的代理" }],
+        highlight: ["mean", "meanFunction"],
       },
     },
     {
-      code: "average([1, 2, 3])",
-      description:
-        "调用 average 后，函数第一次读取 statistics，Python 在这里加载模块。",
+      code: "print(median([1, 2, 9]))",
+      description: "第一次读取 median 时，Python 从已加载的模块取出 median 函数，再更新绑定。",
       output: "2",
       diagram: {
         kind: "refs",
-        names: [{ name: "statistics", to: "module" }],
-        objects: [{ id: "module", label: "模块 statistics" }],
-        highlight: ["statistics", "module"],
+        names: [{ name: "mean", to: "meanFunction" }, { name: "median", to: "medianFunction" }],
+        objects: [{ id: "meanFunction", label: "mean 函数" }, { id: "medianFunction", label: "median 函数" }],
+        highlight: ["median", "medianFunction"],
       },
     },
   ]}
 />
 
 <QuickQuiz
-  question="这段代码会怎样？"
-  code={`def load():
-      lazy import json
-      return json`}
+  question="假设 statistics 起初还没加载，代码执行到哪一步时首次加载它？"
+  code={`lazy import statistics
+
+  def summarize(values, *, average):
+      if average:
+          return statistics.mean(values)
+      return len(values)
+
+  summarize([1, 2, 3], average=False)
+  summarize([1, 2, 3], average=True)`}
   options={[
-    "调用 load() 时才导入 json",
-    "编译时引发 SyntaxError",
-    "定义 load 时立即导入 json",
-    "返回一个还没有加载的代理",
+    "执行 lazy import 时",
+    "定义 summarize 时",
+    "第一次调用 summarize 时",
+    "第二次调用 summarize 时",
   ]}
-  answerIndex={1}
+  answerIndex={3}
   feedback={[
-    "Python 在编译时就会发现函数体里的 lazy 导入，并报出 SyntaxError。",
+    "执行惰性导入语句时，statistics 先指向代理。",
+    "定义函数时，Python 还没有执行函数体。",
+    "第一次调用中，average 为假，函数直接调用 len。",
     "",
-    "代码在定义 load 之前就会因语法错误停止。",
-    "函数体里的惰性导入会导致 SyntaxError，函数无法定义。",
   ]}
-  explanation="惰性导入只能出现在模块顶层。写在函数、类体或 try 语句里，都会引发 SyntaxError。"
+  explanation="第二次调用才会执行 statistics.mean(values)。Python 在这里首次读取 statistics，并加载模块。"
 />
 
 ## 随堂练习
 
-这个小工具的两个子命令各用一个模块。把文件开头的两条导入语句改成惰性导入，让每次调用按需加载模块。
+这个小工具的两个子命令各用一个模块。把文件开头的两条导入语句改成惰性导入，让模块等到首次使用时再加载。
 
 <PythonExercise
   label="把导入改成惰性导入"

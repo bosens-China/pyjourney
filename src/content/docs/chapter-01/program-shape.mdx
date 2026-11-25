@@ -3,7 +3,6 @@ title: 程序的样子
 description: 从第一行输出开始，认识注释、缩进、赋值和 Python 的命名习惯。
 ---
 
-import ConceptStepper from "@/components/learning/ConceptStepper";
 import QuickQuiz from "@/components/learning/QuickQuiz";
 import PythonExercise from "@/components/python/PythonExercise";
 
@@ -27,9 +26,9 @@ fee = 12  # 单位：元
 print("# 不是注释")
 ```
 
-## 缩进就是代码块
+## 用缩进划分代码块
 
-`if`、`for`、`def` 等语句用冒号引出代码块。块内同一层的语句从同一列开始，每一层缩进用 4 个空格。缩进退回外层时，当前代码块结束。
+`if`、`for` 和 `def` 等语句用冒号引出代码块。块内同一层的语句从同一列开始。按 PEP 8 的风格约定，每层缩进用 4 个空格。缩进退回外层时，当前代码块结束。
 
 ```python run
 total = 120
@@ -41,30 +40,34 @@ print("结算完成")
 
 最后一行和 `if` 对齐，已经回到外层。所以条件无论真假，程序都会打印「结算完成」。第 3 章会详细讲条件判断和循环。
 
+<QuickQuiz
+  question="total 为 50 时，程序会输出什么？"
+  code={`total = 50
+  if total >= 100:
+      print("免运费")
+  print("结算完成")`}
+  options={["免运费", "结算完成", "免运费 和 结算完成 各一行", "什么都不输出"]}
+  answerIndex={1}
+  feedback={[
+    "条件 50 >= 100 为假，缩进的那一行不执行。",
+    "",
+    "条件为假，程序跳过缩进的代码块。",
+    "最后一行和 if 对齐，在 if 块之外。",
+  ]}
+  explanation="条件为假，程序跳过 if 块。最后一行在外层，照常打印「结算完成」。"
+/>
+
 ## 名字与赋值
 
-`=` 先计算右边，再把结果绑定到左边的名字。例如，`count = count + 1` 先读出 `count` 的旧值并加 1，再把结果绑定回 `count`。给整数计数器加 1 时，通常用增强赋值 `count += 1`。读取尚未绑定的名字会引发 `NameError`。
+给名字赋值时，`=` 先计算右边，再把结果绑定到左边的名字。
 
-<ConceptStepper
-  label="右边先求值，再绑定左边的名字"
-  steps={[
-    {
-      code: "count = 2",
-      description: "名字 count 绑定到整数 2。",
-      values: [{ name: "count", value: "2" }],
-    },
-    {
-      code: "count += 1",
-      description: "先算出 count + 1 得到 3，再让 count 指向 3。",
-      values: [{ name: "count", value: "3" }],
-    },
-    {
-      code: "print(count)",
-      description: "读取 count 当前绑定的值并输出。",
-      output: "3",
-    },
-  ]}
-/>
+```python run
+count = 2
+count = count + 1
+print(count)  # 3
+```
+
+给整数计数器加 1 时，通常用增强赋值 `count += 1`。读取尚未定义的名字会引发 `NameError`。
 
 一次赋值也可以绑定多个名字。`width, height = 20, 45` 把 `width` 绑定到 20，把 `height` 绑定到 45。这种写法叫元组解包，下一章会详细介绍。
 
@@ -78,23 +81,6 @@ print("结算完成")
 - 用空行分隔函数、类和函数里较大的代码块。
 
 名字要说明用途。`total_count` 比 `tc` 好读，`items` 比 `lst` 好读。
-
-<QuickQuiz
-  question="total 为 50 时，程序会输出什么？"
-  code={`total = 50
-  if total >= 100:
-      print("免运费")
-  print("结算完成")`}
-  options={["免运费", "结算完成", "免运费 和 结算完成 各一行", "什么都不输出"]}
-  answerIndex={1}
-  feedback={[
-    "条件 50 >= 100 为假，缩进的那一行不执行。",
-    "",
-    "条件为假，程序跳过缩进的代码块，直接执行最后一行。",
-    "最后一行在 if 块之外，无论条件真假都会执行。",
-  ]}
-  explanation="条件为假，程序跳过 if 块。最后一行在外层，照常打印「结算完成」。"
-/>
 
 ## 随堂练习
 

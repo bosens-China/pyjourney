@@ -29,7 +29,7 @@ def fib(n):
 
 ```python
 def fib2(n: int) -> list[int]:
-    """Return a list containing the Fibonacci series up to n."""
+    """Return the Fibonacci numbers less than n."""
     result = []
     a, b = 0, 1
     while a < n:
@@ -37,6 +37,24 @@ def fib2(n: int) -> list[int]:
         a, b = b, a + b
     return result
 ```
+
+<QuickQuiz
+  question="这段代码输出哪两行？"
+  code={`def greet(name):
+      print("你好", name)
+
+  result = greet("Ada")
+  print(result)`}
+  options={["你好 Ada，然后 你好 Ada", "你好 Ada，然后 None", "只有 None", "你好 Ada，然后空行"]}
+  answerIndex={1}
+  feedback={[
+    "greet 打印问候语后就执行完了，所以返回 None。",
+    "",
+    "调用 greet 时，函数体里的 print 会先输出问候语。",
+    "greet 返回 None，外层的 print 会把 None 打印出来。",
+  ]}
+  explanation="greet 先打印你好 Ada，随后返回 None。最后一行打印 result 的值，也就是 None。"
+/>
 
 ## 函数是对象
 
@@ -69,7 +87,7 @@ def fib2(n: int) -> list[int]:
       },
     },
     {
-      code: "f(4)",
+      code: "print(f(4))",
       description: "通过新名字调用，仍然执行 square 的函数体。",
       output: "16",
       diagram: {
@@ -87,35 +105,14 @@ def fib2(n: int) -> list[int]:
 
 ## Lambda 表达式
 
-`lambda` 用一个表达式创建函数，表达式的值就是返回值。临时需要一个简单的函数时，可以直接把它交给 `list.sort()` 的 `key`。它也能读取外层函数的变量，例如 `make_incrementor` 返回的函数会用到 `n`。
+`lambda` 用一个表达式创建函数，表达式的值就是返回值。
 
-```python
+`sorted()` 的 `key` 可以接收一个函数。`sorted()` 会把每一项交给这个函数，再按函数返回的值排序。下面用 `lambda pair: pair[1]` 取每个元组的第二项作为排序依据。
+
+```python run
 pairs = [(1, "one"), (2, "two"), (3, "three"), (4, "four")]
-pairs.sort(key=lambda pair: pair[1])
+print(sorted(pairs, key=lambda pair: pair[1]))
 ```
-
-```python
-def make_incrementor(n):
-    return lambda x: x + n
-```
-
-<QuickQuiz
-  question="这段代码输出哪两行？"
-  code={`def greet(name):
-      print("你好", name)
-
-  result = greet("Ada")
-  print(result)`}
-options={["你好 Ada，然后 你好 Ada", "你好 Ada，然后 None", "只有 None", "你好 Ada，然后空行"]}
-answerIndex={1}
-feedback={[
-"greet 打印问候语后就执行完了，所以返回 None。",
-"",
-"调用 greet 时，函数体里的 print 会先输出问候语。",
-"greet 返回 None，外层的 print 会把 None 打印出来。",
-]}
-explanation="greet 先打印你好 Ada，随后返回 None。最后一行打印 result 的值，也就是 None。"
-/>
 
 ## 随堂练习
 

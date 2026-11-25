@@ -3,11 +3,10 @@ import {
   getCustomMDXComponent as getOriginalComponents,
   type CodeButtonGroupProps,
 } from "@rspress/core/theme-original";
-import { CodeXml, LoaderCircle, Play } from "lucide-react";
+import { LoaderCircle, Play } from "lucide-react";
 import {
   createContext,
   useContext,
-  useEffect,
   useRef,
   type ComponentProps,
   type RefObject,
@@ -21,6 +20,7 @@ type PreProps = ComponentProps<typeof OriginalPre>;
 const RunControl = createContext<{
   run: () => void;
   button: RefObject<HTMLButtonElement | null>;
+  busy: boolean;
 } | null>(null);
 
 export function CodeButtonGroup(props: CodeButtonGroupProps) {
@@ -33,8 +33,9 @@ export function CodeButtonGroup(props: CodeButtonGroupProps) {
         ref={control.button}
         variant="ghost"
         size="icon-sm"
-        className="rp-code-button-group__button focus-visible:border-transparent focus-visible:ring-0"
+        className="rp-code-button-group__button focus-visible:border-transparent focus-visible:ring-0 aria-disabled:cursor-wait"
         aria-label="运行 Python 示例"
+        aria-disabled={control.busy}
         title="运行"
         onClick={control.run}
       >
@@ -48,25 +49,13 @@ export function CodeButtonGroup(props: CodeButtonGroupProps) {
 function RunnablePre({ code, ...props }: PreProps & { code: string }) {
   const { state, run, stop, reset } = usePythonRunner({ reuseWorker: false });
   const runButton = useRef<HTMLButtonElement>(null);
-  const backButton = useRef<HTMLButtonElement>(null);
-  const returnFocus = useRef(false);
   const showingOutput = state.phase !== "idle";
   const busy = state.phase === "loading" || state.phase === "running";
   const result = state.phase === "complete" ? state.results[0] : undefined;
 
-  useEffect(() => {
-    if (showingOutput) {
-      backButton.current?.focus();
-    } else if (returnFocus.current) {
-      runButton.current?.focus();
-      returnFocus.current = false;
-    }
-  }, [showingOutput]);
-
-  function returnToCode() {
-    if (busy) stop();
-    returnFocus.current = true;
+  function hideOutput() {
     reset();
+    runButton.current?.focus();
   }
 
   const outputClass =
@@ -74,11 +63,14 @@ function RunnablePre({ code, ...props }: PreProps & { code: string }) {
 
   return (
     <>
-      <div className="pyjourney-runnable-source" hidden={showingOutput}>
+      <div className="pyjourney-runnable-source">
         <RunControl.Provider
           value={{
-            run: () => run({ code, setups: [""], checks: [] }),
+            run: () => {
+              if (!busy) run({ code, setups: [""], checks: [] });
+            },
             button: runButton,
+            busy,
           }}
         >
           <OriginalPre {...props} />
@@ -92,13 +84,11 @@ function RunnablePre({ code, ...props }: PreProps & { code: string }) {
           <div className="flex items-center justify-between gap-2 border-b border-rp-line px-4 py-2">
             <strong className="text-sm">运行结果</strong>
             <Button
-              ref={backButton}
               variant="ghost"
               size="sm"
-              onClick={returnToCode}
+              onClick={busy ? stop : hideOutput}
             >
-              <CodeXml aria-hidden="true" />
-              返回代码
+              {busy ? "停止运行" : "收起结果"}
             </Button>
           </div>
           <div role="status" className="grid min-w-0 gap-2 px-4 py-3">

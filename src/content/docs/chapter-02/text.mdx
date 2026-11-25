@@ -8,7 +8,7 @@ import PythonExercise from "@/components/python/PythonExercise";
 
 文本的类型是 `str`。单引号和双引号都可以写字符串。文本里只有一种引号时，可以用另一种包住它。`\n` 是换行，三重引号的字符串可以跨行。
 
-在引号前加 `r` 就得到原始字符串，里面的 `\n` 会原样保留为反斜杠和字母 n。原始字符串常用于正则表达式。如果末尾有反斜杠，它们必须成对。参见 [Python 3.15 原始字符串字面量](https://docs.python.org/zh-cn/3.15/reference/lexical_analysis.html#raw-string-literals)。
+在引号前加 `r` 就得到原始字符串，里面的 `\n` 会原样保留为反斜杠和字母 n。原始字符串常用于正则表达式。原始字符串字面量的结束引号前只能有偶数个连续的反斜杠。参见 [Python 3.15 原始字符串字面量](https://docs.python.org/zh-cn/3.15/reference/lexical_analysis.html#raw-string-literals)。
 
 ## 下标与切片
 
@@ -41,21 +41,19 @@ print(line.startswith("name"))  # False，开头还有空白
 
 ## f-字符串
 
-在引号前写 `f`，就可以把名字或表达式放进花括号。运行时，Python 会算出表达式的值，再把它填进文本。要输出花括号本身，把它写成 `{{` 或 `}}`。
+在引号前写 `f`，就可以把名字或表达式放进大括号。运行时，Python 会算出表达式的值，再把它填进文本。要输出大括号本身，把它写成 `{{` 或 `}}`。
 
 ```python run
 name = "Ada"
 total = 1234.5
 print(f"{name} 共消费 {total:,.2f} 元")  # Ada 共消费 1,234.50 元
-print(f"{name!r:>8}")                    #    'Ada'
-print(f"{total=}")                       # total=1234.5
 ```
 
-冒号后面可以指定格式。`.2f` 显示两位小数，`,` 加上千位分隔符，`>8` 在至少 8 个字符的宽度里右对齐。`!r` 用 `repr()` 得到值的文本表示。在表达式后加 `=`，就会同时输出表达式和值，方便调试。
+冒号后面可以指定格式。`.2f` 显示两位小数，`,` 加上千位分隔符。
 
 ## 随堂练习
 
-下面的标签之间有长短不一的空白。先拆出每个标签，再用 `" / "` 把它们拼回一行，打印 `python / 入门 / 精粹`。
+下面的标签之间有长短不一的空白。不传参数调用 `split()`，就能取出各个标签。再用 `" / "` 连接标签，打印 `python / 入门 / 精粹`。
 
 <PythonExercise
   label="切分、清理、再连接"
@@ -70,7 +68,10 @@ print(f"{total=}")                       # total=1234.5
 `}
   expectedOutput={`python / 入门 / 精粹`}
 checks={[
-{ message: "用 split 切开字符串", test: "calls('split')" },
+{
+message: "不传参数调用 split",
+test: "any(isinstance(c.func, ast.Attribute) and c.func.attr == 'split' and not c.args and not c.keywords for c in nodes(ast.Call))",
+},
 { message: "用 join 拼接结果", test: "calls('join')" },
 ]}
 />

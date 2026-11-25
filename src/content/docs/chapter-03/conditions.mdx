@@ -50,16 +50,6 @@ else:
 label = "及格" if score >= 60 else "不及格"
 ```
 
-在条件里需要保存中间结果时，可以用赋值表达式 `:=`。下面的括号让 `n` 先得到列表的长度，再拿这个长度与 10 比较。
-
-```python run
-items = list(range(12))
-if (n := len(items)) > 10:
-    print(f"列表太长（{n} 项，最多 10 项）")
-```
-
-把赋值表达式直接用作 `if` 或 `while` 的整个条件时，可以省略括号。参见 [Python 3.15 的赋值表达式规则](https://docs.python.org/zh-cn/3.15/reference/expressions.html#assignment-expressions)。
-
 ## 遍历元素
 
 `for` 可以直接遍历序列和其他可迭代对象。每一轮，循环变量都绑定到当前取出的元素。
@@ -87,14 +77,14 @@ for name, score in {"Ada": 95, "Bob": 78}.items():
     print(name, score)
 ```
 
-`zip()` 默认在最短的输入用完时停止。如果几组数据应该一一对应，可以传入 `strict=True`。长度不一致时，Python 会引发 `ValueError`。
+`zip()` 默认在最短的输入用完时停止。如果几组数据应该一一对应，可以传入 `strict=True`。遍历时发现长度不一致，Python 会引发 `ValueError`。
 
-`sorted()` 把元素排好序，放进一个新列表。`key` 指定按什么排序，例如按小写字母或元素长度。想反转排序方向时，传入 `reverse=True`。想直接从末尾开始遍历时，用 `reversed()`。
+`sorted()` 把元素排好序，放进一个新列表。想反转排序方向时，传入 `reverse=True`。想直接从末尾开始遍历时，用 `reversed()`。
 
 ```python run
-words = ["banana", "Fig", "apple"]
-print(sorted(words, key=str.lower))  # ['apple', 'banana', 'Fig']
-print(sorted(words, key=len))        # ['Fig', 'apple', 'banana']
+scores = [78, 95, 88]
+print(sorted(scores))                # [78, 88, 95]
+print(sorted(scores, reverse=True))  # [95, 88, 78]
 ```
 
 需要在遍历时增删元素，可以遍历原容器的副本，或者把处理后的结果放进一个新容器。
@@ -104,13 +94,23 @@ print(sorted(words, key=len))        # ['Fig', 'apple', 'banana']
 `while` 在条件为真时反复执行循环体。`break` 结束当前所在的最内层循环。`continue` 跳过本轮剩余语句，进入下一轮。
 
 ```python run
-n = 27
-steps = 0
-while n != 1:
-    n = n // 2 if n % 2 == 0 else 3 * n + 1
-    steps += 1
-print(steps)  # 111
+remaining = 3
+while remaining > 0:
+    print(remaining)
+    remaining -= 1
+print("出发")
 ```
+
+有时条件和循环体需要用到同一个结果。可以用赋值表达式 `:=`，也叫海象运算符。下面每轮截取最多两项，把切片绑定到 `batch`。只要切片非空，就打印这一批，再让 `names` 指向剩余名单。
+
+```python run
+names = ["Ada", "Bo", "Cy"]
+while batch := names[:2]:
+    print(batch)
+    names = names[2:]
+```
+
+把赋值表达式直接用作 `if` 或 `while` 的整个条件时，可以省略括号。参见 [Python 3.15 的赋值表达式规则](https://docs.python.org/zh-cn/3.15/reference/expressions.html#assignment-expressions)。
 
 ## 循环的 else
 
@@ -147,7 +147,7 @@ else:
     },
     {
       code: 'names = ["Bob", "Eve"]\n# 两轮都不满足条件',
-      description: "两个名字都检查完了，循环正常结束，接着执行 else 块。",
+      description: "换成另一组名字重新运行。两个名字都检查完了，循环正常结束，接着执行 else 块。",
       output: "没有以 A 开头的名字",
       diagram: {
         ...loopFlow,
@@ -158,7 +158,7 @@ else:
 />
 
 <FlowPrediction
-  question="循环取到 8 时，判断完条件后会执行哪一步？"
+  question="8 已经是最后一项。程序会怎样离开循环？"
   code={`for n in [3, 5, 8]:
       if n % 2 == 0:
           print("偶数", n)
@@ -167,11 +167,11 @@ else:
       print("全是奇数")`}
   diagram={{ ...loopFlow, active: ["for", "body"] }}
   choices={[
-    { label: "回到 for 取下一项", feedback: "8 满足条件，先执行 if 块里的两条语句。" },
-    { label: "进入 else 块", feedback: "8 满足条件。if 块里的 break 会让程序直接跳到循环之后。" },
+    { label: "先执行 break，再执行 else", feedback: "else 要等循环正常结束才执行。想想 break 会把程序带到哪里。" },
+    { label: "尝试取下一项，取不到就执行 else", feedback: "8 是偶数，条件成立。沿着 if 块里的两行往下看。" },
     {
-      label: "打印后执行 break",
-      feedback: "输出「偶数 8」后，break 直接离开循环，跳过 else。",
+      label: "执行 break，跳过 else",
+      feedback: "即使 8 是最后一项，执行 break 也会跳过 else。如果把 8 改成 7，循环会尝试取下一项，发现取完了才执行 else。",
       path: ["for", "body", "break", "after"],
     },
   ]}

@@ -5,7 +5,7 @@ description: 用 contextmanager 写清理逻辑，用 suppress 忽略指定异�
 
 import FlowPrediction from "@/components/learning/FlowPrediction";
 import PythonExercise from "@/components/python/PythonExercise";
-import ContextlibTimeline from "@/components/learning/ContextlibTimeline";
+import ContextExitTimeline from "@/components/learning/ContextExitTimeline";
 
 export const overrideFlow = {
   kind: "flow",
@@ -26,9 +26,9 @@ export const overrideEnter = {
 
 上一课用类实现了上下文管理器。准备和清理各只需要几行代码时，可以用 `contextlib` 把它们写进同一个生成器函数。
 
-## @contextmanager
+## 把准备和清理写进生成器
 
-用 `@contextmanager` 装饰生成器函数后，就可以在 `with` 里调用它。生成器在 `yield` 之前执行原先写在 `__enter__()` 里的准备工作，并且恰好交出一个值。如果写了 `as`，Python 会把这个值绑定到目标。
+用 `@contextmanager` 装饰生成器函数后，就可以用 `with override(...)` 这样的调用创建上下文管理器。生成器在 `yield` 之前执行准备工作，然后交出一个值。一个上下文中只执行一次 `yield`。如果写了 `as`，Python 会把这个值绑定到目标。
 
 生成器在 `yield` 处暂停，`with` 代码块开始运行。离开代码块时，生成器从暂停处继续，执行原先写在 `__exit__()` 里的清理工作。代码块里未处理的异常会在 `yield` 处重新抛出。把清理语句放进 `finally`，无论代码块是正常结束还是引发异常，它们都会执行。
 
@@ -53,7 +53,49 @@ def override(store, key, value):
 
 `finally` 会恢复这个键。原来有这个键，就写回旧值。原来没有，就删掉临时添加的键。如果发生异常，清理完成后异常继续传播。
 
-<ContextlibTimeline
+<FlowPrediction
+  question="这份临时切换模式的代码省略了 finally。捕获异常后，会打印哪个模式？"
+  code={`from contextlib import contextmanager
+
+  @contextmanager
+  def preview(settings):
+      old = settings["mode"]
+      settings["mode"] = "预览"
+      yield
+      settings["mode"] = old
+
+  settings = {"mode": "正式"}
+  try:
+      with preview(settings):
+          raise ValueError("渲染失败")
+  except ValueError:
+      print(settings["mode"])`}
+  diagram={{
+    kind: "flow",
+    nodes: [
+      { id: "resume", label: "异常回到 yield" },
+      { id: "restore", label: "写回旧模式" },
+      { id: "propagate", label: "进入外层 except" },
+    ],
+    edges: [
+      ["resume", "restore"],
+      ["restore", "propagate"],
+      ["resume", "propagate", 1],
+    ],
+    active: ["resume"],
+  }}
+  choices={[
+    { label: "「正式」", feedback: "检查从 yield 恢复时发生了什么。外层 except 会收到异常，但不会替 preview 写回旧模式。" },
+    {
+      label: "「预览」",
+      feedback: "异常在 yield 处重新抛出，跳过了写回旧模式的语句。外层 except 读到的仍是「预览」。",
+      path: ["resume", "propagate"],
+    },
+  ]}
+/>
+
+<ContextExitTimeline
+  label="override 的执行顺序"
   normal={[
     overrideEnter,
     {
@@ -94,50 +136,9 @@ def override(store, key, value):
       diagram: { ...overrideFlow, active: ["before", "body", "resume", "cleanup"] },
     },
   ]}
-  exceptionCheck={
-    <FlowPrediction
-      question="如果把恢复语句直接放在 yield 后面，程序会怎样处理这次异常？"
-      code={'with override(store, "debug", True):\n    raise ValueError("读取失败")'}
-      diagram={{
-        kind: "flow",
-        nodes: [
-          { id: "resume", label: "在 yield 处抛出 ValueError" },
-          { id: "restore", label: "执行 yield 后的普通语句" },
-          { id: "propagate", label: "异常向外传播" },
-        ],
-        edges: [
-          ["resume", "restore"],
-          ["restore", "propagate"],
-          ["resume", "propagate", 1],
-        ],
-        active: ["resume"],
-      }}
-      choices={[
-        { label: "先恢复，再让异常传播", feedback: "Python 在 yield 处重新抛出异常。要保证离开前执行恢复语句，可以把它放在 finally 里。" },
-        {
-          label: "跳过恢复，向外传播",
-          feedback: "异常会跳过紧跟在 yield 后面的普通语句，debug 仍是 True。把恢复语句放进 finally，异常传播前就能清理。",
-          path: ["resume", "propagate"],
-        },
-      ]}
-    />
-  }
 />
 
-## suppress
-
-确定可以忽略 `KeyError` 时，可以用 `suppress(KeyError)` 包住这段操作。遇到 `KeyError` 时，程序结束 `with` 代码块，从下一条语句继续。其他异常照常传播。
-
-```python run
-from contextlib import suppress
-
-counts = {"known": 1}
-with suppress(KeyError):
-    del counts["missing"]
-print(counts["known"])
-```
-
-## ExitStack
+## 按输入组合多个上下文
 
 上下文管理器的数量要到运行时才能确定时，可以用 `ExitStack`。用 `stack.enter_context(...)` 逐个进入管理器。离开 `ExitStack` 时，已经进入的管理器按相反顺序退出。即使后续管理器进入失败，先前进入成功的也会退出。
 
@@ -145,14 +146,18 @@ print(counts["known"])
 from contextlib import ExitStack
 
 store = {"debug": False, "trace": False}
-with ExitStack() as stack:
-    stack.enter_context(override(store, "debug", True))
-    stack.enter_context(override(store, "trace", True))
-    print(store["debug"], store["trace"])
-print(store["debug"], store["trace"])
+
+def inspect_flags(store, keys):
+    with ExitStack() as stack:
+        for key in keys:
+            stack.enter_context(override(store, key, True))
+        print(store)
+
+inspect_flags(store, ["debug", "trace"])
+print(store)
 ```
 
-代码块里，两个键的值都是 `True`。离开 `ExitStack` 时，两个 `override` 依次恢复原来的 `False`。
+调用方可以传入任意数量的键。传入 `debug` 和 `trace` 时，第一次打印的两个值都是 `True`。离开 `ExitStack` 后，再打印时两个值都恢复成了 `False`。
 
 | 阶段 | 管理器的执行顺序 |
 | --- | --- |
@@ -161,7 +166,7 @@ print(store["debug"], store["trace"])
 
 ## 随堂练习
 
-补全 `override` 的清理逻辑，让 `debug` 在 `with` 代码块内为 `True`，离开时恢复原值。
+补全 `override` 的清理逻辑。无论代码块正常结束还是引发异常，都要恢复现有键的原值。如果键是临时添加的，离开时删掉它。
 
 <PythonExercise
   label="用生成器恢复字典里的一个键"
@@ -179,6 +184,16 @@ print(store["debug"], store["trace"])
   with override(config, "debug", True):
       print(config["debug"])
   print(config["debug"])
+
+  with override(config, "trace", True):
+      print(config["trace"])
+  print("trace" in config)
+
+  try:
+      with override(config, "debug", True):
+          raise ValueError("读取失败")
+  except ValueError:
+      print(config["debug"])
 `}
   solution={`from contextlib import contextmanager
 
@@ -199,8 +214,21 @@ print(store["debug"], store["trace"])
   with override(config, "debug", True):
       print(config["debug"])
   print(config["debug"])
+
+  with override(config, "trace", True):
+      print(config["trace"])
+  print("trace" in config)
+
+  try:
+      with override(config, "debug", True):
+          raise ValueError("读取失败")
+  except ValueError:
+      print(config["debug"])
 `}
   expectedOutput={`True
+  False
+  True
+  False
   False`}
 checks={[
 {
@@ -209,3 +237,7 @@ test: "any(t.finalbody and any(isinstance(n, ast.Yield) for s in t.body for n in
 },
 ]}
 />
+
+## 忽略指定异常（选读）
+
+确定某个异常可以忽略时，可以用 `suppress` 包住会引发异常的那几行。比如清理临时文件时，如果文件已经被删除，可以只忽略 `FileNotFoundError`。遇到指定异常时，程序会从 `with` 后面继续执行。其他异常照常传播。详见 [`suppress` 官方文档](https://docs.python.org/zh-cn/3.15/library/contextlib.html#contextlib.suppress)。

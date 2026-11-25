@@ -1,17 +1,17 @@
-import { useState, type ComponentProps, type ReactNode } from "react";
+import { useState, type ComponentProps } from "react";
 import { Button } from "@/components/ui/button";
 import ConceptStepper from "@/components/learning/ConceptStepper";
 
 type Steps = ComponentProps<typeof ConceptStepper>["steps"];
 
-export default function ContextlibTimeline({
+export default function ContextExitTimeline({
+  label,
   normal,
   exception,
-  exceptionCheck,
 }: {
+  label: string;
   normal: Steps;
   exception: Steps;
-  exceptionCheck: ReactNode;
 }) {
   const [path, setPath] = useState<"normal" | "exception">("normal");
 
@@ -38,11 +38,9 @@ export default function ContextlibTimeline({
         </Button>
       </div>
       <ConceptStepper
-        key={path}
-        label="override 的执行顺序"
+        label={label}
         steps={path === "normal" ? normal : exception}
       />
-      {path === "exception" && exceptionCheck}
     </div>
   );
 }

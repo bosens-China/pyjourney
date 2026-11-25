@@ -304,7 +304,21 @@ ty、uv 和 Ruff 都由 Astral 开发。ty 也能为编辑器提供补全、悬�
 
 ## pytest：测试
 
-把下面的代码保存到 `tests/test_tally.py`。文件名和函数名都以 `test_` 开头，直接用 `assert` 写断言。这两条测试调用的 `count_words()` 会在下一节实现。
+先把统计词频的代码保存到 `src/tally/__init__.py`。每次调用 `count_words()` 都会创建自己的计数字典。
+
+```python
+def count_words(text: str) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for word in text.lower().split():
+        counts[word] = counts.get(word, 0) + 1
+    return counts
+
+
+def main() -> None:
+    print(count_words("the cat and the hat"))
+```
+
+把下面的代码保存到 `tests/test_tally.py`。文件名和函数名都以 `test_` 开头。用 `assert` 检查两个调用的返回值。
 
 ```python
 from tally import count_words
@@ -318,7 +332,7 @@ def test_ignores_case():
     assert count_words("Hi hi") == {"hi": 2}
 ```
 
-实现 `count_words()` 后，在项目根目录运行测试。
+在项目根目录运行测试。
 
 ```bash
 uv run pytest
@@ -328,7 +342,26 @@ uv run pytest
 
 ## 把它们串起来
 
-下面用 `count_words()` 的第一版演示这套检查。第一版给计数字典设了默认值，还在 `main()` 里传错了参数。按顺序运行四条命令，看看每一步发现了什么。
+下面用 `count_words()` 的第一版演示每项检查能发现什么。可以在项目的临时副本中复现。展开代码，保存到副本里的 `src/tally/__init__.py`，再按顺序运行图里的命令。
+
+<details>
+<summary>查看产生诊断的第一版代码</summary>
+
+```python
+"""统计词频。"""
+
+
+def count_words(text: str, counts: dict[str, int] = {}) -> dict[str, int]:
+    for word in text.lower().split():
+        counts[word]=counts.get(word,0)+1
+    return counts
+
+
+def main() -> None:
+    print(count_words(42))
+```
+
+</details>
 
 <ConceptStepper
   label="从格式化到测试"
@@ -337,7 +370,7 @@ uv run pytest
     {
       code: "uv run ruff format",
       description:
-        "格式化器先统一排版，在运算符两边补空格，在函数之间留两行空白。",
+        "格式化器先统一排版，在运算符两边和逗号后补空格。",
       output: "1 file reformatted, 2 files left unchanged",
       diagram: {
         kind: "flow",
@@ -407,7 +440,7 @@ uv run pytest
     },
     {
       code: "uv run ruff check\nuv run ty check\nuv run pytest",
-      description: "在函数体里创建新字典，再改正 main 里的调用。重新运行后，三项检查全部通过。",
+      description: "换回上一节的代码。它在函数体里创建新字典，并向 count_words 传入文本。重新运行后，三项检查全部通过。",
       output: "All checks passed!\nAll checks passed!\n2 passed",
       diagram: {
         kind: "flow",
@@ -424,19 +457,7 @@ uv run pytest
   ]}
 />
 
-将修正后的代码保存到 `src/tally/__init__.py`。
-
-```python
-def count_words(text: str) -> dict[str, int]:
-    counts: dict[str, int] = {}
-    for word in text.lower().split():
-        counts[word] = counts.get(word, 0) + 1
-    return counts
-
-
-def main() -> None:
-    print(count_words("the cat and the hat"))
-```
+换回上一节的代码后，可以再运行一次项目入口。
 
 ```bash
 uv run tally
@@ -468,13 +489,13 @@ uv run tally
 }
 ```
 
-Ruff 和 ty 都会读取项目的 `pyproject.toml`。打开上一节的第一版代码，编辑器会直接标出问题所在的行。
+Ruff 和 ty 都会读取项目的 `pyproject.toml`。打开上一节的第一版代码，编辑器会标出两处问题。下面展示的是经过格式化的代码。
 
 <EditorPreview
   label="编辑器里的检查提示"
   file="src/tally/__init__.py"
   code={[
-    "import sys",
+    '"""统计词频。"""',
     "",
     "",
     "def count_words(text: str, counts: dict[str, int] = {}) -> dict[str, int]:",
@@ -487,13 +508,6 @@ Ruff 和 ty 都会读取项目的 `pyproject.toml`。打开上一节的第一版
     "    print(count_words(42))",
   ]}
   marks={[
-    {
-      line: 1,
-      text: "sys",
-      source: "Ruff F401",
-      message: "`sys` imported but unused",
-      severity: "warning",
-    },
     {
       line: 4,
       text: "{}",

@@ -19,7 +19,7 @@ print(4 * 3.75 - 1)  # 14.0
 print(1_000_000)     # 1000000
 ```
 
-## 四种除法相关的运算
+## 除法、商与余数
 
 下面以两个整数相除为例。
 
@@ -29,12 +29,6 @@ print(1_000_000)     # 1000000
 - `divmod(x, y)` 同时返回商和余数，即 `(x // y, x % y)`。
 
 <FloorNumberLine />
-
-`int("42")` 和 `float("3.5")` 把文本转换成数字，`str(42)` 把数字转换成文本。用 `int()` 把浮点数转成整数时，会去掉小数部分，所以 `int(3.9)` 得到 `3`。要向上取整，用 `math.ceil()`。要向下取整，用 `math.floor()`。
-
-`round()` 默认舍入到最接近的整数。数值正好在两个整数中间时，就选其中的偶数。所以 `round(2.5)` 得到 `2`，`round(3.5)` 得到 `4`。参见 [Python 3.15 的 round() 说明](https://docs.python.org/zh-cn/3.15/builtins/functions.html#round)。
-
-浮点数用二进制表示，`0.1`、`0.2` 和 `0.3` 都是近似值。`0.1 + 0.2 == 0.3` 为假。需要判断两个浮点数是否足够接近时，用 `math.isclose()`。
 
 <QuickQuiz
   question="这三行依次输出什么？"
@@ -52,9 +46,15 @@ print(1_000_000)     # 1000000
   explanation="/ 得到浮点数 3.5。// 朝负无穷取整，-3.5 变成 -4。余数满足 (-4) * 2 + 1 == -7，所以是 1。"
 />
 
+`int("42")` 和 `float("3.5")` 把文本转换成数字，`str(42)` 把数字转换成文本。用 `int()` 把浮点数转成整数时，会去掉小数部分。例如，`int(3.9)` 得到 `3`。
+
+`round()` 默认舍入到最接近的整数。数值正好在两个整数中间时，就选其中的偶数。所以 `round(2.5)` 得到 `2`，`round(3.5)` 得到 `4`。参见 [Python 3.15 的 round() 说明](https://docs.python.org/zh-cn/3.15/builtins/functions.html#round)。
+
+在常见的二进制浮点表示中，`0.1`、`0.2` 和 `0.3` 都是近似值，所以 `0.1 + 0.2 == 0.3` 为假。需要判断两个浮点数是否足够接近时，用标准库的 `math.isclose()`。参见 [Python 3.15 浮点算术教程](https://docs.python.org/zh-cn/3.15/tutorial/floatingpoint.html)。
+
 ## 布尔值
 
-比较两个数字时，结果是布尔值 `True` 或 `False`，类型是 `bool`。`bool` 是 `int` 的子类。需要把布尔值当作整数时，用 `int()` 明确转换，例如 `int(True)` 得到 `1`。
+比较两个数字时，结果是布尔值 `True` 或 `False`，类型是 `bool`。
 
 任何对象都能用作条件。下面列出了常见的假值。其他对象默认是真值。
 
@@ -68,11 +68,28 @@ print(1_000_000)     # 1000000
 
 `None` 表示「没有值」。函数执行到末尾时会返回 `None`。字典找不到键时，`get()` 默认也返回 `None`。
 
-`None` 是唯一的对象，所以可以用 `if result is None:` 检查它。这条判断只在 `result` 是 `None` 时成立，可以把 `None` 和 `0`、空字符串这样的假值区分开。
+Python 只有一个 `None` 对象。用 `if result is None:` 可以判断 `result` 是否表示没有值。`0` 和空字符串也是假值，但它们都可以表示有效结果。
+
+<QuickQuiz
+  question="分别检查免费商品和价格缺失的商品。两次 print() 依次输出什么？"
+  code={`price = 0
+  print(price is None)
+  price = None
+  print(price is None)`}
+  options={["True、True", "False、True", "False、False", "True、False"]}
+  answerIndex={1}
+  feedback={[
+    "虽然 0 是假值，它仍表示一个有效的价格。想想 is 检查的是什么。",
+    "",
+    "第二次赋值后，price 指向的正是 None 对象。",
+    "is None 检查值是否缺失。两次判断的顺序是先检查免费商品，再检查价格缺失的商品。",
+  ]}
+  explanation="0 是有效的价格，只有 None 表示缺失。两者都是假值，直接用 if price: 就会漏掉免费商品。"
+/>
 
 ## 随堂练习
 
-`seconds` 以秒为单位记录一段时长。用 `divmod()` 把它换算成小时、分钟和秒，打印 `1 小时 2 分 5 秒`。
+`seconds` 以秒为单位记录一段时长。用 `divmod()` 把它换算成小时、分钟和秒，打印 `1 小时 2 分 5 秒`。可以像 `quotient, remainder = divmod(17, 3)` 这样，把返回的商和余数分别绑定到两个名字。
 
 <PythonExercise
   label="用 divmod 换算时长"

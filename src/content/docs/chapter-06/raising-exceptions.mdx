@@ -3,11 +3,10 @@ title: 抛出异常
 description: 直接执行操作并处理预期的异常，用 raise 抛出异常，用 raise ... from 标明原因。
 ---
 
-import ConceptStepper from "@/components/learning/ConceptStepper";
 import QuickQuiz from "@/components/learning/QuickQuiz";
 import PythonExercise from "@/components/python/PythonExercise";
 
-先执行操作，再捕获预期的异常，是 Python 的一种惯用写法，简称 EAFP。例如，直接让 `int()` 尝试把文本转成整数，再处理转换失败的情况。
+先执行操作，再捕获预期的异常，是 Python 的一种惯用写法。例如，直接让 `int()` 尝试把文本转成整数，再处理转换失败的情况。
 
 ```python run
 def to_int(text):
@@ -33,83 +32,60 @@ def set_age(age):
 
 在 `except` 里记录异常后，可以写一个不带参数的 `raise`。它会重新抛出当前异常，交给调用方处理。
 
-自定义异常类直接或间接继承 `Exception`，类名通常以 `Error` 结尾。简单的异常类可以只有一个 `pass`。需要给处理器提供更多信息时，再添加相应的属性。
-
-```python
-class DatabaseError(Exception):
-    pass
-```
-
 ## 异常链
 
-在 `except` 里又抛出异常时，回溯默认会显示，新异常发生在处理原异常的过程中。
+在 `except` 里抛出新异常时，回溯默认会说明新异常是在处理原异常时发生的。
 
-把底层异常换成调用方更容易理解的异常时，可以用 `raise ... from ...` 标明直接原因。新异常的 `__cause__` 会保存原来的异常。回溯也会把原异常列为直接原因，并显示「The above exception was the direct cause of the following exception」。
+把底层异常换成调用方更容易理解的异常时，用 `raise ... from ...` 标明直接原因。新异常的 `__cause__` 会保存原来的异常。
 
 ```python run
-def func():
-    raise ConnectionError
+def connect():
+    raise ConnectionError("连接超时")
 
 try:
-    func()
+    connect()
 except ConnectionError as exc:
-    raise RuntimeError("Failed to open database") from exc  # [!code highlight]
+    raise RuntimeError("打不开数据库") from exc  # [!code highlight]
 ```
 
-想在回溯里只显示新异常时，用 `raise ... from None` 隐藏原异常。
+运行后，回溯会先显示底层错误，再显示交给调用方的新错误。下面保留了两条异常消息和它们之间的一行提示。
 
-<ConceptStepper
-  label="from 写明直接原因"
-  steps={[
-    {
-      code: "raise ConnectionError",
-      description: "底层操作先抛出 ConnectionError。",
-      values: [{ name: "当前异常", value: "ConnectionError" }],
-    },
-    {
-      code: "raise RuntimeError('Failed to open database') from exc",
-      description: "from exc 把 ConnectionError 记为直接原因，再抛出 RuntimeError。",
-      diagram: {
-        kind: "flow",
-        direction: "row",
-        nodes: [
-          { id: "cause", label: "ConnectionError" },
-          { id: "outer", label: "RuntimeError" },
-        ],
-        active: ["cause", "outer"],
-      },
-      values: [
-        { name: "异常", value: "RuntimeError" },
-        { name: "__cause__", value: "ConnectionError" },
-      ],
-    },
-  ]}
-/>
+```text
+ConnectionError: 连接超时
+
+The above exception was the direct cause of the following exception:
+
+RuntimeError: 打不开数据库
+```
+
+中间的提示把上方的 `ConnectionError` 标为下方 `RuntimeError` 的直接原因。
 
 <QuickQuiz
-  question="在 except 里捕获了 exc。怎样把它标记为新异常的直接原因？"
-  options={[
-    "raise RuntimeError('失败')",
-    "raise RuntimeError('失败') from exc",
-    "raise RuntimeError('失败') from None",
-    "raise exc from RuntimeError('失败')",
-  ]}
+  question="这段代码产生的回溯会把哪个异常标为 RuntimeError 的直接原因？"
+  code={`settings = {}
+  try:
+      try:
+          port = settings["port"]
+      except KeyError:
+          raise ValueError("缺少端口")
+  except ValueError as exc:
+      raise RuntimeError("无法启动") from exc`}
+  options={["KeyError", "ValueError", "两个都标为直接原因"]}
   answerIndex={1}
   feedback={[
-    "省略 from 时，回溯会说明新异常是在处理 exc 的过程中发生的。",
+    "KeyError 先发生。外层的 from exc 使用的是外层 except 捕获的异常。",
     "",
-    "from None 会在回溯里隐藏原来的异常。",
-    "把原异常 exc 写在 from 后，把要抛出的 RuntimeError 写在前面。",
+    "from exc 只标记 exc 指向的那个异常。",
   ]}
-  explanation="from exc 把原异常存入 __cause__，回溯会把它列为直接原因。正在处理的异常也会自动存入 __context__。用 from None 可以在回溯里隐藏原异常，仍能通过 __context__ 读取它。"
+  explanation="exc 指向外层捕获的 ValueError，所以它是 RuntimeError 的直接原因。回溯也会显示 KeyError，并说明 ValueError 是在处理 KeyError 时发生的。"
 />
 
 ## 随堂练习
 
-`load` 遇到 `FileNotFoundError` 时，改为抛出 `DatabaseError("打不开数据库")`，并把原来的异常记为直接原因。
+`load` 遇到 `FileNotFoundError` 时，改为抛出 `DatabaseError("打不开数据库")`，并把原来的异常记为直接原因。编辑器已提供 `DatabaseError`。它的定义用到了第 7 章的[继承](../chapter-07/classes)。
 
 <PythonExercise
-  label="用 __cause__ 保留底层异常"
+  label="用 raise ... from 保留底层异常"
   starterCode={`class DatabaseError(Exception):
       pass
 
