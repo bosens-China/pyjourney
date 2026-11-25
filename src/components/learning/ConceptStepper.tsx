@@ -1,8 +1,9 @@
-import { useEffect, useId, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useId, useState, type ReactNode } from "react";
 import Diagram, { type DiagramSpec } from "@/components/learning/Diagram";
 import PythonCode from "@/components/python/PythonCode";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { markdownCodeBlock } from "@/lib/markdown";
 
 interface Step {
   code: string;
@@ -45,6 +46,34 @@ export default function ConceptStepper({
   }, [index, lastIndex, playing]);
 
   if (!step) return null;
+
+  if (import.meta.env.SSG_MD) {
+    return (
+      <>
+        {`\n\n**${label}**\n\n`}
+        {steps.map(
+          ({ code, description, values, output, diagram, visual }, i) => {
+            const details = [
+              values
+                ?.map(({ name, value }) => `- \`${name}\` → \`${value}\``)
+                .join("\n"),
+              output !== undefined &&
+                `**输出**\n\n${markdownCodeBlock(output, "text")}`,
+              description,
+            ];
+            return (
+              <Fragment key={i}>
+                {`**第 ${i + 1} 步**\n\n${markdownCodeBlock(code, language)}\n\n`}
+                {diagram && <Diagram diagram={diagram} />}
+                {visual}
+                {`\n\n${details.filter(Boolean).join("\n\n")}\n\n`}
+              </Fragment>
+            );
+          },
+        )}
+      </>
+    );
+  }
 
   function goTo(nextIndex: number) {
     setPlaying(false);

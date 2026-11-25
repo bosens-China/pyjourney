@@ -8,6 +8,8 @@ function Tabs({
   orientation = "horizontal",
   ...props
 }: React.ComponentProps<typeof TabsPrimitive.Root>) {
+  if (import.meta.env.SSG_MD) return <>{props.children}</>;
+
   return (
     <TabsPrimitive.Root
       data-slot="tabs"
@@ -42,6 +44,8 @@ function TabsList({
   ...props
 }: React.ComponentProps<typeof TabsPrimitive.List> &
   VariantProps<typeof tabsListVariants>) {
+  if (import.meta.env.SSG_MD) return null;
+
   return (
     <TabsPrimitive.List
       data-slot="tabs-list"
@@ -73,8 +77,20 @@ function TabsTrigger({
 
 function TabsContent({
   className,
+  markdownLabel,
   ...props
-}: React.ComponentProps<typeof TabsPrimitive.Content>) {
+}: React.ComponentProps<typeof TabsPrimitive.Content> & {
+  markdownLabel?: string;
+}) {
+  if (import.meta.env.SSG_MD) {
+    return (
+      <>
+        {markdownLabel && `\n\n**${markdownLabel}**\n\n`}
+        {props.children}
+      </>
+    );
+  }
+
   return (
     <TabsPrimitive.Content
       data-slot="tabs-content"

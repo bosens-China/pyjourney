@@ -7,6 +7,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { markdownCodeBlock } from "@/lib/markdown";
 import type {
   PythonCase,
   PythonCheck,
@@ -180,7 +181,32 @@ function Summary({
   );
 }
 
-export default function CodeWorkspace({
+export default function CodeWorkspace(props: Props) {
+  if (import.meta.env.SSG_MD) {
+    const { starterCode, solution, label, cases, chapter } = props;
+    const blocks = chapter ? [] : [`**${label}**`];
+    blocks.push(markdownCodeBlock(starterCode));
+
+    const expectedOutput = chapter ? undefined : cases[0]?.expectedOutput;
+    if (expectedOutput !== undefined) {
+      blocks.push(
+        expectedOutput
+          ? `**预期输出**\n\n${markdownCodeBlock(expectedOutput, "text")}`
+          : "**预期输出**\n\n无输出。",
+      );
+    }
+    if (solution) {
+      blocks.push(
+        `<details>\n<summary>查看参考答案</summary>\n\n${markdownCodeBlock(solution)}\n\n</details>`,
+      );
+    }
+    return <>{`\n\n${blocks.join("\n\n")}\n\n`}</>;
+  }
+
+  return <InteractiveCodeWorkspace {...props} />;
+}
+
+function InteractiveCodeWorkspace({
   starterCode,
   solution,
   label,

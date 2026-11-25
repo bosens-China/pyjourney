@@ -378,6 +378,32 @@ function selectedSliceIndices({ items, slice, index }: SliceDiagram) {
   return [index < 0 ? index + items.length : index];
 }
 
+function describeSlice(diagram: SliceDiagram) {
+  const { items, slice, index } = diagram;
+  const positions = items.map(
+    (item, position) =>
+      `\`${position}\` / \`${position - items.length}\` 对应 \`${JSON.stringify(item)}\``,
+  );
+  const characters = `字符下标（从左、从右）：${positions.join("，")}。`;
+  const picked = selectedSliceIndices(diagram);
+  if (slice) {
+    const [start, stop, step] = slice;
+    const stride = step === undefined ? "" : `:${step}`;
+    const selected = picked.length
+      ? `依次取下标 ${picked.join("、")}`
+      : "未取到字符";
+    const result = JSON.stringify(
+      picked.map((position) => items[position]).join(""),
+    );
+    return `${characters}\n\n切片 \`[${start ?? ""}:${stop ?? ""}${stride}]\` ${selected}，结果为 \`${result}\`。`;
+  }
+  if (index === undefined) return characters;
+  const result = items[picked[0]];
+  return result === undefined
+    ? `${characters}\n\n下标 \`${index}\` 越界。`
+    : `${characters}\n\n下标 \`${index}\` 取到 \`${JSON.stringify(result)}\`。`;
+}
+
 function Slice(diagram: SliceDiagram) {
   const { items, slice, showBounds } = diagram;
   const cell = 44;
@@ -504,6 +530,21 @@ function Slice(diagram: SliceDiagram) {
 }
 
 export default function Diagram({ diagram }: { diagram: DiagramSpec }) {
+  if (import.meta.env.SSG_MD) {
+    switch (diagram.kind) {
+      case "refs": {
+        const relations = referenceRelations(diagram).map(
+          (line) => `- ${line}`,
+        );
+        return <>{`\n\n**引用关系**\n\n${relations.join("\n")}\n\n`}</>;
+      }
+      case "flow":
+        return <>{`\n\n${describeFlow(diagram)}\n\n`}</>;
+      case "slice":
+        return <>{`\n\n${describeSlice(diagram)}\n\n`}</>;
+    }
+  }
+
   return (
     <div className="@container min-w-0 overflow-x-auto rounded-lg border border-rp-line p-4">
       {diagram.kind === "refs" ? (

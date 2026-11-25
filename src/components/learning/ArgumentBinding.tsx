@@ -2,6 +2,7 @@ import { useId, useState } from "react";
 import PythonCode from "@/components/python/PythonCode";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { markdownCodeBlock } from "@/lib/markdown";
 
 const signature = "def query(sql, /, timeout=30, *, read_only): ...";
 
@@ -45,6 +46,19 @@ export default function ArgumentBinding() {
   const supplied = argumentsToBind.filter(
     ({ parameter }) => includeTimeout || parameter !== "timeout",
   );
+
+  if (import.meta.env.SSG_MD) {
+    const withoutTimeout = argumentsToBind.filter(
+      ({ parameter }) => parameter !== "timeout",
+    );
+    const example = [
+      signature,
+      "",
+      `${queryCall(argumentsToBind)}  # sql = 'select', timeout = 10, read_only = True`,
+      `${queryCall(withoutTimeout)}  # sql = 'select', timeout = 30, read_only = True`,
+    ].join("\n");
+    return <>{`\n\n${markdownCodeBlock(example)}\n\n`}</>;
+  }
 
   function resetBinding() {
     setBound([]);

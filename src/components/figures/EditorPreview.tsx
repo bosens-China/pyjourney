@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { PythonTokens } from "@/components/python/PythonCode";
 import { Card } from "@/components/ui/card";
+import { markdownCodeBlock } from "@/lib/markdown";
 
 interface Mark {
   line: number;
@@ -57,6 +58,18 @@ export default function EditorPreview({
   marks,
   status,
 }: EditorPreviewProps) {
+  if (import.meta.env.SSG_MD) {
+    const diagnostics = marks.map(
+      ({ line, text, source, message }) =>
+        `- 第 ${line} 行的 \`${text}\`（${source}）提示 ${message}。`,
+    );
+    return (
+      <>
+        {`\n\n\`${file}\`\n\n${markdownCodeBlock(code.join("\n"))}\n\n${diagnostics.join("\n")}\n\n`}
+      </>
+    );
+  }
+
   return (
     <figure className="rp-not-doc my-6 grid gap-3">
       <Card asChild className="gap-0 overflow-hidden p-0 sm:p-0">

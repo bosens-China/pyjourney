@@ -4,6 +4,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { markdownCodeBlock } from "@/lib/markdown";
 
 interface QuickQuizProps {
   question: string;
@@ -32,6 +33,25 @@ export default function QuickQuiz({
   const hint = selected === null ? undefined : feedback?.[selected];
 
   useEffect(() => setReady(true), []);
+
+  if (import.meta.env.SSG_MD) {
+    const sections = [
+      `**${question}**`,
+      code && markdownCodeBlock(code),
+      options.map((option, index) => `${index + 1}. ${option}`).join("\n"),
+      [
+        "<details>",
+        "<summary>答案解析</summary>",
+        "",
+        `**答案** ${options[answerIndex]}`,
+        "",
+        explanation,
+        "",
+        "</details>",
+      ].join("\n"),
+    ];
+    return <>{`\n\n${sections.filter(Boolean).join("\n\n")}\n\n`}</>;
+  }
 
   return (
     <Card asChild className="my-6">

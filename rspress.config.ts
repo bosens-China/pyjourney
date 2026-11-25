@@ -14,8 +14,9 @@ export default defineConfig({
   title: "Python 漫游指南",
   description: "从零开始，探索 Python 的奇妙世界。",
   lang: "zh",
-  llms: false,
+  llms: true,
   markdown: {
+    link: { checkAnchors: true },
     shiki: {
       transformers: [
         {
@@ -81,6 +82,7 @@ export default defineConfig({
   icon: "/favicon.svg",
   route: { cleanUrls: true },
   themeConfig: {
+    llmsUI: { viewOptions: false },
     editLink: {
       docRepoBaseUrl:
         "https://github.com/bosens-China/pyjourney/tree/main/src/content/docs",

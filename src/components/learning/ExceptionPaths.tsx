@@ -56,6 +56,23 @@ const scenarios = [
 export default function ExceptionPaths() {
   const caption = useId();
 
+  if (import.meta.env.SSG_MD) {
+    const rows = scenarios.map(({ call, path, output, error }) => {
+      const steps = path.map((step) => {
+        if (step === "propagate") return `\`${error}\` 向外传播`;
+        if (step === "except") return `\`except ${error}\``;
+        return `\`${step}\``;
+      });
+      const printed = output.split("\n").map((line) => `\`${line}\``);
+      return `| \`${call}\` | ${steps.join(" → ")} | ${printed.join("、")} |`;
+    });
+    return (
+      <>
+        {`\n\n| 调用 | 执行路径 | 依次打印 |\n| --- | --- | --- |\n${rows.join("\n")}\n\n`}
+      </>
+    );
+  }
+
   return (
     <Card asChild className="my-6">
       <figure aria-labelledby={caption}>

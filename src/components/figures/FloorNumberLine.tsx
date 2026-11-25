@@ -1,5 +1,11 @@
 import { Card } from "@/components/ui/card";
 export default function FloorNumberLine() {
+  if (import.meta.env.SSG_MD) {
+    return (
+      <>{"\n\n数轴上 `-4 ≤ -3.5 < -3`，朝负无穷方向取整得到 `-4`。\n\n"}</>
+    );
+  }
+
   return (
     <Card asChild className="my-6 gap-0 text-center sm:p-4">
       <figure>

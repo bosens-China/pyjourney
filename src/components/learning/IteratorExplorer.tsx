@@ -8,6 +8,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
+import { markdownCodeBlock } from "@/lib/markdown";
 
 const numbers = [1, 2, 3];
 const trialNumbers = [2, 4, 7];
@@ -15,6 +16,7 @@ const remainingNumbers = trialNumbers.slice(1);
 const remainingSum = remainingNumbers.reduce((sum, value) => sum + value, 0);
 const expected = `${remainingSum} 0 ${remainingSum + trialNumbers[0]}`;
 const initial = { position: 0, message: "已创建迭代器，下一项是 1。" };
+const practiceCode = `numbers = [${trialNumbers.join(", ")}]\nit = iter(numbers)\nnext(it)\nprint(sum(it), sum(it), sum(numbers))`;
 
 function Positions({
   values,
@@ -49,6 +51,14 @@ export default function IteratorExplorer() {
   const [answer, setAnswer] = useState("");
   const [checked, setChecked] = useState(false);
   const correct = answer.trim().replace(/\s+/g, " ") === expected;
+
+  if (import.meta.env.SSG_MD) {
+    return (
+      <>
+        {`\n\n预测最后一行打印的三个数。\n\n${markdownCodeBlock(practiceCode)}\n\n`}
+      </>
+    );
+  }
 
   function advance() {
     setState(({ position }) => {
@@ -115,9 +125,7 @@ export default function IteratorExplorer() {
               }}
             >
               <pre className="overflow-x-auto rounded-lg bg-rp-soft p-3 font-rp-mono text-sm">
-                <PythonCode
-                  code={`numbers = [${trialNumbers.join(", ")}]\nit = iter(numbers)\nnext(it)\nprint(sum(it), sum(it), sum(numbers))`}
-                />
+                <PythonCode code={practiceCode} />
               </pre>
               <Positions values={trialNumbers} position={1} />
               <label className="grid max-w-sm gap-1 text-sm font-medium">

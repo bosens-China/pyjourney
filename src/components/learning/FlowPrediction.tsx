@@ -4,6 +4,7 @@ import PythonCode from "@/components/python/PythonCode";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { markdownCodeBlock } from "@/lib/markdown";
 
 interface Choice {
   label: string;
@@ -26,6 +27,27 @@ export default function FlowPrediction({
 }: FlowPredictionProps) {
   const questionId = useId();
   const [selected, setSelected] = useState<Choice>();
+
+  if (import.meta.env.SSG_MD) {
+    const options = choices
+      .map(({ label }, index) => `${index + 1}. ${label}`)
+      .join("\n");
+    const answer = choices.find(({ path }) => path);
+    return (
+      <>
+        {`\n\n**${question}**\n\n${markdownCodeBlock(code)}\n\n`}
+        <Diagram diagram={diagram} />
+        {`${options}\n\n`}
+        {answer?.path && (
+          <>
+            {`<details>\n<summary>答案解析</summary>\n\n**答案** ${answer.label}\n\n${answer.feedback}\n\n`}
+            <Diagram diagram={{ ...diagram, active: answer.path }} />
+            {"</details>\n\n"}
+          </>
+        )}
+      </>
+    );
+  }
 
   return (
     <Card asChild className="my-6">

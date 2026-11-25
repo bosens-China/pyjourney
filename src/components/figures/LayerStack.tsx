@@ -11,6 +11,14 @@ interface LayerStackProps {
 }
 
 export default function LayerStack({ label, layers }: LayerStackProps) {
+  if (import.meta.env.SSG_MD) {
+    const items = layers.map(({ title, items, note }) => {
+      const tools = items.map((item) => `\`${item}\``).join("、");
+      return `- **${title}** ${tools}。${note}`;
+    });
+    return <>{`\n\n**${label}**\n\n${items.join("\n")}\n\n`}</>;
+  }
+
   return (
     <Card asChild className="my-6 gap-3">
       <figure>

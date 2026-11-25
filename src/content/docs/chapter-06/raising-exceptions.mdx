@@ -38,7 +38,7 @@ def set_age(age):
 
 把底层异常换成调用方更容易理解的异常时，用 `raise ... from ...` 标明直接原因。新异常的 `__cause__` 会保存原来的异常。
 
-```python run
+```python run lineNumbers
 def connect():
     raise ConnectionError("连接超时")
 

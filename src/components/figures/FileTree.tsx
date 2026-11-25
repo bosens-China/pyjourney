@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/card";
+import { markdownCodeBlock } from "@/lib/markdown";
 import { cn } from "@/lib/utils";
 
 interface Entry {
@@ -25,6 +26,32 @@ export default function FileTree({
   entries,
   compact = false,
 }: FileTreeProps) {
+  if (import.meta.env.SSG_MD) {
+    if (compact) {
+      const names: string[] = [];
+      const taggedPaths = entries.flatMap(({ name, depth, tag }) => {
+        names[depth] = name;
+        if (!tag) return [];
+        const path = names
+          .slice(0, depth)
+          .map((directory) => directory.replace(/\/$/, ""))
+          .concat(name)
+          .join("/");
+        return [`- \`${path}\`（${tag}）`];
+      });
+      return <>{`\n\n${taggedPaths.join("\n")}\n\n`}</>;
+    }
+    const lines = entries.map(({ name, depth, tag, note }) => {
+      const details = [tag && `[${tag}]`, note].filter(Boolean).join(" ");
+      return `${"  ".repeat(depth)}${name}${details ? `  ${details}` : ""}`;
+    });
+    return (
+      <>
+        {`\n\n**${label}**\n\n${markdownCodeBlock(lines.join("\n"), "text")}\n\n`}
+      </>
+    );
+  }
+
   const tree = (
     <ul
       aria-label={compact ? label : undefined}

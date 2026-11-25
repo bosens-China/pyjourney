@@ -2,6 +2,7 @@ import { useId, useState } from "react";
 import { PythonTokens } from "@/components/python/PythonCode";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { markdownCodeBlock } from "@/lib/markdown";
 
 const codeLines = [
   "def countdown(n):",
@@ -18,6 +19,19 @@ export default function GeneratorExplorer() {
   const paused = calls > 0 && !finished;
   const latest = initialNumber - calls + 1;
   const activeLine = paused ? 2 : finished ? 1 : -1;
+
+  if (import.meta.env.SSG_MD) {
+    const values = Array.from(
+      { length: initialNumber },
+      (_, index) => `next(g)  # ${initialNumber - index}`,
+    );
+    const trace = [
+      `g = countdown(${initialNumber})`,
+      ...values,
+      "next(g)  # 引发 StopIteration",
+    ].join("\n");
+    return <>{`\n\n${markdownCodeBlock(trace)}\n\n`}</>;
+  }
 
   return (
     <Card asChild className="my-6">

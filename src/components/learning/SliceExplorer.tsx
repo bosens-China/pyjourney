@@ -137,6 +137,18 @@ export default function SliceExplorer() {
     if (mode !== "explore") heading.current?.focus();
   }, [mode]);
 
+  if (import.meta.env.SSG_MD) {
+    const rows = examples.map(({ slice, note }) => {
+      const value = collect(word, sliceIndices(word.length, slice));
+      return `| \`${expression(slice)}\` | \`"${value}"\` | ${note} |`;
+    });
+    return (
+      <>
+        {`\n\n| 切片 | 结果 | 取值方式 |\n| --- | --- | --- |\n${rows.join("\n")}\n\n`}
+      </>
+    );
+  }
+
   function changeMode(next: Mode) {
     setChecked(false);
     setMode(next);

@@ -7,6 +7,17 @@ const attempts = [
 ];
 
 export default function ComprehensionPairs() {
+  if (import.meta.env.SSG_MD) {
+    const rows = attempts.map(({ y, result }) =>
+      result ? `| ${y} | 加入 \`${result}\` |` : `| ${y} | 跳过 |`,
+    );
+    return (
+      <>
+        {`\n\n外层第一轮时，\`x = 1\`。\n\n| 内层的 \`y\` | 是否加入结果 |\n| --- | --- |\n${rows.join("\n")}\n\n`}
+      </>
+    );
+  }
+
   return (
     <Card asChild className="my-6 gap-3">
       <figure>

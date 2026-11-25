@@ -15,6 +15,16 @@ export default function ContextExitTimeline({
 }) {
   const [path, setPath] = useState<"normal" | "exception">("normal");
 
+  if (import.meta.env.SSG_MD) {
+    return (
+      <>
+        {`\n\n**${label}**\n\n`}
+        <ConceptStepper label="正常离开" steps={normal} />
+        <ConceptStepper label="遇到异常" steps={exception} />
+      </>
+    );
+  }
+
   return (
     <div className="rp-not-doc">
       <div

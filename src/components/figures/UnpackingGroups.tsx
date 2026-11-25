@@ -2,6 +2,7 @@ import { useState } from "react";
 import PythonCode from "@/components/python/PythonCode";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { markdownCodeBlock } from "@/lib/markdown";
 import {
   NativeSelect,
   NativeSelectOption,
@@ -147,6 +148,11 @@ function Assignment({ example }: { example: (typeof examples)[number] }) {
 
 export default function UnpackingGroups() {
   const [active, setActive] = useState(0);
+
+  if (import.meta.env.SSG_MD) {
+    const example = `${examples[1].code}\nprint(rest)  # []`;
+    return <>{`\n\n${markdownCodeBlock(example)}\n\n`}</>;
+  }
 
   return (
     <Card asChild className="my-6">

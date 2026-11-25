@@ -8,6 +8,16 @@ export default function ClosureExplorer() {
   const [counts, setCounts] = useState({ a: 0, b: 0 });
   const [called, setCalled] = useState<(typeof counters)[number]>();
 
+  if (import.meta.env.SSG_MD) {
+    return (
+      <>
+        {
+          "\n\n从两个新计数器开始，依次调用 `a()`、`a()` 和 `b()`，返回 `1`、`2` 和 `1`。\n\n"
+        }
+      </>
+    );
+  }
+
   return (
     <Card asChild className="my-6">
       <section aria-label="两个闭包各自保存计数">
